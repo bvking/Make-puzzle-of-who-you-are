@@ -42,12 +42,19 @@ const maxClosedAlpha = 255;           // opacité fond pendant transition (utili
 // "hold"       : œil fermé plein cadre (agents/attracteurs continuent)
 // "relaunch"   : relance logique initiale mais avec l'œil fermé
 let stage = "open";
+let activePresetIndex = -1;
+let guiVisible = true;
+let isPaused = false;
+let mobileControls = null;
+let mobilePresetButton = null;
+let mobilePauseButton = null;
+let lastTouchInteractionAt = 0;
 
 // --- Réduction progressive d'agents après transition ---
 let agentReduceActive = false;
 let agentReduceStartFrame = 0;
 const agentReduceDuration = 160; // frames
-const agentTargetCount = 790;
+const agentTargetCount = 300;
 let agentReduceStartCount = 0;
 
 // -------------------- BRUIT PERLIN ATTRACTEUR BLEU --------------------
@@ -98,11 +105,18 @@ const DEFAULT_PRESETS = [
     attractors: [{ name: "Rouge", x: 55.1015625, y: 454.19140625, mode: "repulse" }, { name: "Vert", x: 298.82421875, y: 736.375, mode: "attract" }, { name: "Bleu", x: 25.67666894778297, y: 22, mode: "repulse" }]
   }
 ];
-DEFAULT_PRESETS.push({
-  name: "IPhone",
-  params: JSON.parse(JSON.stringify(DEFAULT_PRESETS[0].params)),
-  attractors: JSON.parse(JSON.stringify(DEFAULT_PRESETS[0].attractors))
+const IPHONE_AGENT_COUNT = 50;
+const IPHONE_PRESET = JSON.parse(JSON.stringify(DEFAULT_PRESETS[2]));
+IPHONE_PRESET.name = "IPhone";
+Object.assign(IPHONE_PRESET.params, {
+  agentCount: IPHONE_AGENT_COUNT,
+  showImageFond: true,
+  imageFondAlpha: 55,
+  debugHeatmap: false,
+  agentDrawEvery: 2,
+  preloadClosed: true
 });
+DEFAULT_PRESETS.push(IPHONE_PRESET);
 let presets = JSON.parse(JSON.stringify(DEFAULT_PRESETS));
 
 // -------------------- PARAMS & GUI --------------------
@@ -258,6 +272,14 @@ function setup() {
 
   // GUI
   setupGUI();
+  setupMobileControls();
+  if (typeof window !== "undefined") {
+    window.setTimeout(setupMobileControls, 250);
+    window.addEventListener("resize", setupMobileControls);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", setupMobileControls);
+    }
+  }
 
   // agents selon paramètres
   updateAgents();
@@ -277,8 +299,10 @@ function setup() {
 
   // bouton sauvegarde manuelle
   const saveButton = createButton("Sauvegarder les paramètres");
+  saveButton.addClass("desktop-save-button");
   saveButton.position(10, height + 10);
   saveButton.mousePressed(saveParams);
+  if (shouldUseMobileControls()) saveButton.hide();
 
   // reload image pour compat Safari
   loadImage(
@@ -386,24 +410,105 @@ class Agent {
 // ==========================================================
 // INTERACTIONS SOURIS / CLAVIER
 // ==========================================================
-function mousePressed() {
-  for (let attractor of attractors) {
-    let d = dist(mouseX, mouseY, attractor.pos.x, attractor.pos.y);
-    if (d < attractor.radius / 2.5) {
-      selectedAttractor = attractor;
-      break;
-    }
-  }
+function eventComesFromUi(event) {
+  const target = event && event.target;
+  return Boolean(
+    target &&
+    target.closest &&
+    target.closest(".dg, .iphone-controls, button, input, select, textarea")
+  );
 }
 
-function mouseDragged() {
-  if (selectedAttractor) {
-    selectedAttractor.pos.set(mouseX, mouseY);
+function getCanvasPointer(event) {
+  const canvas = document.querySelector("canvas");
+  const source =
+    event && event.touches && event.touches.length
+      ? event.touches[0]
+      : event && event.changedTouches && event.changedTouches.length
+        ? event.changedTouches[0]
+        : event;
+
+  if (!canvas || !source || !Number.isFinite(source.clientX)) {
+    return createVector(mouseX, mouseY);
   }
+
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return createVector(mouseX, mouseY);
+
+  return createVector(
+    constrain(((source.clientX - rect.left) / rect.width) * width, 0, width),
+    constrain(((source.clientY - rect.top) / rect.height) * height, 0, height)
+  );
+}
+
+function pickAttractorAt(point, relaxedHitArea = false) {
+  let bestAttractor = null;
+  let bestDistance = Infinity;
+
+  for (let attractor of attractors) {
+    const d = dist(point.x, point.y, attractor.pos.x, attractor.pos.y);
+    const hitRadius = relaxedHitArea
+      ? Math.max(58, attractor.radius * 1.8)
+      : attractor.radius / 2.5;
+    if (d < hitRadius && d < bestDistance) {
+      bestAttractor = attractor;
+      bestDistance = d;
+    }
+  }
+
+  return bestAttractor;
+}
+
+function beginAttractorDrag(point, relaxedHitArea = false) {
+  selectedAttractor = pickAttractorAt(point, relaxedHitArea);
+  if (!selectedAttractor) return false;
+  moveSelectedAttractor(point);
+  return true;
+}
+
+function moveSelectedAttractor(point) {
+  if (!selectedAttractor) return false;
+  selectedAttractor.pos.set(
+    constrain(point.x, selectedAttractor.radius, width - selectedAttractor.radius),
+    constrain(point.y, selectedAttractor.radius, height - selectedAttractor.radius)
+  );
+  return true;
+}
+
+function mousePressed(event) {
+  if (eventComesFromUi(event) || Date.now() - lastTouchInteractionAt < 500) {
+    return true;
+  }
+  return beginAttractorDrag(getCanvasPointer(event), false) ? false : true;
+}
+
+function mouseDragged(event) {
+  if (eventComesFromUi(event) || Date.now() - lastTouchInteractionAt < 500) {
+    return true;
+  }
+  return moveSelectedAttractor(getCanvasPointer(event)) ? false : true;
 }
 
 function mouseReleased() {
   selectedAttractor = null;
+}
+
+function touchStarted(event) {
+  lastTouchInteractionAt = Date.now();
+  if (eventComesFromUi(event)) return true;
+  return beginAttractorDrag(getCanvasPointer(event), true) ? false : true;
+}
+
+function touchMoved(event) {
+  lastTouchInteractionAt = Date.now();
+  if (eventComesFromUi(event)) return true;
+  return moveSelectedAttractor(getCanvasPointer(event)) ? false : true;
+}
+
+function touchEnded(event) {
+  if (eventComesFromUi(event)) return true;
+  selectedAttractor = null;
+  return false;
 }
 
 function keyPressed() {
@@ -416,8 +521,169 @@ function keyPressed() {
   }
 }
 
+function updateAttractorModeParam(attractor) {
+  if (!attractor) return;
+  if (attractor.name === "Rouge") params.modeRouge = attractor.mode;
+  if (attractor.name === "Vert") params.modeVert = attractor.mode;
+  if (attractor.name === "Bleu") params.modeBleu = attractor.mode;
+  if (window.gui) window.gui.updateDisplay();
+}
+
 function toggleMode(a) {
+  if (!a) return;
   a.mode = a.mode === "attract" ? "repulse" : "attract";
+  updateAttractorModeParam(a);
+}
+
+function shouldUseMobileControls() {
+  if (typeof window === "undefined") return false;
+  const coarsePointer =
+    window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+  const visualWidth = window.visualViewport
+    ? window.visualViewport.width
+    : window.innerWidth;
+  return coarsePointer || window.innerWidth <= 820 || visualWidth <= 820;
+}
+
+function setGuiVisible(visible) {
+  guiVisible = visible;
+  const guiRoot = document.querySelector(".dg.ac");
+  if (guiRoot) guiRoot.style.display = guiVisible ? "block" : "none";
+  if (document.body) document.body.classList.toggle("gui-open", guiVisible);
+}
+
+function addMobileControlButton(label, title, onClick) {
+  const button = createButton(label);
+  button.parent(mobileControls);
+  button.addClass("iphone-control-button");
+  button.elt.type = "button";
+  button.elt.title = title;
+  button.elt.setAttribute("aria-label", title);
+  button.elt.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+    onClick(button);
+  });
+  return button;
+}
+
+function updateMobilePresetButton() {
+  if (!mobilePresetButton) return;
+  const presetNumber = activePresetIndex >= 0 ? activePresetIndex + 1 : "";
+  const presetName =
+    activePresetIndex >= 0 && presets[activePresetIndex]
+      ? presets[activePresetIndex].name
+      : "Preset";
+  mobilePresetButton.html(presetNumber ? `P${presetNumber}` : "Preset");
+  mobilePresetButton.elt.title = presetName;
+  mobilePresetButton.elt.setAttribute("aria-label", `Charger le preset suivant. Actuel: ${presetName}`);
+}
+
+function updateMobilePauseButton() {
+  if (!mobilePauseButton) return;
+  mobilePauseButton.html(isPaused ? "Play" : "Pause");
+  mobilePauseButton.elt.classList.toggle("is-active", isPaused);
+}
+
+function resetSketchCycle() {
+  stage = "open";
+  transitionActive = false;
+  closedRequested = false;
+  agentReduceActive = false;
+  agentReduceStartFrame = 0;
+  agentReduceStartCount = 0;
+  holdStartFrame = 0;
+  openAlpha = 255;
+  closedAlpha = 0;
+
+  for (let x = 0; x < gridSize; x++) {
+    for (let y = 0; y < gridSize; y++) {
+      field[x][y] = 0;
+      fieldColor[x][y] = { state: "base", timer: 0 };
+      densityMap[x][y] = 0;
+      densityDuration[x][y] = 0;
+    }
+  }
+
+  agents = [];
+  updateAgents();
+  if (agentLayer) agentLayer.clear();
+  if (window.gui) window.gui.updateDisplay();
+  if (isPaused) redraw();
+}
+
+function reloadStartupPreset() {
+  const startupPresetIndex = findPresetIndexByName(STARTUP_PRESET_NAME);
+  if (startupPresetIndex === -1) return;
+  if (applyPreset(startupPresetIndex, { notify: false })) {
+    resetSketchCycle();
+    updateMobilePresetButton();
+  }
+}
+
+function loadNextPresetFromMobile() {
+  if (!presets.length) return;
+  const nextIndex =
+    activePresetIndex >= 0 ? (activePresetIndex + 1) % presets.length : 0;
+  if (applyPreset(nextIndex, { notify: false })) {
+    resetSketchCycle();
+    updateMobilePresetButton();
+  }
+}
+
+function togglePauseFromMobile() {
+  isPaused = !isPaused;
+  if (isPaused) noLoop();
+  else loop();
+  updateMobilePauseButton();
+}
+
+function toggleBackgroundFromMobile() {
+  params.showImageFond = !params.showImageFond;
+  if (window.gui) window.gui.updateDisplay();
+  if (isPaused) redraw();
+}
+
+function setupMobileControls() {
+  const saveButton = document.querySelector(".desktop-save-button");
+
+  if (!shouldUseMobileControls()) {
+    if (mobileControls) {
+      mobileControls.remove();
+      mobileControls = null;
+    }
+    if (saveButton) saveButton.style.display = "";
+    if (document.body) document.body.classList.remove("mobile-ui-active");
+    setGuiVisible(true);
+    return;
+  }
+
+  const firstMobileSetup = !mobileControls;
+  document.body.classList.add("mobile-ui-active");
+  if (firstMobileSetup) setGuiVisible(false);
+  else setGuiVisible(guiVisible);
+  if (saveButton) saveButton.style.display = "none";
+
+  if (mobileControls) mobileControls.remove();
+  mobileControls = createDiv("");
+  mobileControls.addClass("iphone-controls");
+
+  addMobileControlButton("GUI", "Afficher ou masquer dat.GUI", button => {
+    setGuiVisible(!guiVisible);
+    button.elt.classList.toggle("is-active", guiVisible);
+  });
+  addMobileControlButton("IPhone", "Recharger le preset IPhone", reloadStartupPreset);
+  mobilePresetButton = addMobileControlButton(
+    "Preset",
+    "Charger le preset suivant",
+    loadNextPresetFromMobile
+  );
+  addMobileControlButton("Fond", "Afficher ou masquer le fond image", toggleBackgroundFromMobile);
+  addMobileControlButton("Reset", "Relancer le cycle", resetSketchCycle);
+  mobilePauseButton = addMobileControlButton("Pause", "Pause ou lecture", togglePauseFromMobile);
+
+  updateMobilePresetButton();
+  updateMobilePauseButton();
 }
 
 // ==========================================================
@@ -625,7 +891,17 @@ function normalizePresetList(source) {
           .filter(p => ["Rouge", "Vert", "Bleu"].includes(p.name))
       : null;
   }
+  enforceIphonePresetAgentCount(normalized);
   return normalized;
+}
+
+function enforceIphonePresetAgentCount(list) {
+  if (!Array.isArray(list)) return;
+  for (const preset of list) {
+    if (preset && preset.name === STARTUP_PRESET_NAME && preset.params) {
+      preset.params.agentCount = IPHONE_AGENT_COUNT;
+    }
+  }
 }
 
 function countFilledPresets(list) {
@@ -802,6 +1078,8 @@ function applyPreset(index, options = {}) {
   }
 
   console.log(`📂 Preset ${index + 1} (${presets[index].name}) chargé`);
+  activePresetIndex = index;
+  updateMobilePresetButton();
   if (notify) alert(`Preset "${presets[index].name}" chargé avec succès!`);
 
   // Force la mise à jour de la GUI
