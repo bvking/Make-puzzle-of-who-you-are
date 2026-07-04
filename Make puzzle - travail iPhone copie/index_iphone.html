@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Surfaces bleutees avec attracteurs - iPhone</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.6.0/lib/p5.min.js"></script>
+
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        min-height: 100%;
+        overflow: hidden;
+        background: black;
+        touch-action: none;
+      }
+
+      body {
+        padding-top: env(safe-area-inset-top);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+      }
+
+      canvas {
+        display: block;
+        width: min(100vw, 100vh) !important;
+        height: min(100vw, 100vh) !important;
+        max-width: 100vw;
+        max-height: 100vh;
+      }
+
+      .dg.ac {
+        transform: scale(0.78);
+        transform-origin: top right;
+        right: env(safe-area-inset-right);
+        top: env(safe-area-inset-top);
+      }
+    </style>
+  </head>
+  <body>
+    <script src="Sqaure%20Mode%20preset.js?v=20260703-iphone"></script>
+  </body>
+</html>
