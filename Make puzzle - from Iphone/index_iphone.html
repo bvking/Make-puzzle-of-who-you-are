@@ -98,6 +98,27 @@
     </style>
   </head>
   <body>
-    <script src="Sqaure%20Mode%20preset.js?v=20260704-agent50"></script>
+    <script>
+      (function loadIphonePresetWith49Agents() {
+        const sourceUrl = "Sqaure%20Mode%20preset.js?v=20260704-agent49";
+        const request = new XMLHttpRequest();
+        request.open("GET", sourceUrl, false);
+        request.send(null);
+
+        let code = request.responseText;
+        code = code
+          .replace("const IPHONE_AGENT_COUNT = 50;", "const IPHONE_AGENT_COUNT = 49;")
+          .replace(
+            'gui.add(params, "agentCount", 50, 10000, 1)',
+            'gui.add(params, "agentCount", 49, 10000, 1)'
+          )
+          .replace(
+            "target.agentCount = Math.round(clampNumber(target.agentCount, 50, 10000, 50));",
+            "target.agentCount = Math.round(clampNumber(target.agentCount, 49, 10000, 49));"
+          );
+
+        (0, eval)(code + "\n//# sourceURL=Sqaure Mode preset.js");
+      })();
+    </script>
   </body>
 </html>
