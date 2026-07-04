@@ -207,6 +207,8 @@ let params = {
 // Mets a true une seule fois si tu veux forcer l'effacement des anciennes
 // sauvegardes agentField* au demarrage, puis remets false.
 const RESET_SAVED_STATE_ON_START = false;
+const APPLY_STARTUP_PRESET_ON_LOAD = true;
+const STARTUP_PRESET_NAME = "IPhone";
 
 console.log("⚙️ script chargé");
 
@@ -318,6 +320,7 @@ function setup() {
   // charge paramètres + positions
   if (RESET_SAVED_STATE_ON_START) clearSavedState();
   loadParams();
+  applyStartupPreset();
 
   // GUI
   setupGUI();
@@ -764,6 +767,24 @@ function loadParams() {
   }
 }
 
+function findPresetIndexByName(name) {
+  return presets.findIndex(slot => slot && slot.name === name);
+}
+
+function applyStartupPreset() {
+  if (!APPLY_STARTUP_PRESET_ON_LOAD) return;
+
+  const startupPresetIndex = findPresetIndexByName(STARTUP_PRESET_NAME);
+  if (startupPresetIndex === -1) {
+    console.warn(`⚠️ preset de démarrage introuvable: ${STARTUP_PRESET_NAME}`);
+    return;
+  }
+
+  if (applyPreset(startupPresetIndex, { notify: false, updateGui: false })) {
+    console.log(`🚀 preset de démarrage appliqué: ${STARTUP_PRESET_NAME}`);
+  }
+}
+
 // ==========================================================
 // AUTRES FONCTIONS
 // ==========================================================
@@ -810,11 +831,12 @@ function savePreset(index) {
   alert(`Preset "${presets[index].name}" sauvegardé avec succès!`);
 }
 
-function loadPreset(index) {
+function applyPreset(index, options = {}) {
+  const { notify = true, updateGui = true } = options;
   if (index < 0 || index >= presets.length) return;
   if (!presets[index] || !presets[index].params) {
-    alert(`Le preset "${presets[index].name}" est vide!`);
-    return;
+    if (notify) alert(`Le preset "${presets[index].name}" est vide!`);
+    return false;
   }
 
   // Restaure les paramètres
@@ -846,12 +868,18 @@ function loadPreset(index) {
   }
 
   console.log(`📂 Preset ${index + 1} (${presets[index].name}) chargé`);
-  alert(`Preset "${presets[index].name}" chargé avec succès!`);
+  if (notify) alert(`Preset "${presets[index].name}" chargé avec succès!`);
 
   // Force la mise à jour de la GUI
-  if (window.gui) {
+  if (updateGui && window.gui) {
     window.gui.updateDisplay();
   }
+
+  return true;
+}
+
+function loadPreset(index) {
+  applyPreset(index);
 }
 
 function renamePreset(index, newName) {
