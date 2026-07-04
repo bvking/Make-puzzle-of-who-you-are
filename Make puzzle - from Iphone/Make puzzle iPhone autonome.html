@@ -164,6 +164,11 @@ const DEFAULT_PRESETS = [
     attractors: [{ name: "Rouge", x: 55.1015625, y: 454.19140625, mode: "repulse" }, { name: "Vert", x: 298.82421875, y: 736.375, mode: "attract" }, { name: "Bleu", x: 25.67666894778297, y: 22, mode: "repulse" }]
   }
 ];
+DEFAULT_PRESETS.push({
+  name: "IPhone",
+  params: JSON.parse(JSON.stringify(DEFAULT_PRESETS[0].params)),
+  attractors: JSON.parse(JSON.stringify(DEFAULT_PRESETS[0].attractors))
+});
 let presets = JSON.parse(JSON.stringify(DEFAULT_PRESETS));
 
 // -------------------- PARAMS & GUI --------------------
@@ -550,7 +555,7 @@ function setupGUI() {
 
   // --- SECTION PRESETS ---
   const presetsFolder = gui.addFolder("💾 Presets");
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < presets.length; i++) {
     const presetFolder = presetsFolder.addFolder(`Slot ${i + 1}: ${presets[i].name}`);
     presetFolder.add({
       save: () => savePreset(i)
@@ -785,7 +790,7 @@ function updateAgents() {
 // GESTION DES PRESETS
 // ==========================================================
 function savePreset(index) {
-  if (index < 0 || index >= 8) return;
+  if (index < 0 || index >= presets.length) return;
 
   // Sauvegarde une copie profonde des paramètres
   presets[index].params = JSON.parse(JSON.stringify(params));
@@ -806,7 +811,7 @@ function savePreset(index) {
 }
 
 function loadPreset(index) {
-  if (index < 0 || index >= 8) return;
+  if (index < 0 || index >= presets.length) return;
   if (!presets[index] || !presets[index].params) {
     alert(`Le preset "${presets[index].name}" est vide!`);
     return;
@@ -850,7 +855,7 @@ function loadPreset(index) {
 }
 
 function renamePreset(index, newName) {
-  if (index < 0 || index >= 8) return;
+  if (index < 0 || index >= presets.length) return;
 
   presets[index].name = newName;
 
