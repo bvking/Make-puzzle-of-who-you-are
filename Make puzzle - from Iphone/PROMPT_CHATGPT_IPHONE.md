@@ -2,6 +2,8 @@
 
 Je développe un sketch p5.js appelé “Make puzzle picture with collective construction”.
 
+Travail d'art contemporain
+
 Contexte :
 - Le sketch vient au départ du p5.js Web Editor :
   https://editor.p5js.org/bvking/sketches/PW9paSjL5
@@ -71,4 +73,4 @@ Important :
 - Le fichier autonome peut être transféré sur l’iPhone, mais iOS peut parfois ouvrir un HTML local en aperçu sans exécuter correctement le JavaScript.
 - Pour un fonctionnement fiable sans Mac allumé, il faudra probablement héberger le fichier sur GitHub Pages, Netlify, Vercel, p5.js Web Editor, ou un autre hébergement web statique.
 
-Quand je te joins le fichier `Make puzzle iPhone autonome.html`, aide-moi à le modifier directement et donne-moi une version complète corrigée.
+Quand je te joins le fichier `Make puzzle iPhone autonome.html`, aide-moi à le modifier directement et donne-moi une version complète corrigée. On va voir tous ce que l'on peut créer ensemble $
