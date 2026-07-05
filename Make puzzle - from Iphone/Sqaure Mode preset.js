@@ -1,10 +1,10 @@
 // ✅ Version enrichie – attracteurs ajustables + Bleu Perlin + GUI + sauvegarde _debut_300_agents
 // + Phases demandées :
-//   1) Œil ouvert révélé par densité (patchs comme au début)
-//   2) Crossfade 2s (œil ouvert s'estompe, œil fermé apparaît)
-//      → Ajout : pendant ces 120 frames, on alterne fond ouvert/fermé toutes les 30 frames
-//   3) Œil fermé plein cadre (hold)
-//   4) Redémarrage : même logique de révélation mais avec l'œil fermé
+//   1) Première image révélée par densité (patchs comme au début)
+//   2) Crossfade 2s (la première image s'estompe, la deuxième apparaît)
+//      → Ajout : pendant ces 120 frames, on alterne première/deuxième image toutes les 30 frames
+//   3) Deuxième image plein cadre (hold)
+//   4) Redémarrage : même logique de révélation mais avec la deuxième image
 //   → Ajout : à la FIN de la transition, baisse progressive du nombre d’agents vers 300 sur 160 frames
 
 // -------------------- ÉTAT & IMAGES --------------------
@@ -19,28 +19,31 @@ let densityMap = [];
 let densityDuration = [];
 let agentLayer;
 
-let img; // oeil ouvert
+const FIRST_IMAGE_SRC = "visage_homme.png";
+const SECOND_IMAGE_SRC = "visage_femme.png";
+
+let img; // première image révélée
 let imgReady = false;
 
-let imgClosed;            // oeil fermé
+let imgClosed;            // deuxième image affichée après transition
 let imgClosedReady = false;
 let closedRequested = false;
 
-let openAlpha = 255;      // alpha patches oeil ouvert
-let closedAlpha = 0;      // alpha fond oeil fermé pendant la transition
+let openAlpha = 255;      // alpha patches première image
+let closedAlpha = 0;      // alpha fond deuxième image pendant la transition
 let transitionActive = false;
 let transitionStartFrame = 0;
 const transitionDurationFrames = 120; // ≈2s @60fps
-const holdClosedFrames = 30;          // durée "plein cadre" œil fermé
+const holdClosedFrames = 30;          // durée "plein cadre" deuxième image
 let holdStartFrame = 0;
 
-const maxClosedAlpha = 255;           // opacité fond pendant transition (utilisée avec tint)
+const maxClosedAlpha = 255;           // opacité de la deuxième image pendant transition
 
 // Phases d'exécution
-// "open"       : révélation œil ouvert (comme au début)
+// "open"       : révélation première image (comme au début)
 // "transition" : crossfade en cours (avec flip 30 frames)
-// "hold"       : œil fermé plein cadre (agents/attracteurs continuent)
-// "relaunch"   : relance logique initiale mais avec l'œil fermé
+// "hold"       : deuxième image plein cadre (agents/attracteurs continuent)
+// "relaunch"   : relance logique initiale avec la deuxième image
 let stage = "open";
 let activePresetIndex = -1;
 let guiVisible = true;
@@ -105,7 +108,7 @@ const DEFAULT_PRESETS = [
     attractors: [{ name: "Rouge", x: 55.1015625, y: 454.19140625, mode: "repulse" }, { name: "Vert", x: 298.82421875, y: 736.375, mode: "attract" }, { name: "Bleu", x: 25.67666894778297, y: 22, mode: "repulse" }]
   }
 ];
-const IPHONE_AGENT_COUNT = 50;
+const IPHONE_AGENT_COUNT = 48;
 const IPHONE_PRESET = JSON.parse(JSON.stringify(DEFAULT_PRESETS[2]));
 IPHONE_PRESET.name = "IPhone";
 Object.assign(IPHONE_PRESET.params, {
@@ -147,7 +150,7 @@ let params = {
   // Options ajoutées
   showImageFond: true,    // affiche l'image en transparence des le demarrage
   imageFondAlpha: 55,     // opacite du fond image (0-180)
-  preloadClosed: true,     // si true, précharge l'image oeil fermé en preload()
+  preloadClosed: true,     // si true, précharge la deuxième image en preload()
   debugHeatmap: false,     // active l'affichage d'une heatmap debug (density+field)
   agentDrawEvery: 1        // dessine les agents toutes les N frames (1 = chaque frame)
 };
@@ -166,23 +169,23 @@ console.log("⚙️ script chargé");
 function preload() {
   console.log("🟣 preload() appelé");
   img = loadImage(
-    "visage_femme.png",
+    FIRST_IMAGE_SRC,
     () => {
-      console.log("🟢 image oeil ouvert chargée dans preload()");
+      console.log("🟢 première image chargée dans preload()");
       imgReady = true;
     },
-    err => console.log("🔴 erreur de chargement oeil ouvert dans preload()", err)
+    err => console.log("🔴 erreur de chargement de la première image dans preload()", err)
   );
 
-  // Précharge optionnelle de l'image fermée selon params.preloadClosed
+  // Précharge optionnelle de la deuxième image selon params.preloadClosed
   if (params && params.preloadClosed) {
     imgClosed = loadImage(
-      "visage_homme.png",
+      SECOND_IMAGE_SRC,
       () => {
-        console.log("🟢 image oeil fermé préchargée dans preload()");
+        console.log("🟢 deuxième image préchargée dans preload()");
         imgClosedReady = true;
       },
-      err => console.log("⚠️ erreur de préchargement oeil fermé dans preload()", err)
+      err => console.log("⚠️ erreur de préchargement de la deuxième image dans preload()", err)
     );
   }
 }
@@ -306,13 +309,13 @@ function setup() {
 
   // reload image pour compat Safari
   loadImage(
-    "visage_femme.png",
+    FIRST_IMAGE_SRC,
     loaded => {
-      console.log("image oeil ouvert rechargée depuis setup");
+      console.log("première image rechargée depuis setup");
       img = loaded;
       imgReady = true;
     },
-    err => console.log("⚠️ échec rechargement oeil ouvert depuis setup", err)
+    err => console.log("⚠️ échec rechargement de la première image depuis setup", err)
   );
 }
 
@@ -696,7 +699,7 @@ function setupGUI() {
   gui.add(params, "movementMode", ["champ", "attracteurs", "mixte"])
     .name("Mode Déplacement")
     .onChange(updateMovementMode);
-  gui.add(params, "agentCount", 50, 10000, 1)
+  gui.add(params, "agentCount", 48, 10000, 1)
     .name("Nombre d'agents")
     .onChange(updateAgents);
   gui.add(params, "forceRouge", 0, 5, 0.1).name("Force Rouge");
@@ -732,25 +735,25 @@ function setupGUI() {
   gui.add(params, "blueNoiseSpeed", 0.001, 0.05, 0.001).name("Bleu vitesse");
   gui.add({ save: saveParams }, "save").name("📋 Sauvegarder");
 
-  // Options ajoutées : préchargement image fermée, heatmap debug, fréquence dessin agents
+  // Options ajoutées : préchargement deuxième image, heatmap debug, fréquence dessin agents
   gui.add(params, "showImageFond").name("Voir image fond");
   gui.add(params, "imageFondAlpha", 0, 180, 1).name("Opacité fond");
-  gui.add(params, "preloadClosed").name("Précharger œil fermé").onChange(v => {
+  gui.add(params, "preloadClosed").name("Précharger 2e image").onChange(v => {
     if (v && !imgClosedReady) {
       loadImage(
-        "visage_homme.png",
+        SECOND_IMAGE_SRC,
         loaded => {
           imgClosed = loaded;
           imgClosedReady = true;
-          console.log("🟢 image oeil fermé chargée (via GUI)");
+          console.log("🟢 deuxième image chargée (via GUI)");
         },
-        err => console.log("🔴 erreur chargement image fermée via GUI", err)
+        err => console.log("🔴 erreur chargement deuxième image via GUI", err)
       );
     } else if (!v) {
       // Si on désactive le préchargement on peut libérer la référence
       imgClosedReady = false;
       imgClosed = null;
-      console.log("ℹ️ préchargement oeil fermé désactivé (GUI)");
+      console.log("ℹ️ préchargement deuxième image désactivé (GUI)");
     }
   });
   gui.add(params, "debugHeatmap").name("Afficher heatmap (debug)");
@@ -830,7 +833,7 @@ function normalizeParamsObject(target) {
   target.agentSpeed = clampNumber(target.agentSpeed, 0.1, 10, 4);
   target.agentFollowStrength = clampNumber(target.agentFollowStrength, 0, 2, 0.6);
   target.agentRandomness = clampNumber(target.agentRandomness, 0, 5, 1.2);
-  target.agentCount = Math.round(clampNumber(target.agentCount, 50, 10000, 50));
+  target.agentCount = Math.round(clampNumber(target.agentCount, 48, 10000, 48));
   target.forceRouge = clampNumber(target.forceRouge, 0, 5, 1.5);
   target.forceVert = clampNumber(target.forceVert, 0, 5, 1.5);
   target.forceBleu = clampNumber(target.forceBleu, 0, 5, 1.5);
@@ -1216,7 +1219,7 @@ function draw() {
     }
   }
 
-  // --- Phase 3 : œil fermé plein cadre (hold) ---
+  // --- Phase 3 : deuxième image plein cadre (hold) ---
   if (stage === "hold" && imgClosedReady) {
     // updatePotentialField(): pour chaque attracteur, ajoute son
     // influence aux cellules de la grille `field`. L'influence décroît
@@ -1235,7 +1238,7 @@ function draw() {
       closedRequested = false;
 
       stage = "open";
-      console.log("🔁 Retour à la phase open : révélation de l'œil ouvert.");
+      console.log("🔁 Retour à la phase open : révélation de la première image.");
     }
   }
 
@@ -1312,7 +1315,7 @@ function draw() {
       if (stage !== "hold") rect(px, py, size, size);
 
       // --- PATCHS ---
-      // Phase 1: révélation de l'œil OUVERT
+      // Phase 1: révélation de la première image
       if (
         stage === "open" &&
         densityDuration[x][y] > params.densityTimeThreshold &&
@@ -1329,7 +1332,7 @@ function draw() {
         pop();
       }
 
-      // Phase 4: relance — révélation de l'œil FERMÉ
+      // Phase 4: relance — révélation de la deuxième image
       if (
         stage === "relaunch" &&
         imgClosedReady &&
@@ -1404,18 +1407,18 @@ function draw() {
 
     if (!closedRequested && revealedRatio >= 0.6) {
       closedRequested = true;
-      console.log("🟠 Seuil 60% atteint → chargement visage_homme.png & début transition");
+      console.log("🟠 Seuil 60% atteint → chargement de la deuxième image & début transition");
       loadImage(
-        "visage_homme.png",
+        SECOND_IMAGE_SRC,
         loaded => {
           imgClosed = loaded;
           imgClosedReady = true;
-          console.log("🟢 image oeil fermé chargée");
+          console.log("🟢 deuxième image chargée");
           transitionActive = true;
           transitionStartFrame = frameCount;
           stage = "transition";
         },
-        err => console.log("🔴 erreur chargement image fermée", err)
+        err => console.log("🔴 erreur chargement deuxième image", err)
       );
     }
   }
