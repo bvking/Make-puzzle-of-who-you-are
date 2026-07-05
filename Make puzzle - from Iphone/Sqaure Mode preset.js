@@ -105,7 +105,7 @@ const DEFAULT_PRESETS = [
     attractors: [{ name: "Rouge", x: 55.1015625, y: 454.19140625, mode: "repulse" }, { name: "Vert", x: 298.82421875, y: 736.375, mode: "attract" }, { name: "Bleu", x: 25.67666894778297, y: 22, mode: "repulse" }]
   }
 ];
-const IPHONE_AGENT_COUNT = 50;
+const IPHONE_AGENT_COUNT = 48;
 const IPHONE_PRESET = JSON.parse(JSON.stringify(DEFAULT_PRESETS[2]));
 IPHONE_PRESET.name = "IPhone";
 Object.assign(IPHONE_PRESET.params, {
@@ -696,7 +696,7 @@ function setupGUI() {
   gui.add(params, "movementMode", ["champ", "attracteurs", "mixte"])
     .name("Mode Déplacement")
     .onChange(updateMovementMode);
-  gui.add(params, "agentCount", 50, 10000, 1)
+  gui.add(params, "agentCount", 48, 10000, 1)
     .name("Nombre d'agents")
     .onChange(updateAgents);
   gui.add(params, "forceRouge", 0, 5, 0.1).name("Force Rouge");
@@ -830,7 +830,7 @@ function normalizeParamsObject(target) {
   target.agentSpeed = clampNumber(target.agentSpeed, 0.1, 10, 4);
   target.agentFollowStrength = clampNumber(target.agentFollowStrength, 0, 2, 0.6);
   target.agentRandomness = clampNumber(target.agentRandomness, 0, 5, 1.2);
-  target.agentCount = Math.round(clampNumber(target.agentCount, 50, 10000, 50));
+  target.agentCount = Math.round(clampNumber(target.agentCount, 48, 10000, 48));
   target.forceRouge = clampNumber(target.forceRouge, 0, 5, 1.5);
   target.forceVert = clampNumber(target.forceVert, 0, 5, 1.5);
   target.forceBleu = clampNumber(target.forceBleu, 0, 5, 1.5);
