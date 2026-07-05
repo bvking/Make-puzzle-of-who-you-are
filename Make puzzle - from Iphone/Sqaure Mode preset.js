@@ -21,6 +21,9 @@ let agentLayer;
 
 const FIRST_IMAGE_SRC = "visage_homme.png";
 const SECOND_IMAGE_SRC = "visage_femme.png";
+const WHO_ARE_WE_PRESET_NAME = "who_are_we";
+const WHO_ARE_WE_BACKGROUND_SWITCH_THRESHOLD = 0.3;
+const WHO_ARE_WE_BACKGROUND_SWITCH_INTERVAL_MS = 500;
 
 let img; // oeil ouvert
 let imgReady = false;
@@ -33,6 +36,7 @@ let openAlpha = 255;      // alpha patches oeil ouvert
 let closedAlpha = 0;      // alpha fond oeil fermé pendant la transition
 let transitionActive = false;
 let transitionStartFrame = 0;
+let latestRevealedRatio = 0;
 const transitionDurationFrames = 120; // ≈2s @60fps
 const holdClosedFrames = 30;          // durée "plein cadre" œil fermé
 let holdStartFrame = 0;
@@ -120,6 +124,9 @@ Object.assign(IPHONE_PRESET.params, {
   preloadClosed: true
 });
 DEFAULT_PRESETS.push(IPHONE_PRESET);
+const WHO_ARE_WE_PRESET = JSON.parse(JSON.stringify(IPHONE_PRESET));
+WHO_ARE_WE_PRESET.name = WHO_ARE_WE_PRESET_NAME;
+DEFAULT_PRESETS.push(WHO_ARE_WE_PRESET);
 let presets = JSON.parse(JSON.stringify(DEFAULT_PRESETS));
 
 // -------------------- PARAMS & GUI --------------------
@@ -904,6 +911,9 @@ function enforceIphonePresetAgentCount(list) {
     if (preset && preset.name === STARTUP_PRESET_NAME && preset.params) {
       preset.params.agentCount = IPHONE_AGENT_COUNT;
     }
+    if (preset && preset.name === WHO_ARE_WE_PRESET_NAME && preset.params) {
+      preset.params.agentCount = IPHONE_AGENT_COUNT;
+    }
   }
 }
 
@@ -1074,6 +1084,7 @@ function applyPreset(index, options = {}) {
 
   // Met à jour le nombre d'agents
   updateAgents();
+  latestRevealedRatio = 0;
 
   // Met à jour le rayon des attracteurs
   for (let a of attractors) {
@@ -1116,6 +1127,28 @@ function renamePreset(index, newName) {
   alert(`Preset renommé en "${newName}"!`);
 }
 
+function isWhoAreWePresetActive() {
+  return (
+    activePresetIndex >= 0 &&
+    presets[activePresetIndex] &&
+    presets[activePresetIndex].name === WHO_ARE_WE_PRESET_NAME
+  );
+}
+
+function getBackgroundImageForCurrentPreset() {
+  if (
+    isWhoAreWePresetActive() &&
+    latestRevealedRatio >= WHO_ARE_WE_BACKGROUND_SWITCH_THRESHOLD &&
+    imgClosedReady &&
+    imgClosed
+  ) {
+    const showSecondImage =
+      Math.floor(millis() / WHO_ARE_WE_BACKGROUND_SWITCH_INTERVAL_MS) % 2 === 1;
+    return showSecondImage ? imgClosed : img;
+  }
+  return img;
+}
+
 // ==========================================================
 // DRAW + TRANSITION + RELANCE
 // ==========================================================
@@ -1131,10 +1164,11 @@ function draw() {
   }
 
   background(0);
-  if (params.showImageFond && img) {
+  const backgroundImage = getBackgroundImageForCurrentPreset();
+  if (params.showImageFond && backgroundImage) {
     push();
     tint(255, params.imageFondAlpha);
-    image(img, 0, 0, width, height);
+    image(backgroundImage, 0, 0, width, height);
     pop();
   }
 
@@ -1404,6 +1438,7 @@ function draw() {
   if (stage === "open") {
     const totalCells = gridSize * gridSize;
     const revealedRatio = revealedCount / totalCells;
+    latestRevealedRatio = revealedRatio;
 
     if (!closedRequested && revealedRatio >= 0.6) {
       closedRequested = true;
