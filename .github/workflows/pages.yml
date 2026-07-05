@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - work
+      - teinte-aleatoire
+      - teintes-aleatoires
   workflow_dispatch:
 
 permissions:
