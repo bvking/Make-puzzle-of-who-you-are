@@ -19,6 +19,9 @@ let densityMap = [];
 let densityDuration = [];
 let agentLayer;
 
+const FIRST_IMAGE_SRC = "visage_homme.png";
+const SECOND_IMAGE_SRC = "visage_femme.png";
+
 let img; // oeil ouvert
 let imgReady = false;
 
@@ -166,23 +169,23 @@ console.log("⚙️ script chargé");
 function preload() {
   console.log("🟣 preload() appelé");
   img = loadImage(
-    "visage_femme.png",
+    FIRST_IMAGE_SRC,
     () => {
-      console.log("🟢 image oeil ouvert chargée dans preload()");
+      console.log("🟢 première image homme chargée dans preload()");
       imgReady = true;
     },
-    err => console.log("🔴 erreur de chargement oeil ouvert dans preload()", err)
+    err => console.log("🔴 erreur de chargement de la première image homme dans preload()", err)
   );
 
-  // Précharge optionnelle de l'image fermée selon params.preloadClosed
+  // Précharge optionnelle de la deuxième image selon params.preloadClosed
   if (params && params.preloadClosed) {
     imgClosed = loadImage(
-      "visage_homme.png",
+      SECOND_IMAGE_SRC,
       () => {
-        console.log("🟢 image oeil fermé préchargée dans preload()");
+        console.log("🟢 deuxième image femme préchargée dans preload()");
         imgClosedReady = true;
       },
-      err => console.log("⚠️ erreur de préchargement oeil fermé dans preload()", err)
+      err => console.log("⚠️ erreur de préchargement de la deuxième image femme dans preload()", err)
     );
   }
 }
@@ -306,13 +309,13 @@ function setup() {
 
   // reload image pour compat Safari
   loadImage(
-    "visage_femme.png",
+    FIRST_IMAGE_SRC,
     loaded => {
-      console.log("image oeil ouvert rechargée depuis setup");
+      console.log("première image homme rechargée depuis setup");
       img = loaded;
       imgReady = true;
     },
-    err => console.log("⚠️ échec rechargement oeil ouvert depuis setup", err)
+    err => console.log("⚠️ échec rechargement première image homme depuis setup", err)
   );
 }
 
@@ -738,11 +741,11 @@ function setupGUI() {
   gui.add(params, "preloadClosed").name("Précharger œil fermé").onChange(v => {
     if (v && !imgClosedReady) {
       loadImage(
-        "visage_homme.png",
+        SECOND_IMAGE_SRC,
         loaded => {
           imgClosed = loaded;
           imgClosedReady = true;
-          console.log("🟢 image oeil fermé chargée (via GUI)");
+          console.log("🟢 deuxième image femme chargée (via GUI)");
         },
         err => console.log("🔴 erreur chargement image fermée via GUI", err)
       );
@@ -1404,13 +1407,13 @@ function draw() {
 
     if (!closedRequested && revealedRatio >= 0.6) {
       closedRequested = true;
-      console.log("🟠 Seuil 60% atteint → chargement visage_homme.png & début transition");
+      console.log("🟠 Seuil 60% atteint → chargement visage_femme.png & début transition");
       loadImage(
-        "visage_homme.png",
+        SECOND_IMAGE_SRC,
         loaded => {
           imgClosed = loaded;
           imgClosedReady = true;
-          console.log("🟢 image oeil fermé chargée");
+          console.log("🟢 deuxième image femme chargée");
           transitionActive = true;
           transitionStartFrame = frameCount;
           stage = "transition";
