@@ -7,6 +7,7 @@ on:
       - work
       - teinte-aleatoire
       - teintes-aleatoires
+      - prendre-photo-10-photos
   workflow_dispatch:
 
 permissions:
