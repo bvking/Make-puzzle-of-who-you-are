@@ -6,6 +6,8 @@
   const CAPTURE_FACE_TOTAL_PHOTOS = 10;
   const CAPTURE_FACE_INTERVAL_MS = 1000;
   const CAPTURE_FACE_OUTPUT_SIZE = 512;
+  const CAPTURE_FACE_PANEL_HIDE_DELAY_MS = 700;
+  const CAPTURE_FACE_STORAGE_KEY = "captureFaceAlignedPhotos";
   const TARGET_EYE_Y_RATIO = 0.38;
   const TARGET_EYE_DISTANCE_RATIO = 0.34;
   const FACE_MASK_SCALE = 1.12;
@@ -24,6 +26,7 @@
 
   let captureStream = null;
   let captureTimer = null;
+  let capturePanelHideTimer = null;
   let captureInProgress = false;
   let faceMeshInstance = null;
   let faceMeshLoadingPromise = null;
@@ -121,6 +124,12 @@
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         pointer-events: auto;
+        transition: opacity 220ms ease, transform 220ms ease;
+      }
+      .capture-face-panel.is-hiding {
+        opacity: 0;
+        transform: translateY(10px);
+        pointer-events: none;
       }
       .capture-face-preview-row {
         display: flex;
@@ -158,6 +167,10 @@
 
   function ensureCapturePanel() {
     ensureCaptureStyles();
+    if (capturePanelHideTimer) {
+      window.clearTimeout(capturePanelHideTimer);
+      capturePanelHideTimer = null;
+    }
 
     let panel = document.getElementById("capture-face-panel");
     if (!panel) {
@@ -173,6 +186,7 @@
       `;
       document.body.appendChild(panel);
     }
+    panel.classList.remove("is-hiding");
 
     return {
       panel,
@@ -490,6 +504,33 @@
     gallery.appendChild(img);
   }
 
+  function saveCapturedGallery(gallery) {
+    const urls = Array.from(gallery.querySelectorAll("img"))
+      .map(image => image && image.src)
+      .filter(src => src && src.startsWith("data:image/"))
+      .slice(-CAPTURE_FACE_TOTAL_PHOTOS);
+
+    try {
+      localStorage.setItem(CAPTURE_FACE_STORAGE_KEY, JSON.stringify(urls));
+    } catch (err) {
+      console.warn("Impossible de sauvegarder les visages captures", err);
+    }
+  }
+
+  function hideCapturePanelAfterComplete(panel) {
+    if (capturePanelHideTimer) window.clearTimeout(capturePanelHideTimer);
+    capturePanelHideTimer = window.setTimeout(() => {
+      capturePanelHideTimer = null;
+      if (!panel || !panel.isConnected) return;
+      panel.classList.add("is-hiding");
+      window.setTimeout(() => {
+        if (panel.isConnected && panel.classList.contains("is-hiding")) {
+          panel.remove();
+        }
+      }, 260);
+    }, CAPTURE_FACE_PANEL_HIDE_DELAY_MS);
+  }
+
   async function startCaptureSequence() {
     if (captureInProgress) return;
     activateCaptureFacePreset();
@@ -499,7 +540,7 @@
       return;
     }
 
-    const { video, status, gallery } = ensureCapturePanel();
+    const { panel, video, status, gallery } = ensureCapturePanel();
     gallery.innerHTML = "";
     status.textContent = "Autorisation caméra en cours…";
     captureInProgress = true;
@@ -527,7 +568,9 @@
       }
 
       stopCaptureStream();
+      saveCapturedGallery(gallery);
       status.textContent = "10 visages détourés, centrés et affichés.";
+      hideCapturePanelAfterComplete(panel);
     } catch (err) {
       stopCaptureStream();
       status.textContent = "Capture annulée ou caméra refusée.";
