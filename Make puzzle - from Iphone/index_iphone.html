@@ -96,13 +96,234 @@
       .desktop-save-button {
         z-index: 5;
       }
+
+      .camera-test-tools {
+        position: fixed;
+        z-index: 90;
+        top: max(10px, env(safe-area-inset-top));
+        left: max(10px, env(safe-area-inset-left));
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        max-width: calc(100vw - 20px);
+        pointer-events: auto;
+      }
+
+      .camera-test-button,
+      .camera-debug-close {
+        appearance: none;
+        -webkit-appearance: none;
+        min-height: 34px;
+        padding: 0 9px;
+        border: 1px solid rgba(255, 255, 255, 0.42);
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.72);
+        color: white;
+        font: 700 11px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        letter-spacing: 0;
+      }
+
+      .camera-debug-panel {
+        position: fixed;
+        z-index: 89;
+        left: max(10px, env(safe-area-inset-left));
+        right: max(10px, env(safe-area-inset-right));
+        top: max(52px, calc(env(safe-area-inset-top) + 52px));
+        display: none;
+        grid-template-columns: 96px minmax(0, 1fr);
+        gap: 8px;
+        max-height: min(48dvh, 380px);
+        box-sizing: border-box;
+        padding: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.84);
+        color: white;
+        pointer-events: auto;
+      }
+
+      body.camera-debug-open .camera-debug-panel {
+        display: grid;
+      }
+
+      .camera-debug-video {
+        width: 96px;
+        height: 128px;
+        border-radius: 6px;
+        background: #111;
+        object-fit: cover;
+        transform: scaleX(-1);
+      }
+
+      .camera-debug-output {
+        min-width: 0;
+        max-height: calc(min(48dvh, 380px) - 18px);
+        margin: 0;
+        overflow: auto;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font: 10px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
     </style>
   </head>
   <body>
-    <script src="Sqaure%20Mode%20preset.js?v=20260705-who-are-we-v2"></script>
-    <script src="capture-face-align.js?v=20260707-face-align-hide-panel-v1"></script>
+    <div class="camera-test-tools" aria-label="Outils de test camera">
+      <button id="camera-test-button" class="camera-test-button" type="button">Test Camera</button>
+      <button id="native-capture-button" class="camera-test-button" type="button">Capture HTML</button>
+      <button id="camera-debug-close" class="camera-debug-close" type="button">Close</button>
+    </div>
+    <div id="camera-debug-panel" class="camera-debug-panel" aria-live="polite">
+      <video id="camera-debug-video" class="camera-debug-video" playsinline muted autoplay></video>
+      <pre id="camera-debug-output" class="camera-debug-output">Camera debug pret.</pre>
+    </div>
+    <script>
+      (function installCameraDebugTools() {
+        const output = document.getElementById("camera-debug-output");
+        const video = document.getElementById("camera-debug-video");
+        const testButton = document.getElementById("camera-test-button");
+        const nativeCaptureButton = document.getElementById("native-capture-button");
+        const closeButton = document.getElementById("camera-debug-close");
+        let testStream = null;
+
+        function stopTestCameraStream() {
+          if (!testStream) return;
+          for (const track of testStream.getTracks()) track.stop();
+          testStream = null;
+          if (video) video.srcObject = null;
+        }
+
+        async function readCameraPermission() {
+          if (!navigator.permissions || !navigator.permissions.query) {
+            return "navigator.permissions indisponible";
+          }
+          try {
+            const result = await navigator.permissions.query({ name: "camera" });
+            return result && result.state ? result.state : "etat inconnu";
+          } catch (err) {
+            return `${err.name || "Error"}: ${err.message || err}`;
+          }
+        }
+
+        async function collectCameraDiagnostics(label, err, extra) {
+          const mediaDevices = navigator.mediaDevices;
+          const videoInputs = [];
+          if (mediaDevices && mediaDevices.enumerateDevices) {
+            try {
+              const devices = await mediaDevices.enumerateDevices();
+              for (const device of devices) {
+                if (device && device.kind === "videoinput") {
+                  videoInputs.push({
+                    kind: device.kind,
+                    label: device.label || "(label masque avant permission)",
+                    deviceId: device.deviceId ? "present" : "absent"
+                  });
+                }
+              }
+            } catch (devicesErr) {
+              videoInputs.push({
+                error: `${devicesErr.name || "Error"}: ${devicesErr.message || devicesErr}`
+              });
+            }
+          }
+
+          return {
+            label,
+            date: new Date().toISOString(),
+            href: location.href,
+            protocol: location.protocol,
+            hostname: location.hostname,
+            isSecureContext: window.isSecureContext,
+            hasNavigatorMediaDevices: Boolean(mediaDevices),
+            hasGetUserMedia: Boolean(mediaDevices && mediaDevices.getUserMedia),
+            permissionCamera: await readCameraPermission(),
+            userAgent: navigator.userAgent,
+            videoInputs,
+            error: err
+              ? {
+                  name: err.name || "Error",
+                  message: err.message || String(err),
+                  constraint: err.constraint || err.constraintName || "",
+                  stack: err.stack || ""
+                }
+              : null,
+            extra: extra || null
+          };
+        }
+
+        async function showCameraDebug(label, err, extra) {
+          const diagnostics = await collectCameraDiagnostics(label, err, extra);
+          document.body.classList.add("camera-debug-open");
+          if (output) output.textContent = JSON.stringify(diagnostics, null, 2);
+          return diagnostics;
+        }
+
+        async function runMinimalCameraTest() {
+          stopTestCameraStream();
+          document.body.classList.add("camera-debug-open");
+          await showCameraDebug("Test Camera: avant getUserMedia", null, {
+            constraints: { video: true, audio: false }
+          });
+
+          try {
+            testStream = await navigator.mediaDevices.getUserMedia({
+              video: true,
+              audio: false
+            });
+            if (video) {
+              video.srcObject = testStream;
+              await video.play();
+            }
+            const tracks = testStream.getVideoTracks().map(track => ({
+              label: track.label,
+              readyState: track.readyState,
+              settings: track.getSettings ? track.getSettings() : {}
+            }));
+            await showCameraDebug("Test Camera: succes", null, { tracks });
+          } catch (err) {
+            await showCameraDebug("Test Camera: echec", err, {
+              constraints: { video: true, audio: false }
+            });
+          }
+        }
+
+        if (testButton) {
+          testButton.addEventListener("click", event => {
+            event.preventDefault();
+            event.stopPropagation();
+            runMinimalCameraTest();
+          });
+        }
+
+        if (nativeCaptureButton) {
+          nativeCaptureButton.addEventListener("click", event => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (typeof window.captureFace === "function") window.captureFace({ source: "native-html" });
+            else showCameraDebug("Capture HTML: window.captureFace indisponible");
+          });
+        }
+
+        if (closeButton) {
+          closeButton.addEventListener("click", event => {
+            event.preventDefault();
+            event.stopPropagation();
+            document.body.classList.remove("camera-debug-open");
+            stopTestCameraStream();
+          });
+        }
+
+        window.CameraDebug = {
+          collect: collectCameraDiagnostics,
+          show: showCameraDebug,
+          stopTestCameraStream,
+          runMinimalCameraTest
+        };
+      })();
+    </script>
+    <script src="Sqaure%20Mode%20preset.js?v=20260708-camera-touch-v1"></script>
+    <script src="capture-face-align.js?v=20260708-camera-debug-v1"></script>
     <script src="display-photo-extension.js?v=20260706-display-photo-v1"></script>
-    <script src="display-photo-background-random-extension.js?v=20260707-bg-random-v2"></script>
+    <script src="display-photo-background-random-extension.js?v=20260708-bg-random-v3"></script>
     <script>
       (function allowZeroAgentsInGui() {
         const previousSetupGUI = setupGUI;

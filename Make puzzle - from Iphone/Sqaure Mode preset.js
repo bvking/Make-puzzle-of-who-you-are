@@ -425,7 +425,7 @@ function eventComesFromUi(event) {
   return Boolean(
     target &&
     target.closest &&
-    target.closest(".dg, .iphone-controls, button, input, select, textarea")
+    target.closest(".dg, .iphone-controls, .camera-test-tools, .camera-debug-panel, button, input, select, textarea")
   );
 }
 

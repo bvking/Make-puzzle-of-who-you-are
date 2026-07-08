@@ -8,6 +8,24 @@
   const CAPTURE_FACE_OUTPUT_SIZE = 512;
   const CAPTURE_FACE_PANEL_HIDE_DELAY_MS = 700;
   const CAPTURE_FACE_STORAGE_KEY = "captureFaceAlignedPhotos";
+  const CAPTURE_FACE_VIDEO_CONSTRAINTS = [
+    {
+      video: {
+        facingMode: { ideal: "user" },
+        width: { ideal: 1280 },
+        height: { ideal: 1280 }
+      },
+      audio: false
+    },
+    {
+      video: { facingMode: "user" },
+      audio: false
+    },
+    {
+      video: true,
+      audio: false
+    }
+  ];
   const TARGET_EYE_Y_RATIO = 0.38;
   const TARGET_EYE_DISTANCE_RATIO = 0.34;
   const FACE_MASK_SCALE = 1.12;
@@ -196,6 +214,88 @@
     };
   }
 
+  function getCameraDebug() {
+    return window.CameraDebug && typeof window.CameraDebug.show === "function"
+      ? window.CameraDebug
+      : null;
+  }
+
+  async function showCaptureDiagnostics(label, err, extra) {
+    const debug = getCameraDebug();
+    if (debug) return debug.show(label, err, extra);
+    if (err) console.warn(label, err, extra || "");
+    else console.info(label, extra || "");
+    return null;
+  }
+
+  function describeCaptureTrigger(trigger) {
+    if (trigger && trigger.source) return trigger.source;
+    if (trigger && trigger.elt) return "mobile-p5-button";
+    if (trigger && trigger.domElement) return "dat-gui";
+    return "unknown";
+  }
+
+  function makeCameraError(name, message) {
+    const error = new Error(message);
+    error.name = name;
+    return error;
+  }
+
+  function shouldTryNextCameraConstraint(err) {
+    const name = err && err.name;
+    return ![
+      "NotAllowedError",
+      "PermissionDeniedError",
+      "SecurityError",
+      "MediaDevicesUnavailable"
+    ].includes(name);
+  }
+
+  async function requestUserCameraStream(status, trigger) {
+    const triggerSource = describeCaptureTrigger(trigger);
+    await showCaptureDiagnostics("Capture: avant getUserMedia", null, {
+      triggerSource,
+      constraintsTriedInOrder: CAPTURE_FACE_VIDEO_CONSTRAINTS
+    });
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      const error = makeCameraError(
+        "MediaDevicesUnavailable",
+        "navigator.mediaDevices.getUserMedia est indisponible. Sur iPhone, cela arrive souvent en HTTP non securise."
+      );
+      await showCaptureDiagnostics("Capture: getUserMedia indisponible", error, { triggerSource });
+      throw error;
+    }
+
+    let lastError = null;
+    for (const constraints of CAPTURE_FACE_VIDEO_CONSTRAINTS) {
+      try {
+        if (status) status.textContent = "Autorisation camera en cours...";
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        const tracks = stream.getVideoTracks().map(track => ({
+          label: track.label,
+          readyState: track.readyState,
+          settings: track.getSettings ? track.getSettings() : {}
+        }));
+        await showCaptureDiagnostics("Capture: getUserMedia succes", null, {
+          triggerSource,
+          constraints,
+          tracks
+        });
+        return stream;
+      } catch (err) {
+        lastError = err;
+        await showCaptureDiagnostics("Capture: getUserMedia echec", err, {
+          triggerSource,
+          constraints
+        });
+        if (!shouldTryNextCameraConstraint(err)) break;
+      }
+    }
+
+    throw lastError || makeCameraError("CameraError", "Aucune contrainte camera n'a fonctionne.");
+  }
+
   function loadScriptOnce(src) {
     return new Promise((resolve, reject) => {
       const existing = document.querySelector(`script[src="${src}"]`);
@@ -242,9 +342,25 @@
       });
       faceMeshInstance = mesh;
       return faceMeshInstance;
-    })();
+    })().catch(err => {
+      faceMeshInstance = null;
+      faceMeshLoadingPromise = null;
+      throw err;
+    });
 
     return faceMeshLoadingPromise;
+  }
+
+  async function warmUpFaceMesh(status) {
+    try {
+      await ensureFaceMesh(status);
+      await showCaptureDiagnostics("Capture: FaceMesh charge", null);
+      return true;
+    } catch (err) {
+      if (status) status.textContent = "FaceMesh indisponible : capture en recadrage simple.";
+      await showCaptureDiagnostics("Capture: FaceMesh indisponible, fallback crop", err);
+      return false;
+    }
   }
 
   async function detectFaceLandmarks(video, status) {
@@ -446,7 +562,15 @@
     const videoHeight = video.videoHeight || 0;
     if (!videoWidth || !videoHeight) return makeFallbackCrop(video);
 
-    const landmarks = await detectFaceLandmarks(video, status);
+    let landmarks = null;
+    try {
+      landmarks = await detectFaceLandmarks(video, status);
+    } catch (err) {
+      if (status) status.textContent = "Detection visage impossible : recadrage simple.";
+      await showCaptureDiagnostics("Capture: detection FaceMesh echouee, fallback crop", err);
+      return makeFallbackCrop(video);
+    }
+
     if (!landmarks) {
       if (status) status.textContent = "Visage non détecté : centrage approximatif.";
       return makeFallbackCrop(video);
@@ -531,32 +655,32 @@
     }, CAPTURE_FACE_PANEL_HIDE_DELAY_MS);
   }
 
-  async function startCaptureSequence() {
+  async function startCaptureSequence(trigger) {
     if (captureInProgress) return;
-    activateCaptureFacePreset();
-
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert("La capture caméra n'est pas disponible dans ce navigateur.");
-      return;
-    }
 
     const { panel, video, status, gallery } = ensureCapturePanel();
     gallery.innerHTML = "";
-    status.textContent = "Autorisation caméra en cours…";
+    status.textContent = "Autorisation camera en cours...";
     captureInProgress = true;
 
     try {
-      captureStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "user",
-          width: { ideal: 1280 },
-          height: { ideal: 1280 }
-        },
-        audio: false
-      });
+      const debug = getCameraDebug();
+      if (debug && typeof debug.stopTestCameraStream === "function") {
+        debug.stopTestCameraStream();
+      }
+
+      captureStream = await requestUserCameraStream(status, trigger);
+      activateCaptureFacePreset();
       video.srcObject = captureStream;
-      await video.play();
-      await ensureFaceMesh(status);
+      status.textContent = "Flux camera recu. Lecture video...";
+      try {
+        await video.play();
+        await showCaptureDiagnostics("Capture: video.play succes");
+      } catch (playErr) {
+        await showCaptureDiagnostics("Capture: video.play echec", playErr);
+        throw playErr;
+      }
+      await warmUpFaceMesh(status);
 
       for (let captured = 1; captured <= CAPTURE_FACE_TOTAL_PHOTOS; captured++) {
         if (!captureInProgress) break;
@@ -575,7 +699,7 @@
       stopCaptureStream();
       status.textContent = "Capture annulée ou caméra refusée.";
       console.warn("Capture caméra impossible", err);
-      alert("Impossible d'accéder à la caméra de l'iPhone.");
+      await showCaptureDiagnostics("Capture: echec final", err);
     }
   }
 
