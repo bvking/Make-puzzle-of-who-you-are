@@ -446,7 +446,13 @@
     const videoHeight = video.videoHeight || 0;
     if (!videoWidth || !videoHeight) return makeFallbackCrop(video);
 
-    const landmarks = await detectFaceLandmarks(video, status);
+    let landmarks = null;
+    try {
+      landmarks = await detectFaceLandmarks(video, status);
+    } catch (err) {
+      console.warn("Détection visage indisponible, capture approximative", err);
+      if (status) status.textContent = "Détection visage indisponible : centrage approximatif.";
+    }
     if (!landmarks) {
       if (status) status.textContent = "Visage non détecté : centrage approximatif.";
       return makeFallbackCrop(video);
@@ -531,6 +537,48 @@
     }, CAPTURE_FACE_PANEL_HIDE_DELAY_MS);
   }
 
+  async function requestUserCameraStream() {
+    const attempts = [
+      {
+        video: {
+          facingMode: { ideal: "user" },
+          width: { ideal: 1280 },
+          height: { ideal: 1280 }
+        },
+        audio: false
+      },
+      {
+        video: { facingMode: "user" },
+        audio: false
+      },
+      {
+        video: true,
+        audio: false
+      }
+    ];
+
+    let lastError = null;
+    for (const constraints of attempts) {
+      try {
+        return await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (err) {
+        lastError = err;
+        if (err && err.name === "NotAllowedError") break;
+      }
+    }
+    throw lastError || new Error("getUserMedia failed");
+  }
+
+  function describeCameraError(err) {
+    if (!err) return "erreur inconnue";
+    const name = err.name || "Erreur caméra";
+    if (name === "NotAllowedError") return "autorisation refusée dans Safari/iOS";
+    if (name === "NotFoundError") return "aucune caméra disponible";
+    if (name === "NotReadableError") return "caméra déjà utilisée ou bloquée par iOS";
+    if (name === "OverconstrainedError") return "contraintes vidéo incompatibles";
+    return `${name}${err.message ? `: ${err.message}` : ""}`;
+  }
+
   async function startCaptureSequence() {
     if (captureInProgress) return;
 
@@ -547,18 +595,13 @@
     try {
       // Sur iOS, la demande caméra doit rester aussi proche que possible du tap utilisateur.
       // On demande donc le flux avant de changer de preset ou de reconstruire la GUI.
-      captureStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "user",
-          width: { ideal: 1280 },
-          height: { ideal: 1280 }
-        },
-        audio: false
-      });
+      captureStream = await requestUserCameraStream();
       activateCaptureFacePreset();
+      video.setAttribute("playsinline", "");
+      video.setAttribute("webkit-playsinline", "");
+      video.muted = true;
       video.srcObject = captureStream;
       await video.play();
-      await ensureFaceMesh(status);
 
       for (let captured = 1; captured <= CAPTURE_FACE_TOTAL_PHOTOS; captured++) {
         if (!captureInProgress) break;
@@ -575,9 +618,10 @@
       hideCapturePanelAfterComplete(panel);
     } catch (err) {
       stopCaptureStream();
-      status.textContent = "Capture annulée ou caméra refusée.";
+      const reason = describeCameraError(err);
+      status.textContent = `Capture annulée : ${reason}.`;
       console.warn("Capture caméra impossible", err);
-      alert("Impossible d'accéder à la caméra de l'iPhone.");
+      alert(`Impossible d'accéder à la caméra de l'iPhone (${reason}).`);
     }
   }
 
