@@ -533,7 +533,6 @@
 
   async function startCaptureSequence() {
     if (captureInProgress) return;
-    activateCaptureFacePreset();
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       alert("La capture caméra n'est pas disponible dans ce navigateur.");
@@ -546,6 +545,8 @@
     captureInProgress = true;
 
     try {
+      // Sur iOS, la demande caméra doit rester aussi proche que possible du tap utilisateur.
+      // On demande donc le flux avant de changer de preset ou de reconstruire la GUI.
       captureStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "user",
@@ -554,6 +555,7 @@
         },
         audio: false
       });
+      activateCaptureFacePreset();
       video.srcObject = captureStream;
       await video.play();
       await ensureFaceMesh(status);

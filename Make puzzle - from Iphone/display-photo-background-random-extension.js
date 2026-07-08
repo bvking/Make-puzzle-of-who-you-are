@@ -1,6 +1,7 @@
 // Extension display-photo-backGround_random : puzzle aleatoire avec les visages captures.
 (function installDisplayPhotoBackgroundRandomExtension() {
   const PRESET_NAME = "display-photo-backGround_random";
+  const ORDERED_PRESET_NAME = "captured-face-random-order";
   const PHOTO_STORAGE_KEY = "captureFaceAlignedPhotos";
   const MAX_PHOTOS = 10;
   const MOSAIC_DELAY_MS = 1000;
@@ -22,7 +23,8 @@
     primaryLayer: null,
     alternateLayer: null,
     primaryDirty: true,
-    alternateDirty: true
+    alternateDirty: true,
+    presetName: PRESET_NAME
   };
 
   function clone(value) {
@@ -158,6 +160,10 @@
     state.primaryDirty = true;
   }
 
+  function isRandomPresetName(name) {
+    return name === PRESET_NAME || name === ORDERED_PRESET_NAME;
+  }
+
   function isPresetActive() {
     return (
       state.active &&
@@ -165,7 +171,7 @@
       activePresetIndex >= 0 &&
       Array.isArray(presets) &&
       presets[activePresetIndex] &&
-      presets[activePresetIndex].name === PRESET_NAME
+      isRandomPresetName(presets[activePresetIndex].name)
     );
   }
 
@@ -265,11 +271,15 @@
 
     for (let x = 0; x < state.grid; x++) {
       for (let y = 0; y < state.grid; y++) {
-        if (
-          densityDuration[x] &&
-          densityDuration[x][y] > params.densityTimeThreshold
-        ) {
+        const hasEnoughAgents =
+          densityMap[x] && densityMap[x][y] > params.densityThreshold;
+        const hasReachedRevealTime =
+          densityDuration[x] && densityDuration[x][y] > params.densityTimeThreshold;
+
+        if (hasEnoughAgents && hasReachedRevealTime) {
           const index = indexForCell(x, y);
+          // Même seuil que les patchs de fond : une fois ce seuil atteint,
+          // la tuile random du visage capturé reprend sa position d'origine.
           lockCell(index);
           revealed.push(index);
         }
@@ -327,7 +337,7 @@
     return Math.floor((elapsed - COMPLETE_HOLD_MS) / BLINK_INTERVAL_MS) % 2 === 1;
   }
 
-  function makePreset() {
+  function makePreset(name = PRESET_NAME) {
     const sourcePreset =
       typeof IPHONE_PRESET !== "undefined"
         ? IPHONE_PRESET
@@ -342,7 +352,7 @@
           attractors: []
         };
 
-    preset.name = PRESET_NAME;
+    preset.name = name;
     preset.params = Object.assign({}, preset.params || {}, {
       agentCount: typeof IPHONE_AGENT_COUNT === "number" ? IPHONE_AGENT_COUNT : 48,
       showImageFond: true,
@@ -354,10 +364,10 @@
     return preset;
   }
 
-  function upsertPresetInList(list) {
+  function upsertPresetInList(list, name = PRESET_NAME) {
     if (!Array.isArray(list)) return -1;
-    const existingIndex = list.findIndex(preset => preset && preset.name === PRESET_NAME);
-    const preset = makePreset();
+    const existingIndex = list.findIndex(preset => preset && preset.name === name);
+    const preset = makePreset(name);
     if (existingIndex === -1) {
       list.push(preset);
       return list.length - 1;
@@ -366,14 +376,20 @@
     return existingIndex;
   }
 
-  function upsertPreset() {
-    if (typeof DEFAULT_PRESETS !== "undefined") upsertPresetInList(DEFAULT_PRESETS);
-    if (typeof presets !== "undefined") return upsertPresetInList(presets);
+  function upsertPreset(name = PRESET_NAME) {
+    if (typeof DEFAULT_PRESETS !== "undefined") upsertPresetInList(DEFAULT_PRESETS, name);
+    if (typeof presets !== "undefined") return upsertPresetInList(presets, name);
     return -1;
   }
 
-  function activate() {
+  function upsertAllPresets() {
+    upsertPreset(PRESET_NAME);
+    return upsertPreset(ORDERED_PRESET_NAME);
+  }
+
+  function activate(name = PRESET_NAME) {
     state.active = true;
+    state.presetName = name;
     state.startedAt = Date.now();
     state.completedAt = 0;
     state.grid = 0;
@@ -389,20 +405,20 @@
     if (window.gui) window.gui.updateDisplay();
   }
 
-  function loadPreset() {
-    const presetIndex = upsertPreset();
+  function loadPreset(name = PRESET_NAME) {
+    const presetIndex = upsertPreset(name);
     if (presetIndex >= 0 && typeof applyPreset === "function") {
       const result = applyPreset(presetIndex, { notify: false, updateGui: true });
-      if (result !== false && !isPresetActive()) activate();
+      if (result !== false && !isPresetActive()) activate(name);
     }
   }
 
   const previousApplyPreset = applyPreset;
   applyPreset = function applyPresetWithBackgroundRandom(index, options = {}) {
     const result = previousApplyPreset.apply(this, arguments);
-    if (result !== false && Array.isArray(presets) && presets[index]?.name === PRESET_NAME) {
-      activate();
-    } else if (state.active && Array.isArray(presets) && presets[index]?.name !== PRESET_NAME) {
+    if (result !== false && Array.isArray(presets) && isRandomPresetName(presets[index]?.name)) {
+      activate(presets[index].name);
+    } else if (state.active && Array.isArray(presets) && !isRandomPresetName(presets[index]?.name)) {
       state.active = false;
       if (typeof resetSketchCycle === "function") resetSketchCycle();
     }
@@ -443,8 +459,11 @@
     if (!window.gui || window.gui.__displayPhotoBackgroundRandomButtonInstalled) return;
     window.gui.__displayPhotoBackgroundRandomButtonInstalled = true;
     window.gui
-      .add({ displayPhotoBackgroundRandom: loadPreset }, "displayPhotoBackgroundRandom")
+      .add({ displayPhotoBackgroundRandom: () => loadPreset(PRESET_NAME) }, "displayPhotoBackgroundRandom")
       .name(PRESET_NAME);
+    window.gui
+      .add({ capturedFaceRandomOrder: () => loadPreset(ORDERED_PRESET_NAME) }, "capturedFaceRandomOrder")
+      .name(ORDERED_PRESET_NAME);
   }
 
   const previousSetupGUI = setupGUI;
@@ -462,12 +481,14 @@
       shouldUseMobileControls() &&
       typeof addMobileControlButton === "function"
     ) {
-      addMobileControlButton("Random", PRESET_NAME, loadPreset);
+      addMobileControlButton("Random", PRESET_NAME, () => loadPreset(PRESET_NAME));
+      addMobileControlButton("FaceRnd", ORDERED_PRESET_NAME, () => loadPreset(ORDERED_PRESET_NAME));
     }
     return result;
   };
 
-  upsertPreset();
+  upsertAllPresets();
   installGuiButton();
-  window.displayPhotoBackgroundRandomPreset = loadPreset;
+  window.displayPhotoBackgroundRandomPreset = () => loadPreset(PRESET_NAME);
+  window.capturedFaceRandomOrderPreset = () => loadPreset(ORDERED_PRESET_NAME);
 })();
