@@ -53,6 +53,8 @@ let activePresetIndex = -1;
 let guiVisible = true;
 let isPaused = false;
 let mobileControls = null;
+let mobileGuiButton = null;
+let mobileGuiCloseButton = null;
 let mobilePresetButton = null;
 let mobilePauseButton = null;
 let lastTouchInteractionAt = 0;
@@ -560,6 +562,7 @@ function setGuiVisible(visible) {
   const guiRoot = document.querySelector(".dg.ac");
   if (guiRoot) guiRoot.style.display = guiVisible ? "block" : "none";
   if (document.body) document.body.classList.toggle("gui-open", guiVisible);
+  updateMobileGuiButtons();
 }
 
 function addMobileControlButton(label, title, onClick) {
@@ -575,6 +578,42 @@ function addMobileControlButton(label, title, onClick) {
     onClick(button);
   });
   return button;
+}
+
+function installMobileGuiCloseButton() {
+  if (!document.body) return;
+  if (mobileGuiCloseButton && mobileGuiCloseButton.isConnected) return;
+
+  mobileGuiCloseButton = document.createElement("button");
+  mobileGuiCloseButton.type = "button";
+  mobileGuiCloseButton.className = "iphone-gui-close-button";
+  mobileGuiCloseButton.textContent = "Fermer GUI";
+  mobileGuiCloseButton.title = "Fermer dat.GUI";
+  mobileGuiCloseButton.setAttribute("aria-label", "Fermer dat.GUI");
+  mobileGuiCloseButton.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+    setGuiVisible(false);
+  });
+  document.body.appendChild(mobileGuiCloseButton);
+}
+
+function removeMobileGuiCloseButton() {
+  if (mobileGuiCloseButton && mobileGuiCloseButton.isConnected) {
+    mobileGuiCloseButton.remove();
+  }
+  mobileGuiCloseButton = null;
+}
+
+function updateMobileGuiButtons() {
+  if (mobileGuiButton) {
+    mobileGuiButton.elt.classList.toggle("is-active", guiVisible);
+  }
+  if (mobileGuiCloseButton) {
+    const showClose = guiVisible && shouldUseMobileControls();
+    mobileGuiCloseButton.style.display = showClose ? "block" : "none";
+    mobileGuiCloseButton.setAttribute("aria-hidden", showClose ? "false" : "true");
+  }
 }
 
 function updateMobilePresetButton() {
@@ -665,6 +704,7 @@ function setupMobileControls() {
     if (saveButton) saveButton.style.display = "";
     if (document.body) document.body.classList.remove("mobile-ui-active");
     setGuiVisible(true);
+    removeMobileGuiCloseButton();
     return;
   }
 
@@ -677,8 +717,9 @@ function setupMobileControls() {
   if (mobileControls) mobileControls.remove();
   mobileControls = createDiv("");
   mobileControls.addClass("iphone-controls");
+  installMobileGuiCloseButton();
 
-  addMobileControlButton("GUI", "Afficher ou masquer dat.GUI", button => {
+  mobileGuiButton = addMobileControlButton("GUI", "Afficher ou masquer dat.GUI", button => {
     setGuiVisible(!guiVisible);
     button.elt.classList.toggle("is-active", guiVisible);
   });
@@ -692,6 +733,7 @@ function setupMobileControls() {
   addMobileControlButton("Reset", "Relancer le cycle", resetSketchCycle);
   mobilePauseButton = addMobileControlButton("Pause", "Pause ou lecture", togglePauseFromMobile);
 
+  updateMobileGuiButtons();
   updateMobilePresetButton();
   updateMobilePauseButton();
 }

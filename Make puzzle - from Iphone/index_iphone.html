@@ -123,6 +123,37 @@
         letter-spacing: 0;
       }
 
+      .camera-debug-close {
+        display: none;
+      }
+
+      body.camera-debug-open .camera-debug-close {
+        display: inline-block;
+      }
+
+      .iphone-gui-close-button {
+        appearance: none;
+        -webkit-appearance: none;
+        position: fixed;
+        z-index: 96;
+        top: max(10px, env(safe-area-inset-top));
+        right: max(10px, env(safe-area-inset-right));
+        display: none;
+        min-height: 38px;
+        padding: 0 11px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.92);
+        color: black;
+        font: 800 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        letter-spacing: 0;
+        pointer-events: auto;
+      }
+
+      body.mobile-ui-active.gui-open .iphone-gui-close-button {
+        display: block;
+      }
+
       .camera-debug-panel {
         position: fixed;
         z-index: 89;
@@ -170,7 +201,7 @@
     <div class="camera-test-tools" aria-label="Outils de test camera">
       <button id="camera-test-button" class="camera-test-button" type="button">Test Camera</button>
       <button id="native-capture-button" class="camera-test-button" type="button">Capture HTML</button>
-      <button id="camera-debug-close" class="camera-debug-close" type="button">Close</button>
+      <button id="camera-debug-close" class="camera-debug-close" type="button">Fermer debug</button>
     </div>
     <div id="camera-debug-panel" class="camera-debug-panel" aria-live="polite">
       <video id="camera-debug-video" class="camera-debug-video" playsinline muted autoplay></video>
@@ -320,7 +351,7 @@
         };
       })();
     </script>
-    <script src="Sqaure%20Mode%20preset.js?v=20260708-camera-touch-v1"></script>
+    <script src="Sqaure%20Mode%20preset.js?v=20260708-gui-close-v1"></script>
     <script src="capture-face-align.js?v=20260708-camera-debug-v1"></script>
     <script src="display-photo-extension.js?v=20260706-display-photo-v1"></script>
     <script src="display-photo-background-random-extension.js?v=20260708-bg-random-v3"></script>
