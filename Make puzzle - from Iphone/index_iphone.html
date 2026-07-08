@@ -59,6 +59,41 @@
         -webkit-overflow-scrolling: touch;
       }
 
+      .dg.ac .close-button {
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+      }
+
+      .mobile-ui-active.gui-open .dg.ac {
+        transform: none;
+        left: max(10px, env(safe-area-inset-left));
+        right: max(10px, env(safe-area-inset-right));
+        top: max(10px, env(safe-area-inset-top));
+        width: auto !important;
+        z-index: 80;
+      }
+
+      .mobile-ui-active.gui-open .dg.ac .dg.main {
+        width: 100% !important;
+        max-height: calc(100dvh - 96px - env(safe-area-inset-bottom));
+      }
+
+      .mobile-ui-active.gui-open .dg.ac .close-button {
+        position: fixed;
+        left: max(10px, env(safe-area-inset-left));
+        right: max(10px, env(safe-area-inset-right));
+        bottom: max(56px, calc(env(safe-area-inset-bottom) + 56px));
+        width: auto !important;
+        height: 38px;
+        line-height: 38px;
+        border-radius: 9px;
+        background: rgba(7, 10, 14, 0.9);
+        color: #fff;
+        text-align: center;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+      }
+
       .iphone-controls {
         position: fixed;
         z-index: 30;
