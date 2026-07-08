@@ -678,10 +678,19 @@ function setupMobileControls() {
   mobileControls = createDiv("");
   mobileControls.addClass("iphone-controls");
 
-  addMobileControlButton("GUI", "Afficher ou masquer dat.GUI", button => {
+  const guiButton = addMobileControlButton("GUI", "Afficher ou masquer dat.GUI", button => {
     setGuiVisible(!guiVisible);
     button.elt.classList.toggle("is-active", guiVisible);
   });
+  addMobileControlButton("Close", "Masquer dat.GUI", () => {
+    setGuiVisible(false);
+    guiButton.elt.classList.remove("is-active");
+  });
+  mobileControls.elt.insertBefore(
+    mobileControls.elt.lastElementChild,
+    guiButton.elt
+  );
+  guiButton.elt.classList.toggle("is-active", guiVisible);
   addMobileControlButton("IPhone", "Recharger le preset IPhone", reloadStartupPreset);
   mobilePresetButton = addMobileControlButton(
     "Preset",
