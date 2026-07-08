@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="project-date" content="2026-07-08" />
     <title>Surfaces bleutees avec attracteurs - iPhone</title>
 
     <script src="https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js"></script>
@@ -95,6 +96,20 @@
 
       .desktop-save-button {
         z-index: 5;
+      }
+
+      .project-date-badge {
+        position: fixed;
+        z-index: 28;
+        right: max(10px, env(safe-area-inset-right));
+        bottom: max(56px, calc(env(safe-area-inset-bottom) + 56px));
+        padding: 4px 7px;
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.56);
+        color: rgba(255, 255, 255, 0.84);
+        font: 700 10px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        letter-spacing: 0;
+        pointer-events: none;
       }
 
       .camera-test-tools {
@@ -198,6 +213,7 @@
     </style>
   </head>
   <body>
+    <div class="project-date-badge" aria-label="Date du projet">08/07/2026</div>
     <div class="camera-test-tools" aria-label="Outils de test camera">
       <button id="camera-test-button" class="camera-test-button" type="button">Test Camera</button>
       <button id="native-capture-button" class="camera-test-button" type="button">Capture HTML</button>
