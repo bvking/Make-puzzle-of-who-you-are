@@ -2,6 +2,7 @@
 (function installDisplayPhotoBackgroundRandomExtension() {
   const PRESET_NAME = "display-photo-backGround_random";
   const ORDERED_PRESET_NAME = "captured-face-random-order";
+  const ORDER_RANDOM_PRESET_NAME = "order-random";
   const PHOTO_STORAGE_KEY = "captureFaceAlignedPhotos";
   const MAX_PHOTOS = 10;
   const MOSAIC_DELAY_MS = 1000;
@@ -161,7 +162,7 @@
   }
 
   function isRandomPresetName(name) {
-    return name === PRESET_NAME || name === ORDERED_PRESET_NAME;
+    return name === PRESET_NAME || name === ORDERED_PRESET_NAME || name === ORDER_RANDOM_PRESET_NAME;
   }
 
   function isPresetActive() {
@@ -384,7 +385,8 @@
 
   function upsertAllPresets() {
     upsertPreset(PRESET_NAME);
-    return upsertPreset(ORDERED_PRESET_NAME);
+    upsertPreset(ORDERED_PRESET_NAME);
+    return upsertPreset(ORDER_RANDOM_PRESET_NAME);
   }
 
   function activate(name = PRESET_NAME) {
@@ -464,6 +466,9 @@
     window.gui
       .add({ capturedFaceRandomOrder: () => loadPreset(ORDERED_PRESET_NAME) }, "capturedFaceRandomOrder")
       .name(ORDERED_PRESET_NAME);
+    window.gui
+      .add({ orderRandom: () => loadPreset(ORDER_RANDOM_PRESET_NAME) }, "orderRandom")
+      .name(ORDER_RANDOM_PRESET_NAME);
   }
 
   const previousSetupGUI = setupGUI;
@@ -483,6 +488,7 @@
     ) {
       addMobileControlButton("Random", PRESET_NAME, () => loadPreset(PRESET_NAME));
       addMobileControlButton("FaceRnd", ORDERED_PRESET_NAME, () => loadPreset(ORDERED_PRESET_NAME));
+      addMobileControlButton("Order", ORDER_RANDOM_PRESET_NAME, () => loadPreset(ORDER_RANDOM_PRESET_NAME));
     }
     return result;
   };
@@ -491,4 +497,5 @@
   installGuiButton();
   window.displayPhotoBackgroundRandomPreset = () => loadPreset(PRESET_NAME);
   window.capturedFaceRandomOrderPreset = () => loadPreset(ORDERED_PRESET_NAME);
+  window.orderRandomPreset = () => loadPreset(ORDER_RANDOM_PRESET_NAME);
 })();
