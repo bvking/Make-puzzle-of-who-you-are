@@ -11,12 +11,10 @@
 html,body{margin:0;min-height:100%;background:#050505;color:#fff;overscroll-behavior:none}
 body{padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom)}
 main{width:min(100%,520px);margin:auto;padding:12px 0 28px}
-h1{font-size:21px;margin:4px 0 4px} .lead{margin:0 0 14px;color:#b8b8b8;font-size:13px;line-height:1.35}
-.stage{display:none}.stage.active{display:block}
-.card{background:#111;border:1px solid #2b2b2b;border-radius:18px;padding:12px;box-shadow:0 10px 30px #0008}
-.viewport{position:relative;aspect-ratio:1/1;overflow:hidden;border-radius:14px;background:#000;touch-action:none}
-video,.viewport canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-video{transform:scaleX(-1)}
+h1{font-size:21px;margin:4px 0}.lead{margin:0 0 14px;color:#b8b8b8;font-size:13px;line-height:1.35}
+.stage{display:none}.stage.active{display:block}.card{background:#111;border:1px solid #2b2b2b;border-radius:18px;padding:12px;box-shadow:0 10px 30px #0008}
+.viewport{position:relative;aspect-ratio:1;overflow:hidden;border-radius:14px;background:#000;touch-action:none}
+video,.viewport canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}video{transform:scaleX(-1)}
 .guide{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 31% 42% at 50% 46%,transparent 68%,rgba(0,0,0,.68) 69%);border:1px solid #ffffff20}
 .guide:before,.guide:after{content:"";position:absolute;left:33%;right:33%;height:1px;background:#68d8ffcc}.guide:before{top:39%}.guide:after{top:52%}
 .controls{display:grid;gap:9px;margin-top:12px}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
@@ -29,109 +27,121 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 .puzzle{position:relative;aspect-ratio:1;background:#070707;border-radius:14px;overflow:hidden;touch-action:none}
 .tile{position:absolute;background-repeat:no-repeat;border:1px solid rgba(255,255,255,.28);transition:transform .16s ease;border-radius:4px}
 .win{padding:10px 4px 2px;text-align:center;font-weight:800;color:#9fffc0;display:none}.win.show{display:block}
-.note{font-size:12px;color:#aaa;line-height:1.4;margin:10px 2px 0}
-.badge{display:inline-block;border:1px solid #3b3b3b;border-radius:999px;padding:4px 8px;font-size:11px;color:#bbb;margin-bottom:8px}
+.note{font-size:12px;color:#aaa;line-height:1.4;margin:10px 2px 0}.badge{display:inline-block;border:1px solid #3b3b3b;border-radius:999px;padding:4px 8px;font-size:11px;color:#bbb;margin-bottom:8px}
 </style>
 </head>
 <body>
 <main>
-<span class="badge">Prototype iPhone · 22/07/2026</span>
+<span class="badge">Alignement automatique du visage · 22/07/2026</span>
 <h1>Taquin — deux visages</h1>
-<p class="lead">Prends deux portraits, aligne-les, mélange-les, puis reconstitue le visage.</p>
-
-<section id="captureStage" class="stage active">
-  <div class="card">
-    <div class="viewport"><video id="video" playsinline muted autoplay></video><div class="guide"></div></div>
-    <div class="controls">
-      <div class="row"><button id="startCamera">Activer la caméra</button><button id="capture" disabled>Prendre le visage 1</button></div>
-      <div class="row"><button id="switchCamera" class="secondary">Changer caméra</button><button id="resetAll" class="danger">Recommencer</button></div>
-    </div>
-    <div id="captureStatus" class="status">Place les yeux sur la ligne supérieure et la bouche sur la ligne inférieure.</div>
-    <div class="thumbrow"><div id="thumb1" class="thumb"></div><div id="thumb2" class="thumb"></div></div>
-  </div>
-</section>
-
-<section id="alignStage" class="stage">
-  <div class="card">
-    <div id="alignView" class="viewport"><canvas id="alignCanvas"></canvas><div class="guide"></div></div>
-    <div class="controls">
-      <label>Horizontal <input id="offsetX" type="range" min="-160" max="160" value="0"><span id="offsetXVal" class="value">0</span></label>
-      <label>Vertical <input id="offsetY" type="range" min="-160" max="160" value="0"><span id="offsetYVal" class="value">0</span></label>
-      <label>Zoom <input id="scale" type="range" min="70" max="145" value="100"><span id="scaleVal" class="value">100%</span></label>
-      <label>Rotation <input id="rotation" type="range" min="-15" max="15" step="0.2" value="0"><span id="rotationVal" class="value">0°</span></label>
-      <label>Mélange <input id="blend" type="range" min="0" max="100" value="50"><span id="blendVal" class="value">50%</span></label>
-      <div class="row"><button id="backCapture" class="secondary">Refaire les photos</button><button id="makePuzzle">Créer le taquin</button></div>
-    </div>
-    <p class="note">Le visage 1 reste fixe. Ajuste le visage 2 jusqu’à superposer précisément les yeux, le nez et la bouche.</p>
-  </div>
-</section>
-
-<section id="gameStage" class="stage">
-  <div class="card">
-    <div id="puzzle" class="puzzle"></div>
-    <div id="win" class="win">Visage reconstitué.</div>
-    <div class="controls"><div class="row"><button id="shuffle" class="secondary">Mélanger</button><button id="showSolution" class="secondary">Voir la solution</button></div><button id="backAlign">Modifier le morphing</button></div>
-    <p class="note">Touche une case voisine de l’espace vide. La grille est mélangée uniquement par des déplacements valides, donc elle reste toujours résoluble.</p>
-  </div>
-</section>
+<p class="lead">Les yeux, le nez et la bouche sont détectés puis superposés automatiquement avant le mélange.</p>
+<section id="captureStage" class="stage active"><div class="card">
+<div class="viewport"><video id="video" playsinline muted autoplay></video><div class="guide"></div></div>
+<div class="controls"><div class="row"><button id="startCamera">Activer la caméra</button><button id="capture" disabled>Prendre le visage 1</button></div>
+<div class="row"><button id="switchCamera" class="secondary">Changer caméra</button><button id="resetAll" class="danger">Recommencer</button></div></div>
+<div id="captureStatus" class="status">Chargement du détecteur de visage…</div>
+<div class="thumbrow"><div id="thumb1" class="thumb"></div><div id="thumb2" class="thumb"></div></div>
+</div></section>
+<section id="alignStage" class="stage"><div class="card">
+<div class="viewport"><canvas id="alignCanvas"></canvas><div class="guide"></div></div>
+<div id="alignStatus" class="status"></div>
+<div class="controls">
+<label>Horizontal <input id="offsetX" type="range" min="-100" max="100" value="0"><span id="offsetXVal" class="value">0</span></label>
+<label>Vertical <input id="offsetY" type="range" min="-100" max="100" value="0"><span id="offsetYVal" class="value">0</span></label>
+<label>Zoom fin <input id="scale" type="range" min="85" max="115" value="100"><span id="scaleVal" class="value">100%</span></label>
+<label>Rotation fin <input id="rotation" type="range" min="-8" max="8" step="0.1" value="0"><span id="rotationVal" class="value">0°</span></label>
+<label>Mélange <input id="blend" type="range" min="0" max="100" value="50"><span id="blendVal" class="value">50%</span></label>
+<div class="row"><button id="autoAlign" class="secondary">Réaligner automatiquement</button><button id="makePuzzle">Créer le taquin</button></div>
+<button id="backCapture" class="secondary">Refaire les photos</button>
+</div>
+<p class="note">Le calcul minimise simultanément l’écart entre les deux yeux, le bout du nez et le centre de la bouche. Les curseurs servent uniquement à une correction fine.</p>
+</div></section>
+<section id="gameStage" class="stage"><div class="card">
+<div id="puzzle" class="puzzle"></div><div id="win" class="win">Visage reconstitué.</div>
+<div class="controls"><div class="row"><button id="shuffle" class="secondary">Mélanger</button><button id="showSolution" class="secondary">Voir la solution</button></div><button id="backAlign">Modifier le morphing</button></div>
+</div></section>
 </main>
-<script>
-(() => {
-  const SIZE=768, GRID=4;
-  const $=id=>document.getElementById(id);
-  const stages=['captureStage','alignStage','gameStage'];
-  const state={stream:null,facing:'user',photos:[],step:0,tiles:[],blank:GRID*GRID-1,solutionURL:'',showing:false};
-  const video=$('video'), captureBtn=$('capture'), status=$('captureStatus');
-  const alignCanvas=$('alignCanvas'), actx=alignCanvas.getContext('2d');
-  alignCanvas.width=alignCanvas.height=SIZE;
-
-  function showStage(id){stages.forEach(s=>$(s).classList.toggle('active',s===id));}
-  function stopCamera(){if(state.stream){state.stream.getTracks().forEach(t=>t.stop());state.stream=null;}video.srcObject=null;}
-  async function startCamera(){
-    stopCamera(); status.textContent='Ouverture de la caméra…';
-    try{
-      state.stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:state.facing},width:{ideal:1280},height:{ideal:1280}}});
-      video.srcObject=state.stream; await video.play(); captureBtn.disabled=false;
-      status.textContent=state.step===0?'Cadre le premier visage.':'Reproduis exactement le même cadrage pour le second visage.';
-    }catch(e){status.textContent='Caméra indisponible : '+(e.message||e)+'. Vérifie l’autorisation Safari.';}
-  }
-  function captureSquare(){
-    const c=document.createElement('canvas');c.width=c.height=SIZE;const ctx=c.getContext('2d');
-    const vw=video.videoWidth,vh=video.videoHeight;if(!vw||!vh)return null;
-    const side=Math.min(vw,vh),sx=(vw-side)/2,sy=(vh-side)/2;
-    ctx.save();ctx.translate(SIZE,0);ctx.scale(-1,1);ctx.drawImage(video,sx,sy,side,side,0,0,SIZE,SIZE);ctx.restore();
-    return c;
-  }
-  function takePhoto(){
-    const c=captureSquare();if(!c)return;
-    state.photos[state.step]=c; $('thumb'+(state.step+1)).style.backgroundImage=`url(${c.toDataURL('image/jpeg',.85)})`;
-    if(state.step===0){state.step=1;captureBtn.textContent='Prendre le visage 2';status.textContent='Garde la même distance et replace les yeux sur la ligne supérieure.';}
-    else{stopCamera();captureBtn.textContent='Prendre le visage 1';state.step=0;showStage('alignStage');renderBlend();}
-  }
-  function vals(){return {x:+$('offsetX').value,y:+$('offsetY').value,s:+$('scale').value/100,r:+$('rotation').value*Math.PI/180,a:+$('blend').value/100};}
-  function drawPhoto2(ctx,v,alpha){ctx.save();ctx.globalAlpha=alpha;ctx.translate(SIZE/2+v.x,SIZE/2+v.y);ctx.rotate(v.r);ctx.scale(v.s,v.s);ctx.drawImage(state.photos[1],-SIZE/2,-SIZE/2,SIZE,SIZE);ctx.restore();}
-  function renderBlend(target=actx){
-    if(state.photos.length<2)return;const v=vals();target.clearRect(0,0,SIZE,SIZE);target.globalAlpha=1;target.drawImage(state.photos[0],0,0,SIZE,SIZE);drawPhoto2(target,v,v.a);target.globalAlpha=1;
-    $('offsetXVal').textContent=v.x;$('offsetYVal').textContent=v.y;$('scaleVal').textContent=Math.round(v.s*100)+'%';$('rotationVal').textContent=(v.r*180/Math.PI).toFixed(1)+'°';$('blendVal').textContent=Math.round(v.a*100)+'%';
-  }
-  ['offsetX','offsetY','scale','rotation','blend'].forEach(id=>$(id).addEventListener('input',()=>renderBlend()));
-
-  function finalImage(){const c=document.createElement('canvas');c.width=c.height=SIZE;renderBlend(c.getContext('2d'));return c;}
-  function buildPuzzle(){state.solutionURL=finalImage().toDataURL('image/jpeg',.92);state.tiles=Array.from({length:GRID*GRID},(_,i)=>i);state.blank=GRID*GRID-1;createTiles();shuffle(180);showStage('gameStage');}
-  function createTiles(){const root=$('puzzle');root.innerHTML='';for(let i=0;i<GRID*GRID-1;i++){const el=document.createElement('div');el.className='tile';el.dataset.tile=i;el.addEventListener('click',()=>moveTile(i));root.appendChild(el);}layout();}
-  function layout(){
-    const root=$('puzzle'),w=root.clientWidth||480,ts=w/GRID;root.querySelectorAll('.tile').forEach(el=>{const tile=+el.dataset.tile,pos=state.tiles.indexOf(tile),r=Math.floor(pos/GRID),c=pos%GRID,sr=Math.floor(tile/GRID),sc=tile%GRID;el.style.width=el.style.height=ts+'px';el.style.backgroundImage=`url(${state.solutionURL})`;el.style.backgroundSize=`${w}px ${w}px`;el.style.backgroundPosition=`${-sc*ts}px ${-sr*ts}px`;el.style.transform=`translate(${c*ts}px,${r*ts}px)`;el.style.visibility=state.showing?'hidden':'visible';});$('win').classList.toggle('show',isSolved()&&!state.showing);}
-  function adjacent(a,b){const ar=Math.floor(a/GRID),ac=a%GRID,br=Math.floor(b/GRID),bc=b%GRID;return Math.abs(ar-br)+Math.abs(ac-bc)===1;}
-  function moveTile(tile){if(state.showing)return;const p=state.tiles.indexOf(tile),b=state.tiles.indexOf(state.blank);if(!adjacent(p,b))return;[state.tiles[p],state.tiles[b]]=[state.tiles[b],state.tiles[p]];layout();}
-  function shuffle(n=150){state.showing=false;let prev=-1;for(let k=0;k<n;k++){const b=state.tiles.indexOf(state.blank),opts=[];for(let i=0;i<state.tiles.length;i++)if(adjacent(i,b)&&i!==prev)opts.push(i);const p=opts[Math.floor(Math.random()*opts.length)];prev=b;[state.tiles[p],state.tiles[b]]=[state.tiles[b],state.tiles[p]];}$('puzzle').style.backgroundImage='none';layout();}
-  function isSolved(){return state.tiles.every((v,i)=>v===i);}
-  function showSolution(){state.showing=!state.showing;$('puzzle').style.background=state.showing?`#000 url(${state.solutionURL}) center/cover no-repeat`:'#070707';$('showSolution').textContent=state.showing?'Revenir au jeu':'Voir la solution';layout();}
-  function resetAll(){stopCamera();state.photos=[];state.step=0;captureBtn.textContent='Prendre le visage 1';captureBtn.disabled=true;$('thumb1').style.backgroundImage=$('thumb2').style.backgroundImage='none';showStage('captureStage');status.textContent='Place les yeux sur la ligne supérieure et la bouche sur la ligne inférieure.';}
-
-  $('startCamera').onclick=startCamera;$('capture').onclick=takePhoto;$('switchCamera').onclick=()=>{state.facing=state.facing==='user'?'environment':'user';startCamera();};$('resetAll').onclick=resetAll;
-  $('backCapture').onclick=resetAll;$('makePuzzle').onclick=buildPuzzle;$('shuffle').onclick=()=>shuffle(180);$('showSolution').onclick=showSolution;$('backAlign').onclick=()=>{state.showing=false;showStage('alignStage');renderBlend();};
-  window.addEventListener('resize',()=>requestAnimationFrame(layout));window.addEventListener('pagehide',stopCamera);
-})();
+<script type="module">
+import {FaceLandmarker,FilesetResolver} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/+esm";
+const SIZE=768,GRID=4,$=id=>document.getElementById(id),stages=['captureStage','alignStage','gameStage'];
+const state={stream:null,facing:'user',photos:[],marks:[],step:0,tiles:[],blank:15,solutionURL:'',showing:false,landmarker:null,auto:{scale:1,rot:0,tx:0,ty:0}};
+const video=$('video'),captureBtn=$('capture'),status=$('captureStatus'),alignCanvas=$('alignCanvas'),actx=alignCanvas.getContext('2d');
+alignCanvas.width=alignCanvas.height=SIZE;
+function showStage(id){stages.forEach(s=>$(s).classList.toggle('active',s===id))}
+async function initLandmarker(){
+ try{
+  const vision=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm");
+  state.landmarker=await FaceLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",delegate:"GPU"},runningMode:"IMAGE",numFaces:1,minFaceDetectionConfidence:.55,minFacePresenceConfidence:.55,minTrackingConfidence:.5});
+  status.textContent='Détecteur prêt. Active la caméra et cadre le visage de face.';
+ }catch(e){status.textContent='Détecteur indisponible. Le réglage manuel restera utilisable.';console.error(e)}
+}
+initLandmarker();
+function stopCamera(){if(state.stream){state.stream.getTracks().forEach(t=>t.stop());state.stream=null}video.srcObject=null}
+async function startCamera(){
+ stopCamera();status.textContent='Ouverture de la caméra…';
+ try{state.stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:state.facing},width:{ideal:1280},height:{ideal:1280}}});video.srcObject=state.stream;await video.play();captureBtn.disabled=false;status.textContent=state.step?'Reproduis le cadrage du premier visage.':'Place le visage de face, yeux ouverts.'}
+ catch(e){status.textContent='Caméra indisponible : '+(e.message||e)}
+}
+function captureSquare(){
+ const c=document.createElement('canvas');c.width=c.height=SIZE;const ctx=c.getContext('2d'),vw=video.videoWidth,vh=video.videoHeight;if(!vw||!vh)return null;
+ const side=Math.min(vw,vh),sx=(vw-side)/2,sy=(vh-side)/2;ctx.save();ctx.translate(SIZE,0);ctx.scale(-1,1);ctx.drawImage(video,sx,sy,side,side,0,0,SIZE,SIZE);ctx.restore();return c
+}
+function average(lm,ids){let x=0,y=0;ids.forEach(i=>{x+=lm[i].x*SIZE;y+=lm[i].y*SIZE});return{x:x/ids.length,y:y/ids.length}}
+function anchors(lm){return[
+ average(lm,[33,133,159,145]),
+ average(lm,[362,263,386,374]),
+ average(lm,[1,4]),
+ average(lm,[13,14,61,291])
+]}
+function detect(c){
+ if(!state.landmarker)return null;
+ const r=state.landmarker.detect(c);return r.faceLandmarks?.[0]||null
+}
+function similarity(src,dst){
+ const n=src.length,cs=src.reduce((a,p)=>({x:a.x+p.x/n,y:a.y+p.y/n}),{x:0,y:0}),cd=dst.reduce((a,p)=>({x:a.x+p.x/n,y:a.y+p.y/n}),{x:0,y:0});
+ let A=0,B=0,D=0;for(let i=0;i<n;i++){const sx=src[i].x-cs.x,sy=src[i].y-cs.y,dx=dst[i].x-cd.x,dy=dst[i].y-cd.y;A+=sx*dx+sy*dy;B+=sx*dy-sy*dx;D+=sx*sx+sy*sy}
+ const scale=Math.hypot(A,B)/Math.max(D,1e-6),rot=Math.atan2(B,A),co=Math.cos(rot),si=Math.sin(rot);
+ return{scale,rot,tx:cd.x-scale*(co*cs.x-si*cs.y),ty:cd.y-scale*(si*cs.x+co*cs.y)}
+}
+function autoAlign(){
+ if(state.marks[0]&&state.marks[1]){
+  state.auto=similarity(anchors(state.marks[1]),anchors(state.marks[0]));
+  ['offsetX','offsetY','rotation'].forEach(id=>$(id).value=0);$('scale').value=100;
+  $('alignStatus').textContent='Alignement automatique réussi : yeux, nez et bouche superposés.';
+ }else{$('alignStatus').textContent='Points du visage non détectés sur une photo : utilise les réglages fins ou refais les portraits de face.'}
+ renderBlend()
+}
+function takePhoto(){
+ const c=captureSquare();if(!c)return;const lm=detect(c);
+ if(state.landmarker&&!lm){status.textContent='Visage non détecté. Regarde l’objectif, éclaire le visage et recommence.';return}
+ state.photos[state.step]=c;state.marks[state.step]=lm;$('thumb'+(state.step+1)).style.backgroundImage=`url(${c.toDataURL('image/jpeg',.85)})`;
+ if(state.step===0){state.step=1;captureBtn.textContent='Prendre le visage 2';status.textContent='Garde la même distance et la tête bien droite.'}
+ else{stopCamera();state.step=0;captureBtn.textContent='Prendre le visage 1';showStage('alignStage');autoAlign()}
+}
+function fine(){return{x:+$('offsetX').value,y:+$('offsetY').value,s:+$('scale').value/100,r:+$('rotation').value*Math.PI/180,a:+$('blend').value/100}}
+function drawPhoto2(ctx,v,alpha){
+ const a=state.auto,co=Math.cos(a.rot),si=Math.sin(a.rot),cx=SIZE/2,cy=SIZE/2;
+ const baseCx=a.scale*(co*cx-si*cy)+a.tx,baseCy=a.scale*(si*cx+co*cy)+a.ty;
+ ctx.save();ctx.globalAlpha=alpha;ctx.translate(baseCx+v.x,baseCy+v.y);ctx.rotate(a.rot+v.r);ctx.scale(a.scale*v.s,a.scale*v.s);ctx.drawImage(state.photos[1],-cx,-cy,SIZE,SIZE);ctx.restore()
+}
+function renderBlend(target=actx){
+ if(state.photos.length<2)return;const v=fine();target.clearRect(0,0,SIZE,SIZE);target.globalAlpha=1;target.drawImage(state.photos[0],0,0,SIZE,SIZE);drawPhoto2(target,v,v.a);target.globalAlpha=1;
+ $('offsetXVal').textContent=v.x;$('offsetYVal').textContent=v.y;$('scaleVal').textContent=Math.round(v.s*100)+'%';$('rotationVal').textContent=(v.r*180/Math.PI).toFixed(1)+'°';$('blendVal').textContent=Math.round(v.a*100)+'%'
+}
+['offsetX','offsetY','scale','rotation','blend'].forEach(id=>$(id).addEventListener('input',()=>renderBlend()));
+function finalImage(){const c=document.createElement('canvas');c.width=c.height=SIZE;renderBlend(c.getContext('2d'));return c}
+function buildPuzzle(){state.solutionURL=finalImage().toDataURL('image/jpeg',.92);state.tiles=Array.from({length:16},(_,i)=>i);state.blank=15;createTiles();shuffle(180);showStage('gameStage')}
+function createTiles(){const root=$('puzzle');root.innerHTML='';for(let i=0;i<15;i++){const el=document.createElement('div');el.className='tile';el.dataset.tile=i;el.onclick=()=>moveTile(i);root.appendChild(el)}layout()}
+function layout(){const root=$('puzzle'),w=root.clientWidth||480,ts=w/GRID;root.querySelectorAll('.tile').forEach(el=>{const tile=+el.dataset.tile,pos=state.tiles.indexOf(tile),r=Math.floor(pos/GRID),c=pos%GRID,sr=Math.floor(tile/GRID),sc=tile%GRID;Object.assign(el.style,{width:ts+'px',height:ts+'px',backgroundImage:`url(${state.solutionURL})`,backgroundSize:`${w}px ${w}px`,backgroundPosition:`${-sc*ts}px ${-sr*ts}px`,transform:`translate(${c*ts}px,${r*ts}px)`,visibility:state.showing?'hidden':'visible'})});$('win').classList.toggle('show',isSolved()&&!state.showing)}
+function adjacent(a,b){return Math.abs(Math.floor(a/GRID)-Math.floor(b/GRID))+Math.abs(a%GRID-b%GRID)===1}
+function moveTile(tile){if(state.showing)return;const p=state.tiles.indexOf(tile),b=state.tiles.indexOf(state.blank);if(!adjacent(p,b))return;[state.tiles[p],state.tiles[b]]=[state.tiles[b],state.tiles[p]];layout()}
+function shuffle(n=150){state.showing=false;let prev=-1;for(let k=0;k<n;k++){const b=state.tiles.indexOf(state.blank),opts=[];for(let i=0;i<16;i++)if(adjacent(i,b)&&i!==prev)opts.push(i);const p=opts[Math.floor(Math.random()*opts.length)];prev=b;[state.tiles[p],state.tiles[b]]=[state.tiles[b],state.tiles[p]]}$('puzzle').style.backgroundImage='none';layout()}
+function isSolved(){return state.tiles.every((v,i)=>v===i)}
+function showSolution(){state.showing=!state.showing;$('puzzle').style.background=state.showing?`#000 url(${state.solutionURL}) center/cover no-repeat`:'#070707';$('showSolution').textContent=state.showing?'Revenir au jeu':'Voir la solution';layout()}
+function resetAll(){stopCamera();state.photos=[];state.marks=[];state.step=0;captureBtn.textContent='Prendre le visage 1';captureBtn.disabled=true;$('thumb1').style.backgroundImage=$('thumb2').style.backgroundImage='none';showStage('captureStage');status.textContent=state.landmarker?'Détecteur prêt. Active la caméra.':'Chargement du détecteur…'}
+$('startCamera').onclick=startCamera;$('capture').onclick=takePhoto;$('switchCamera').onclick=()=>{state.facing=state.facing==='user'?'environment':'user';startCamera()};$('resetAll').onclick=resetAll;
+$('backCapture').onclick=resetAll;$('autoAlign').onclick=autoAlign;$('makePuzzle').onclick=buildPuzzle;$('shuffle').onclick=()=>shuffle(180);$('showSolution').onclick=showSolution;$('backAlign').onclick=()=>{state.showing=false;showStage('alignStage');renderBlend()};
+window.addEventListener('resize',()=>requestAnimationFrame(layout));window.addEventListener('pagehide',stopCamera);
 </script>
 </body>
 </html>
