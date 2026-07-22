@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#050505">
+<title>Taquin — deux visages</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:#050505;color:#fff;overscroll-behavior:none}
+body{padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom)}
+main{width:min(100%,520px);margin:auto;padding:12px 0 28px}
+h1{font-size:21px;margin:4px 0 4px} .lead{margin:0 0 14px;color:#b8b8b8;font-size:13px;line-height:1.35}
+.stage{display:none}.stage.active{display:block}
+.card{background:#111;border:1px solid #2b2b2b;border-radius:18px;padding:12px;box-shadow:0 10px 30px #0008}
+.viewport{position:relative;aspect-ratio:1/1;overflow:hidden;border-radius:14px;background:#000;touch-action:none}
+video,.viewport canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+video{transform:scaleX(-1)}
+.guide{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 31% 42% at 50% 46%,transparent 68%,rgba(0,0,0,.68) 69%);border:1px solid #ffffff20}
+.guide:before,.guide:after{content:"";position:absolute;left:33%;right:33%;height:1px;background:#68d8ffcc}.guide:before{top:39%}.guide:after{top:52%}
+.controls{display:grid;gap:9px;margin-top:12px}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
+button{appearance:none;border:0;border-radius:12px;padding:13px 14px;font-weight:750;font-size:15px;background:#f1f1f1;color:#050505;min-height:46px}
+button.secondary{background:#222;color:#fff;border:1px solid #383838}button.danger{background:#3a1717;color:#ffdede}button:disabled{opacity:.45}
+.status{min-height:20px;color:#9fe7ff;font-size:13px;margin:8px 2px 0}
+label{display:grid;grid-template-columns:92px 1fr 46px;gap:8px;align-items:center;font-size:13px;color:#ddd}
+input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-numeric:tabular-nums}
+.thumbrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.thumb{aspect-ratio:1;border-radius:10px;background:#000 center/cover no-repeat;border:1px solid #333}
+.puzzle{position:relative;aspect-ratio:1;background:#070707;border-radius:14px;overflow:hidden;touch-action:none}
+.tile{position:absolute;background-repeat:no-repeat;border:1px solid rgba(255,255,255,.28);transition:transform .16s ease;border-radius:4px}
+.win{padding:10px 4px 2px;text-align:center;font-weight:800;color:#9fffc0;display:none}.win.show{display:block}
+.note{font-size:12px;color:#aaa;line-height:1.4;margin:10px 2px 0}
+.badge{display:inline-block;border:1px solid #3b3b3b;border-radius:999px;padding:4px 8px;font-size:11px;color:#bbb;margin-bottom:8px}
+</style>
+</head>
+<body>
+<main>
+<span class="badge">Prototype iPhone · 22/07/2026</span>
+<h1>Taquin — deux visages</h1>
+<p class="lead">Prends deux portraits, aligne-les, mélange-les, puis reconstitue le visage.</p>
+
+<section id="captureStage" class="stage active">
+  <div class="card">
+    <div class="viewport"><video id="video" playsinline muted autoplay></video><div class="guide"></div></div>
+    <div class="controls">
+      <div class="row"><button id="startCamera">Activer la caméra</button><button id="capture" disabled>Prendre le visage 1</button></div>
+      <div class="row"><button id="switchCamera" class="secondary">Changer caméra</button><button id="resetAll" class="danger">Recommencer</button></div>
+    </div>
+    <div id="captureStatus" class="status">Place les yeux sur la ligne supérieure et la bouche sur la ligne inférieure.</div>
+    <div class="thumbrow"><div id="thumb1" class="thumb"></div><div id="thumb2" class="thumb"></div></div>
+  </div>
+</section>
+
+<section id="alignStage" class="stage">
+  <div class="card">
+    <div id="alignView" class="viewport"><canvas id="alignCanvas"></canvas><div class="guide"></div></div>
+    <div class="controls">
+      <label>Horizontal <input id="offsetX" type="range" min="-160" max="160" value="0"><span id="offsetXVal" class="value">0</span></label>
+      <label>Vertical <input id="offsetY" type="range" min="-160" max="160" value="0"><span id="offsetYVal" class="value">0</span></label>
+      <label>Zoom <input id="scale" type="range" min="70" max="145" value="100"><span id="scaleVal" class="value">100%</span></label>
+      <label>Rotation <input id="rotation" type="range" min="-15" max="15" step="0.2" value="0"><span id="rotationVal" class="value">0°</span></label>
+      <label>Mélange <input id="blend" type="range" min="0" max="100" value="50"><span id="blendVal" class="value">50%</span></label>
+      <div class="row"><button id="backCapture" class="secondary">Refaire les photos</button><button id="makePuzzle">Créer le taquin</button></div>
+    </div>
+    <p class="note">Le visage 1 reste fixe. Ajuste le visage 2 jusqu’à superposer précisément les yeux, le nez et la bouche.</p>
+  </div>
+</section>
+
+<section id="gameStage" class="stage">
+  <div class="card">
+    <div id="puzzle" class="puzzle"></div>
+    <div id="win" class="win">Visage reconstitué.</div>
+    <div class="controls"><div class="row"><button id="shuffle" class="secondary">Mélanger</button><button id="showSolution" class="secondary">Voir la solution</button></div><button id="backAlign">Modifier le morphing</button></div>
+    <p class="note">Touche une case voisine de l’espace vide. La grille est mélangée uniquement par des déplacements valides, donc elle reste toujours résoluble.</p>
+  </div>
+</section>
+</main>
+<script>
+(() => {
+  const SIZE=768, GRID=4;
+  const $=id=>document.getElementById(id);
+  const stages=['captureStage','alignStage','gameStage'];
+  const state={stream:null,facing:'user',photos:[],step:0,tiles:[],blank:GRID*GRID-1,solutionURL:'',showing:false};
+  const video=$('video'), captureBtn=$('capture'), status=$('captureStatus');
+  const alignCanvas=$('alignCanvas'), actx=alignCanvas.getContext('2d');
+  alignCanvas.width=alignCanvas.height=SIZE;
+
+  function showStage(id){stages.forEach(s=>$(s).classList.toggle('active',s===id));}
+  function stopCamera(){if(state.stream){state.stream.getTracks().forEach(t=>t.stop());state.stream=null;}video.srcObject=null;}
+  async function startCamera(){
+    stopCamera(); status.textContent='Ouverture de la caméra…';
+    try{
+      state.stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:state.facing},width:{ideal:1280},height:{ideal:1280}}});
+      video.srcObject=state.stream; await video.play(); captureBtn.disabled=false;
+      status.textContent=state.step===0?'Cadre le premier visage.':'Reproduis exactement le même cadrage pour le second visage.';
+    }catch(e){status.textContent='Caméra indisponible : '+(e.message||e)+'. Vérifie l’autorisation Safari.';}
+  }
+  function captureSquare(){
+    const c=document.createElement('canvas');c.width=c.height=SIZE;const ctx=c.getContext('2d');
+    const vw=video.videoWidth,vh=video.videoHeight;if(!vw||!vh)return null;
+    const side=Math.min(vw,vh),sx=(vw-side)/2,sy=(vh-side)/2;
+    ctx.save();ctx.translate(SIZE,0);ctx.scale(-1,1);ctx.drawImage(video,sx,sy,side,side,0,0,SIZE,SIZE);ctx.restore();
+    return c;
+  }
+  function takePhoto(){
+    const c=captureSquare();if(!c)return;
+    state.photos[state.step]=c; $('thumb'+(state.step+1)).style.backgroundImage=`url(${c.toDataURL('image/jpeg',.85)})`;
+    if(state.step===0){state.step=1;captureBtn.textContent='Prendre le visage 2';status.textContent='Garde la même distance et replace les yeux sur la ligne supérieure.';}
+    else{stopCamera();captureBtn.textContent='Prendre le visage 1';state.step=0;showStage('alignStage');renderBlend();}
+  }
+  function vals(){return {x:+$('offsetX').value,y:+$('offsetY').value,s:+$('scale').value/100,r:+$('rotation').value*Math.PI/180,a:+$('blend').value/100};}
+  function drawPhoto2(ctx,v,alpha){ctx.save();ctx.globalAlpha=alpha;ctx.translate(SIZE/2+v.x,SIZE/2+v.y);ctx.rotate(v.r);ctx.scale(v.s,v.s);ctx.drawImage(state.photos[1],-SIZE/2,-SIZE/2,SIZE,SIZE);ctx.restore();}
+  function renderBlend(target=actx){
+    if(state.photos.length<2)return;const v=vals();target.clearRect(0,0,SIZE,SIZE);target.globalAlpha=1;target.drawImage(state.photos[0],0,0,SIZE,SIZE);drawPhoto2(target,v,v.a);target.globalAlpha=1;
+    $('offsetXVal').textContent=v.x;$('offsetYVal').textContent=v.y;$('scaleVal').textContent=Math.round(v.s*100)+'%';$('rotationVal').textContent=(v.r*180/Math.PI).toFixed(1)+'°';$('blendVal').textContent=Math.round(v.a*100)+'%';
+  }
+  ['offsetX','offsetY','scale','rotation','blend'].forEach(id=>$(id).addEventListener('input',()=>renderBlend()));
+
+  function finalImage(){const c=document.createElement('canvas');c.width=c.height=SIZE;renderBlend(c.getContext('2d'));return c;}
+  function buildPuzzle(){state.solutionURL=finalImage().toDataURL('image/jpeg',.92);state.tiles=Array.from({length:GRID*GRID},(_,i)=>i);state.blank=GRID*GRID-1;createTiles();shuffle(180);showStage('gameStage');}
+  function createTiles(){const root=$('puzzle');root.innerHTML='';for(let i=0;i<GRID*GRID-1;i++){const el=document.createElement('div');el.className='tile';el.dataset.tile=i;el.addEventListener('click',()=>moveTile(i));root.appendChild(el);}layout();}
+  function layout(){
+    const root=$('puzzle'),w=root.clientWidth||480,ts=w/GRID;root.querySelectorAll('.tile').forEach(el=>{const tile=+el.dataset.tile,pos=state.tiles.indexOf(tile),r=Math.floor(pos/GRID),c=pos%GRID,sr=Math.floor(tile/GRID),sc=tile%GRID;el.style.width=el.style.height=ts+'px';el.style.backgroundImage=`url(${state.solutionURL})`;el.style.backgroundSize=`${w}px ${w}px`;el.style.backgroundPosition=`${-sc*ts}px ${-sr*ts}px`;el.style.transform=`translate(${c*ts}px,${r*ts}px)`;el.style.visibility=state.showing?'hidden':'visible';});$('win').classList.toggle('show',isSolved()&&!state.showing);}
+  function adjacent(a,b){const ar=Math.floor(a/GRID),ac=a%GRID,br=Math.floor(b/GRID),bc=b%GRID;return Math.abs(ar-br)+Math.abs(ac-bc)===1;}
+  function moveTile(tile){if(state.showing)return;const p=state.tiles.indexOf(tile),b=state.tiles.indexOf(state.blank);if(!adjacent(p,b))return;[state.tiles[p],state.tiles[b]]=[state.tiles[b],state.tiles[p]];layout();}
+  function shuffle(n=150){state.showing=false;let prev=-1;for(let k=0;k<n;k++){const b=state.tiles.indexOf(state.blank),opts=[];for(let i=0;i<state.tiles.length;i++)if(adjacent(i,b)&&i!==prev)opts.push(i);const p=opts[Math.floor(Math.random()*opts.length)];prev=b;[state.tiles[p],state.tiles[b]]=[state.tiles[b],state.tiles[p]];}$('puzzle').style.backgroundImage='none';layout();}
+  function isSolved(){return state.tiles.every((v,i)=>v===i);}
+  function showSolution(){state.showing=!state.showing;$('puzzle').style.background=state.showing?`#000 url(${state.solutionURL}) center/cover no-repeat`:'#070707';$('showSolution').textContent=state.showing?'Revenir au jeu':'Voir la solution';layout();}
+  function resetAll(){stopCamera();state.photos=[];state.step=0;captureBtn.textContent='Prendre le visage 1';captureBtn.disabled=true;$('thumb1').style.backgroundImage=$('thumb2').style.backgroundImage='none';showStage('captureStage');status.textContent='Place les yeux sur la ligne supérieure et la bouche sur la ligne inférieure.';}
+
+  $('startCamera').onclick=startCamera;$('capture').onclick=takePhoto;$('switchCamera').onclick=()=>{state.facing=state.facing==='user'?'environment':'user';startCamera();};$('resetAll').onclick=resetAll;
+  $('backCapture').onclick=resetAll;$('makePuzzle').onclick=buildPuzzle;$('shuffle').onclick=()=>shuffle(180);$('showSolution').onclick=showSolution;$('backAlign').onclick=()=>{state.showing=false;showStage('alignStage');renderBlend();};
+  window.addEventListener('resize',()=>requestAnimationFrame(layout));window.addEventListener('pagehide',stopCamera);
+})();
+</script>
+</body>
+</html>
