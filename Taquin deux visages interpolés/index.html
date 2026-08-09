@@ -22,7 +22,7 @@ button{appearance:none;border:0;border-radius:12px;padding:13px 14px;font-weight
 button.secondary{background:#222;color:#fff;border:1px solid #383838}button.danger{background:#3a1717;color:#ffdede}button:disabled{opacity:.45}
 .mode-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.mode-picker button{min-width:0;padding:10px 6px;font-size:12px}.mode-picker button.is-active{background:#9fe7ff;color:#061014;border-color:#9fe7ff}
 .region-controls{display:grid;gap:9px;padding:10px;border:1px solid #303030;border-radius:12px;background:#0a0a0a}.region-title{font-size:12px;color:#bbb}.region-presets{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.region-presets button{min-height:44px;padding:8px;font-size:12px}.region-presets button:last-child{grid-column:1/-1}.region-mixers{display:grid;gap:7px}.region-mixers label,.region-options label{grid-template-columns:105px 1fr 42px}.region-options{display:grid;gap:7px;padding-top:9px;border-top:1px solid #292929}.source-key{display:grid;grid-template-columns:1fr 1fr;gap:8px}.source-card{display:grid;grid-template-columns:50px 1fr;gap:8px;align-items:center;padding:6px;border:1px solid #303030;border-radius:10px;background:#090909;font-size:12px;color:#ccc}.source-thumb{width:50px;aspect-ratio:1;border-radius:8px;background:#000 center/cover no-repeat;border:1px solid #333}
-.animation-controls{display:grid;gap:8px;padding:10px;border:1px solid #315465;border-radius:12px;background:#08141a}.animation-controls label{grid-template-columns:88px 1fr 48px}.animation-controls button.is-running{background:#9fe7ff;color:#061014;border-color:#9fe7ff}.animation-hint{font-size:12px;line-height:1.35;color:#a8c8d5}
+.animation-controls{display:grid;gap:8px;padding:10px;border:1px solid #315465;border-radius:12px;background:#08141a;transition:border-color .25s,box-shadow .25s}.animation-controls label{grid-template-columns:88px 1fr 48px}.animation-controls button.is-running{background:#9fe7ff;color:#061014;border-color:#9fe7ff}.animation-controls.is-animating{border-color:#9fe7ff;box-shadow:0 0 18px #52d8ff42}.animation-state{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:750;color:#b8c4c9}.animation-state:before{content:"";width:9px;height:9px;border-radius:50%;background:#68757a}.animation-controls.is-animating .animation-state{color:#9fe7ff}.animation-controls.is-animating .animation-state:before{background:#65e6ff;box-shadow:0 0 0 0 #65e6ff99;animation:animationPulse 1.3s ease-out infinite}.animation-badge{position:absolute;z-index:3;top:10px;left:10px;padding:7px 10px;border-radius:999px;background:#06151be8;border:1px solid #9fe7ff;color:#9fe7ff;font-size:11px;font-weight:850;letter-spacing:.04em;box-shadow:0 0 16px #52d8ff55}.animation-badge:before{content:"●";margin-right:6px}.animation-hint{font-size:12px;line-height:1.35;color:#a8c8d5}@keyframes animationPulse{70%{box-shadow:0 0 0 7px #65e6ff00}100%{box-shadow:0 0 0 0 #65e6ff00}}@media(prefers-reduced-motion:reduce){.animation-controls.is-animating .animation-state:before{animation:none}}
 [hidden]{display:none!important}
 .status{min-height:20px;color:#9fe7ff;font-size:13px;margin:8px 2px 0}
 label{display:grid;grid-template-columns:92px 1fr 46px;gap:8px;align-items:center;font-size:13px;color:#ddd}
@@ -38,7 +38,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <main>
 <span class="badge">Morphing animé WebGL et Régions · 09/08/2026</span>
 <h1>Taquin — deux visages</h1>
-<p class="lead">Choisis un morphing géométrique ou régional, puis anime-le par de petites oscillations progressives avant de créer le taquin.</p>
+<p class="lead">Choisis WebGL ou Régions : l’animation démarre automatiquement avec des oscillations visibles et progressives avant la création du taquin.</p>
 <section id="captureStage" class="stage active"><div class="card">
 <div class="viewport"><video id="video" playsinline muted></video><div class="guide"></div></div>
 <div class="controls"><div class="row"><button id="startCamera" type="button">Activer la caméra</button><button id="capture" type="button" disabled>Prendre le visage 1</button></div>
@@ -47,7 +47,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <div class="thumbrow"><div id="thumb1" class="thumb" role="img" aria-label="Aperçu de la photo 1"></div><div id="thumb2" class="thumb" role="img" aria-label="Aperçu de la photo 2"></div></div>
 </div></section>
 <section id="alignStage" class="stage"><div class="card">
-<div class="viewport"><canvas id="alignCanvas" role="img" aria-label="Aperçu de la composition des deux visages">Aperçu de la composition des deux visages.</canvas><div class="guide"></div></div>
+<div class="viewport"><canvas id="alignCanvas" role="img" aria-label="Aperçu de la composition des deux visages">Aperçu de la composition des deux visages.</canvas><span id="animationBadge" class="animation-badge" aria-hidden="true" hidden>MORPHING ACTIF</span><div class="guide"></div></div>
 <div id="alignStatus" class="status"></div>
 <div class="controls">
 <div class="source-key" role="group" aria-label="Photos sources"><div class="source-card"><div id="sourceThumb1" class="source-thumb" role="img" aria-label="Photo source 1"></div><span>Photo 1</span></div><div class="source-card"><div id="sourceThumb2" class="source-thumb" role="img" aria-label="Photo source 2"></div><span>Photo 2</span></div></div>
@@ -59,8 +59,9 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <div id="modeStatus" class="status" aria-live="polite"></div>
 <div id="animationControls" class="animation-controls" role="group" aria-label="Animation douce du morphing" hidden>
 <button id="toggleAnimation" type="button" class="secondary" aria-pressed="false">Animer doucement</button>
-<label>Amplitude <input id="animationAmplitude" type="range" min="0" max="20" value="8"><span id="animationAmplitudeVal" class="value">8%</span></label>
-<label>Vitesse <input id="animationSpeed" type="range" min="20" max="160" value="70"><span id="animationSpeedVal" class="value">0.70×</span></label>
+<span id="animationState" class="animation-state">Animation en attente</span>
+<label>Amplitude <input id="animationAmplitude" type="range" min="0" max="45" value="30"><span id="animationAmplitudeVal" class="value">30%</span></label>
+<label>Vitesse <input id="animationSpeed" type="range" min="20" max="180" value="110"><span id="animationSpeedVal" class="value">1.10×</span></label>
 <span id="animationHint" class="animation-hint"></span>
 </div>
 <div id="regionControls" class="region-controls" hidden>
@@ -119,9 +120,10 @@ const state={
  mode:'canvas',regionMix:{left:0,right:0,leftEye:1,rightEye:1,nose:0,mouth:1},regionFeather:.5,regionHarmony:.6,regionCache:null,
  meshTriangles:[],previewTriangles:[],previewTrianglesVersion:-1,faceOval:FALLBACK_FACE_OVAL.slice(),
  buffers:new Map(),webgl:null,photoVersion:0,renderQueued:false,quickRenderQueued:false,accurateRenderTimer:null,
- animation:{running:false,raf:0,phase:0,ramp:0,lastTick:0,lastRender:0,baseControls:null,baseRegionMix:null,lastFrame:null,frozenFrame:null}
+ animation:{running:false,raf:0,autoStartRaf:0,exporting:false,phase:0,ramp:0,lastTick:0,lastRender:0,baseControls:null,baseRegionMix:null,lastFrame:null,frozenFrame:null,userFrozen:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false}
 };
 const video=$('video'),captureBtn=$('capture'),status=$('captureStatus'),alignCanvas=$('alignCanvas');
+const reducedMotionQuery=window.matchMedia?.('(prefers-reduced-motion: reduce)')||null;
 alignCanvas.width=alignCanvas.height=PREVIEW_SIZE;
 
 function showStage(id){stages.forEach(s=>$(s).classList.toggle('active',s===id))}
@@ -227,7 +229,7 @@ function autoAlign(){
   state.auto={scale:1,rot:0,tx:0,ty:0};$('alignStatus').textContent='Détection incomplète : le fondu manuel superposé et les réglages restent disponibles.'
  }
  updateModeAvailability();
- scheduleRender()
+ scheduleRender();maybeAutoStartAnimation()
 }
 async function takePhoto(){
  const c=captureSquare();if(!c){status.textContent='Image caméra pas encore prête. Réessaie dans un instant.';return}
@@ -243,7 +245,7 @@ async function takePhoto(){
   state.step=1;captureBtn.textContent='Prendre le visage 2';captureBtn.disabled=false;
   status.textContent=lm?'Garde la même distance et la tête bien droite.':'Premier visage conservé sans détection. Le fondu manuel restera disponible.'
  }else{
-  stopCamera();state.step=0;captureBtn.textContent='Prendre le visage 1';showStage('alignStage');updatePreviewSize();autoAlign()
+  stopCamera();state.step=0;captureBtn.textContent='Prendre le visage 1';showStage('alignStage');updatePreviewSize();state.animation.userFrozen=false;autoAlign();if(canMeshMorph())setMode(state.mode==='regions'?'regions':'webgl');maybeAutoStartAnimation()
  }
 }
 
@@ -384,8 +386,8 @@ function initWebGLRenderer(){
  const renderer={canvas,gl,textureVersion:-1,lost:false,failed:false,failedAt:0};
  try{
   createWebGLResources(renderer);
-  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();renderer.lost=true;renderer.textureVersion=-1;scheduleRender()});
-  canvas.addEventListener('webglcontextrestored',()=>{try{createWebGLResources(renderer)}catch(e){console.error(e);renderer.failed=true;renderer.failedAt=performance.now();renderer.error=e.message||String(e)}scheduleRender()});
+  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();if(renderer.abandoned)return;renderer.lost=true;renderer.textureVersion=-1;scheduleRender()});
+  canvas.addEventListener('webglcontextrestored',()=>{if(renderer.abandoned)return;try{createWebGLResources(renderer)}catch(e){console.error(e);renderer.failed=true;renderer.failedAt=performance.now();renderer.error=e.message||String(e)}scheduleRender();if(!renderer.failed&&!state.animation.running&&!state.animation.userFrozen&&state.mode==='webgl'&&state.animation.frozenFrame){if(automaticMotionReduced())state.animation.resumeAfterMotion=true;else resumeAutomaticAnimation()}});
   state.webgl=renderer;return renderer
  }catch(e){console.error(e);renderer.failed=true;renderer.failedAt=performance.now();renderer.error=e.message||String(e);state.webgl=renderer;return renderer}
 }
@@ -498,9 +500,9 @@ function renderSelected(canvas,{updateUI=true,values=null,regionMix=null,mode=st
 function animationModeAvailable(){return canMeshMorph()&&(state.mode==='webgl'||state.mode==='regions')}
 function animationSettings(){return{amplitude:+$('animationAmplitude').value/100,speed:+$('animationSpeed').value/100}}
 function syncAnimationControls(){
- const available=animationModeAvailable(),animation=state.animation,running=animation.running,frozen=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode,{amplitude,speed}=animationSettings();$('animationControls').hidden=!available;$('toggleAnimation').disabled=!available||amplitude<=0;$('toggleAnimation').classList.toggle('is-running',running);$('toggleAnimation').setAttribute('aria-pressed',String(running));$('toggleAnimation').textContent=running?'Arrêter et figer':frozen?'Reprendre doucement':'Animer doucement';
+ const meshReady=canMeshMorph(),modeReady=state.mode==='webgl'||state.mode==='regions',available=meshReady&&modeReady,animation=state.animation,running=animation.running,frozen=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode,{amplitude,speed}=animationSettings(),controls=$('animationControls'),badge=$('animationBadge'),reduced=automaticMotionReduced();controls.hidden=state.photos.length<2;controls.classList.toggle('is-animating',running);badge.hidden=!running;badge.textContent=running?`MORPHING ACTIF · ${state.mode==='webgl'?'WEBGL':'RÉGIONS'} · ${Math.round(amplitude*100)} %`:'MORPHING ACTIF';$('toggleAnimation').disabled=!available||amplitude<=0;$('toggleAnimation').classList.toggle('is-running',running);$('toggleAnimation').setAttribute('aria-pressed',String(running));$('toggleAnimation').textContent=running?'Arrêter et figer':frozen?'Reprendre doucement':'Démarrer l’animation';
  $('animationAmplitudeVal').textContent=Math.round(amplitude*100)+'%';$('animationAmplitude').setAttribute('aria-valuetext',`${Math.round(amplitude*100)} %`);$('animationSpeedVal').textContent=speed.toFixed(2)+'×';$('animationSpeed').setAttribute('aria-valuetext',`${speed.toFixed(2)} fois`);
- const description=state.mode==='webgl'?'Oscillations lentes de la forme, du mélange, de la position, du zoom et de la rotation.':'Oscillations indépendantes des deux moitiés, des yeux, du nez et de la bouche ; la géométrie reste fixe pour préserver la fluidité.';$('animationHint').textContent=description+(amplitude<=0?' Amplitude 0 % : animation suspendue.':frozen?' Image figée ; les curseurs conservent les valeurs centrales.':'')
+ let description;if(!meshReady)description='Animation indisponible : les deux visages doivent être détectés. Reprends la photo non détectée.';else if(!modeReady)description='Choisis Triangles WebGL ou Régions pour lancer automatiquement le morphing animé.';else description=state.mode==='webgl'?'La forme, le mélange, la position, le zoom et la rotation oscillent autour de tes réglages.':'Les deux moitiés, les yeux, le nez et la bouche oscillent indépendamment ; la géométrie reste fixe pour préserver la fluidité.';if(reduced&&available&&!running)description+=' Le réglage iPhone « Réduire les animations » bloque seulement le démarrage automatique : le bouton reste utilisable.';$('animationState').textContent=running?'Animation active':frozen?'Image figée':!meshReady?'Visages non détectés':!modeReady?'Mode statique':reduced?'Prête · démarrage manuel':'Prête à démarrer';$('animationHint').textContent=description+(amplitude<=0?' Amplitude 0 % : animation suspendue.':frozen?' Les curseurs conservent les valeurs centrales.':'')
 }
 function smoothstep(value){return value*value*(3-2*value)}
 function oscillatedBounded(base,amount,wave,min,max){const low=Math.max(min,base-amount),high=Math.min(max,base+amount);return low+(high-low)*(wave+1)/2}
@@ -512,19 +514,27 @@ function animationFrame(){
  const patterns={left:[.72,.2],right:[.83,2.2],leftEye:[1.07,4.1],rightEye:[1.19,1.4],nose:[.91,3.3],mouth:[.63,5.2]},mix={};
  for(const key of REGION_KEYS){const [frequency,offset]=patterns[key];mix[key]=oscillatedRegionMix(animation.baseRegionMix[key],amount,Math.sin(p*frequency+offset))}return animationSnapshot('regions',{...base},mix)
 }
+function automaticMotionReduced(){return reducedMotionQuery?.matches===true}
+function cancelPendingAutoStart(){const animation=state.animation;if(animation.autoStartRaf)cancelAnimationFrame(animation.autoStartRaf);animation.autoStartRaf=0}
+function queueAutomaticAnimationStart(allowFrozen=false){
+ const animation=state.animation,{amplitude}=animationSettings(),blockedFrame=animation.frozenFrame&&!allowFrozen;if(animation.exporting||animation.autoStartRaf||animation.userFrozen||animation.running||blockedFrame||!animationModeAvailable()||amplitude<=0||document.hidden||!$('alignStage').classList.contains('active')||automaticMotionReduced()||(state.mode==='webgl'&&(state.webgl?.failed||state.webgl?.lost)))return;
+ animation.autoStartRaf=requestAnimationFrame(()=>{if(!animation.autoStartRaf)return;animation.autoStartRaf=0;const frameStillBlocked=animation.frozenFrame&&!allowFrozen;if(!animation.exporting&&!animation.userFrozen&&!animation.running&&!frameStillBlocked&&animationModeAvailable()&&animationSettings().amplitude>0&&!document.hidden&&$('alignStage').classList.contains('active')&&!automaticMotionReduced()&&!(state.mode==='webgl'&&(state.webgl?.failed||state.webgl?.lost)))startAnimation(true)})
+}
+function maybeAutoStartAnimation(){queueAutomaticAnimationStart(false)}
+function resumeAutomaticAnimation(){queueAutomaticAnimationStart(true)}
 function queueAnimationLoop(){if(state.animation.running&&!state.animation.raf&&!document.hidden&&$('alignStage').classList.contains('active'))state.animation.raf=requestAnimationFrame(animationTick)}
 function animationTick(now){
  const animation=state.animation;animation.raf=0;if(!animation.running)return;if(!animationModeAvailable()){stopAnimation({render:false});return}
- const elapsed=Math.min(.1,Math.max(0,(now-animation.lastTick)/1000)),settings=animationSettings();animation.lastTick=now;animation.phase+=elapsed*.65*settings.speed;animation.ramp=Math.min(1,animation.ramp+elapsed/1.8);const interval=state.mode==='webgl'?1000/20:1000/12;
+ const elapsed=Math.min(.1,Math.max(0,(now-animation.lastTick)/1000)),settings=animationSettings();animation.lastTick=now;animation.phase+=elapsed*.65*settings.speed;animation.ramp=Math.min(1,animation.ramp+elapsed/1.2);const interval=state.mode==='webgl'?1000/20:1000/12;
  if(now-animation.lastRender>=interval-1){const frame=animationFrame();if(frame){const info=renderSelected(alignCanvas,{updateUI:false,values:frame.values,regionMix:frame.regionMix,mode:frame.mode});animation.lastFrame=frame;animation.lastRender=now;
    if(state.mode==='webgl'&&(!info||info.message.includes('Canvas 2D'))){stopAnimation({freeze:true,render:false});$('modeStatus').textContent='Animation WebGL figée : WebGL indisponible, cette image Canvas est conservée.';return}
   }}queueAnimationLoop()
 }
-function startAnimation(){
- if(!animationModeAvailable()||state.animation.running||animationSettings().amplitude<=0||!$('alignStage').classList.contains('active'))return;const animation=state.animation;if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}const resuming=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode&&animation.baseControls;if(!resuming){animation.phase=0;animation.ramp=0;animation.baseControls=readControls();animation.baseRegionMix={...state.regionMix};animation.lastFrame=animationSnapshot(state.mode,{...animation.baseControls},state.mode==='regions'?{...animation.baseRegionMix}:null)}animation.frozenFrame=null;animation.running=true;animation.lastTick=performance.now();animation.lastRender=animation.lastTick-(state.mode==='webgl'?1000/20:1000/12);syncAnimationControls();$('modeStatus').textContent=resuming?'Animation reprise doucement.':state.mode==='webgl'?'Animation WebGL démarrée · montée progressive, jusqu’à 20 images/s.':'Animation Régions démarrée · montée progressive, jusqu’à 12 images/s.';queueAnimationLoop()
+function startAnimation(automatic=false){
+ cancelPendingAutoStart();if(state.animation.exporting||automatic&&(automaticMotionReduced()||(state.mode==='webgl'&&(state.webgl?.failed||state.webgl?.lost))))return;if(!animationModeAvailable()||state.animation.running||animationSettings().amplitude<=0||!$('alignStage').classList.contains('active'))return;const animation=state.animation;animation.userFrozen=false;animation.resumeAfterGame=false;animation.resumeAfterMotion=false;animation.resumeOnPageShow=false;if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}const resuming=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode&&animation.baseControls;if(!resuming){animation.phase=0;animation.ramp=0;animation.baseControls=readControls();animation.baseRegionMix={...state.regionMix};animation.lastFrame=animationSnapshot(state.mode,{...animation.baseControls},state.mode==='regions'?{...animation.baseRegionMix}:null)}animation.frozenFrame=null;animation.running=true;animation.lastTick=performance.now();animation.lastRender=animation.lastTick-(state.mode==='webgl'?1000/20:1000/12);syncAnimationControls();const {amplitude,speed}=animationSettings();$('modeStatus').textContent=resuming?'Animation reprise doucement.':state.mode==='webgl'?`Animation WebGL active · amplitude ${Math.round(amplitude*100)} % · vitesse ${speed.toFixed(2)}×.`:`Animation Régions active · amplitude ${Math.round(amplitude*100)} % · vitesse ${speed.toFixed(2)}×.`;queueAnimationLoop()
 }
 function stopAnimation({freeze=false,render=true}={}){
- const animation=state.animation;if(!animation.running){if(!freeze&&animation.frozenFrame){animation.frozenFrame=null;animation.baseControls=null;animation.baseRegionMix=null;animation.lastFrame=null;syncAnimationControls();if(render&&state.photos.length>=2&&$('alignStage').classList.contains('active'))scheduleRender()}return}if(animation.raf)cancelAnimationFrame(animation.raf);if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}animation.raf=0;animation.running=false;if(freeze&&animation.lastFrame)animation.frozenFrame=animation.lastFrame;else{animation.frozenFrame=null;animation.baseControls=null;animation.baseRegionMix=null;animation.lastFrame=null;animation.phase=0;animation.ramp=0}syncAnimationControls();if(freeze&&render)$('modeStatus').textContent='Animation figée · Reprendre doucement pour continuer.';if(render&&state.photos.length>=2&&$('alignStage').classList.contains('active'))scheduleRender()
+ cancelPendingAutoStart();const animation=state.animation;if(!animation.running){if(!freeze&&animation.frozenFrame){animation.frozenFrame=null;animation.baseControls=null;animation.baseRegionMix=null;animation.lastFrame=null;syncAnimationControls();if(render&&state.photos.length>=2&&$('alignStage').classList.contains('active'))scheduleRender()}return}if(animation.raf)cancelAnimationFrame(animation.raf);if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}animation.raf=0;animation.running=false;if(freeze&&animation.lastFrame)animation.frozenFrame=animation.lastFrame;else{animation.frozenFrame=null;animation.baseControls=null;animation.baseRegionMix=null;animation.lastFrame=null;animation.phase=0;animation.ramp=0}syncAnimationControls();if(freeze&&render)$('modeStatus').textContent='Animation figée · Reprendre doucement pour continuer.';if(render&&state.photos.length>=2&&$('alignStage').classList.contains('active'))scheduleRender()
 }
 function frozenRenderOptions(){const frame=state.animation.frozenFrame;return frame&&frame.mode===state.mode?{updateUI:false,values:frame.values,regionMix:frame.regionMix,mode:frame.mode}:null}
 function scheduleRender(){
@@ -546,10 +556,10 @@ function updatePreviewSize(){
 }
 function setMode(mode){
  if(mode!=='fallback'&&!canMeshMorph())return;
- if(mode!==state.mode)stopAnimation({render:false});
- if(mode==='webgl'&&state.webgl?.failed){disposeWebGL(state.webgl);state.webgl=null}
+ const changed=mode!==state.mode,retryWebGL=mode==='webgl'&&(state.webgl?.failed||state.webgl?.lost);if(changed||retryWebGL){stopAnimation({render:false});state.animation.userFrozen=false}
+ if(retryWebGL){state.webgl.abandoned=true;disposeWebGL(state.webgl);state.webgl=null}
  state.mode=mode;document.querySelectorAll('[data-mode]').forEach(button=>{const active=button.dataset.mode===mode;button.classList.toggle('is-active',active);button.setAttribute('aria-pressed',String(active))});
- $('regionControls').hidden=mode!=='regions';$('blendLabelText').textContent=mode==='regions'?'Forme':'Mélange';if(mode==='regions'){syncRegionControls();$('modeStatus').textContent='Préparation de la composition par régions…'}syncAnimationControls();scheduleRender()
+ $('regionControls').hidden=mode!=='regions';$('blendLabelText').textContent=mode==='regions'?'Forme':'Mélange';if(mode==='regions'){syncRegionControls();$('modeStatus').textContent='Préparation de la composition par régions…'}syncAnimationControls();scheduleRender();if(changed||retryWebGL)maybeAutoStartAnimation()
 }
 document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>setMode(button.dataset.mode)));
 function updateRegionControlLabels(){
@@ -560,15 +570,16 @@ function syncRegionControls(){updateRegionControlLabels()}
 function applyRegionPreset(name){
  stopAnimation({render:false});
  const presets={all1:[0,0,0,0,0,0],all2:[1,1,1,1,1,1],halves:[0,1,0,1,.5,.5],alternate:[0,1,1,0,.25,.75]};
- if(name==='invert')for(const key of REGION_KEYS)state.regionMix[key]=1-state.regionMix[key];else{const values=presets[name];if(!values)return;REGION_KEYS.forEach((key,index)=>state.regionMix[key]=values[index])}syncRegionControls();scheduleRender()
+ if(name==='invert')for(const key of REGION_KEYS)state.regionMix[key]=1-state.regionMix[key];else{const values=presets[name];if(!values)return;REGION_KEYS.forEach((key,index)=>state.regionMix[key]=values[index])}syncRegionControls();scheduleRender();maybeAutoStartAnimation()
 }
 document.querySelectorAll('[data-region-preset]').forEach(button=>button.addEventListener('click',()=>applyRegionPreset(button.dataset.regionPreset)));
-document.querySelectorAll('[data-region-mix]').forEach(input=>{input.addEventListener('input',()=>{stopAnimation({render:false});state.regionMix[input.dataset.regionMix]=+input.value/100;updateRegionControlLabels();scheduleInteractiveRender()});input.addEventListener('change',scheduleRender)});
-for(const [id,key] of [['regionFeather','regionFeather'],['regionHarmony','regionHarmony']]){$(id).addEventListener('input',event=>{stopAnimation({render:false});state[key]=+event.target.value/100;updateRegionControlLabels();scheduleInteractiveRender()});$(id).addEventListener('change',scheduleRender)}
-['offsetX','offsetY','scale','rotation','blend'].forEach(id=>{$(id).addEventListener('input',()=>{stopAnimation({render:false});scheduleInteractiveRender()});$(id).addEventListener('change',scheduleRender)});
-$('toggleAnimation').addEventListener('click',()=>state.animation.running?stopAnimation({freeze:true}):startAnimation());
+const finishManualAdjustment=()=>{scheduleRender();maybeAutoStartAnimation()};
+document.querySelectorAll('[data-region-mix]').forEach(input=>{input.addEventListener('input',()=>{stopAnimation({render:false});state.regionMix[input.dataset.regionMix]=+input.value/100;updateRegionControlLabels();scheduleInteractiveRender()});input.addEventListener('change',finishManualAdjustment)});
+for(const [id,key] of [['regionFeather','regionFeather'],['regionHarmony','regionHarmony']]){$(id).addEventListener('input',event=>{stopAnimation({render:false});state[key]=+event.target.value/100;updateRegionControlLabels();scheduleInteractiveRender()});$(id).addEventListener('change',finishManualAdjustment)}
+['offsetX','offsetY','scale','rotation','blend'].forEach(id=>{$(id).addEventListener('input',()=>{stopAnimation({render:false});scheduleInteractiveRender()});$(id).addEventListener('change',finishManualAdjustment)});
+$('toggleAnimation').addEventListener('click',()=>{if(state.animation.running){state.animation.userFrozen=true;stopAnimation({freeze:true})}else{state.animation.userFrozen=false;startAnimation()}});
 function animationSettingChanged(event){if(state.animation.running&&animationSettings().amplitude<=0){stopAnimation({freeze:true});$('modeStatus').textContent='Animation figée : amplitude 0 %.'}else if(event.target.id==='animationAmplitude'&&state.animation.frozenFrame){stopAnimation();$('modeStatus').textContent='Amplitude modifiée · nouveau départ depuis les valeurs centrales.'}else syncAnimationControls()}
-for(const id of ['animationAmplitude','animationSpeed'])$(id).addEventListener('input',animationSettingChanged);
+for(const id of ['animationAmplitude','animationSpeed']){$(id).addEventListener('input',animationSettingChanged);$(id).addEventListener('change',()=>{syncAnimationControls();maybeAutoStartAnimation()})}
 
 function finalImage(snapshot=state.animation.frozenFrame){
  const c=makeCanvas(SIZE),previous={auto:state.auto,regionFeather:state.regionFeather,regionHarmony:state.regionHarmony};
@@ -576,9 +587,9 @@ function finalImage(snapshot=state.animation.frozenFrame){
  finally{state.auto=previous.auto;state.regionFeather=previous.regionFeather;state.regionHarmony=previous.regionHarmony}
 }
 async function buildPuzzle(){
- const snapshot=state.animation.running?state.animation.lastFrame:state.animation.frozenFrame;if(state.animation.running)stopAnimation({freeze:true,render:false});const controls=[...document.querySelectorAll('#alignStage button,#alignStage input')],disabled=controls.map(control=>control.disabled);controls.forEach(control=>control.disabled=true);$('modeStatus').textContent='Création du visage 768 × 768…';await new Promise(resolve=>requestAnimationFrame(resolve));
- try{state.solutionURL=finalImage(snapshot).toDataURL('image/jpeg',.92);state.tiles=Array.from({length:16},(_,i)=>i);state.blank=15;showStage('gameStage');createTiles();shuffle(180)}
- catch(e){console.error(e);$('modeStatus').textContent='Création impossible : '+(e.message||e)}finally{controls.forEach((control,index)=>control.disabled=disabled[index])}
+ if(state.animation.exporting)return;cancelPendingAutoStart();const snapshot=state.animation.running?state.animation.lastFrame:state.animation.frozenFrame;state.animation.resumeAfterGame=state.animation.running;if(state.animation.running)stopAnimation({freeze:true,render:false});state.animation.exporting=true;const controls=[...document.querySelectorAll('#alignStage button,#alignStage input')],disabled=controls.map(control=>control.disabled);controls.forEach(control=>control.disabled=true);$('modeStatus').textContent='Création du visage 768 × 768…';await new Promise(resolve=>requestAnimationFrame(resolve));let created=false;
+ try{state.solutionURL=finalImage(snapshot).toDataURL('image/jpeg',.92);state.tiles=Array.from({length:16},(_,i)=>i);state.blank=15;showStage('gameStage');createTiles();shuffle(180);created=true}
+ catch(e){console.error(e);$('modeStatus').textContent='Création impossible : '+(e.message||e)}finally{state.animation.exporting=false;controls.forEach((control,index)=>control.disabled=disabled[index]);if(!created&&state.animation.resumeAfterGame)resumeAutomaticAnimation()}
 }
 function createTiles(){const root=$('puzzle');root.innerHTML='';for(let i=0;i<15;i++){const el=document.createElement('div');el.className='tile';el.dataset.tile=i;el.onclick=()=>moveTile(i);root.appendChild(el)}layout()}
 function layout(){const root=$('puzzle'),w=root.clientWidth||480,ts=w/GRID;root.querySelectorAll('.tile').forEach(el=>{const tile=+el.dataset.tile,pos=state.tiles.indexOf(tile),r=Math.floor(pos/GRID),c=pos%GRID,sr=Math.floor(tile/GRID),sc=tile%GRID;Object.assign(el.style,{width:ts+'px',height:ts+'px',backgroundImage:`url(${state.solutionURL})`,backgroundSize:`${w}px ${w}px`,backgroundPosition:`${-sc*ts}px ${-sr*ts}px`,transform:`translate(${c*ts}px,${r*ts}px)`,visibility:state.showing?'hidden':'visible'})});$('win').classList.toggle('show',isSolved()&&!state.showing)}
@@ -588,17 +599,20 @@ function shuffle(n=150){state.showing=false;$('showSolution').textContent='Voir 
 function isSolved(){return state.tiles.every((v,i)=>v===i)}
 function showSolution(){state.showing=!state.showing;$('puzzle').style.background=state.showing?`#000 url(${state.solutionURL}) center/cover no-repeat`:'#070707';$('showSolution').textContent=state.showing?'Revenir au jeu':'Voir la solution';layout()}
 function resetAll(){
- stopAnimation({render:false});stopCamera();state.photos=[];state.marks=[];state.step=0;state.photoVersion++;state.previewTriangles=[];state.previewTrianglesVersion=-1;state.regionCache=null;state.auto={scale:1,rot:0,tx:0,ty:0};state.buffers.clear();if(state.webgl)state.webgl.textureVersion=-1;
+ stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,autoStartRaf:0,exporting:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();state.photos=[];state.marks=[];state.step=0;state.photoVersion++;state.previewTriangles=[];state.previewTrianglesVersion=-1;state.regionCache=null;state.auto={scale:1,rot:0,tx:0,ty:0};state.buffers.clear();if(state.webgl)state.webgl.textureVersion=-1;
  ['offsetX','offsetY','rotation'].forEach(id=>$(id).value=0);$('scale').value=100;$('blend').value=50;
  captureBtn.textContent='Prendre le visage 1';for(const id of ['thumb1','thumb2','sourceThumb1','sourceThumb2'])$(id).style.backgroundImage='none';showStage('captureStage');
  status.textContent=state.detectorState==='ready'?'Détecteur prêt. Active la caméra.':state.detectorState==='failed'?'Détecteur indisponible. Le réglage manuel reste utilisable.':'Chargement du détecteur de visage…'
 }
 $('startCamera').onclick=startCamera;$('capture').onclick=takePhoto;$('switchCamera').onclick=()=>{state.facing=state.facing==='user'?'environment':'user';startCamera()};$('resetAll').onclick=resetAll;
 $('backCapture').onclick=resetAll;$('autoAlign').onclick=autoAlign;$('makePuzzle').onclick=buildPuzzle;$('shuffle').onclick=()=>shuffle(180);$('showSolution').onclick=showSolution;
-$('backAlign').onclick=()=>{state.showing=false;showStage('alignStage');updatePreviewSize();scheduleRender()};
+$('backAlign').onclick=()=>{state.showing=false;showStage('alignStage');updatePreviewSize();scheduleRender();if(state.animation.resumeAfterGame){state.animation.userFrozen=false;resumeAutomaticAnimation()}};
 window.addEventListener('resize',()=>requestAnimationFrame(()=>{if($('alignStage').classList.contains('active'))updatePreviewSize();layout()}));
-document.addEventListener('visibilitychange',()=>{const animation=state.animation;if(document.hidden){if(animation.raf)cancelAnimationFrame(animation.raf);animation.raf=0;animation.lastTick=0}else if(animation.running&&$('alignStage').classList.contains('active')){animation.lastTick=performance.now();queueAnimationLoop()}});
-window.addEventListener('pagehide',()=>{if(state.animation.running)stopAnimation({freeze:true,render:false});stopCamera()});
+document.addEventListener('visibilitychange',()=>{const animation=state.animation;if(document.hidden){if(animation.raf)cancelAnimationFrame(animation.raf);animation.raf=0;animation.lastTick=0}else if(animation.resumeOnPageShow&&$('alignStage').classList.contains('active')){animation.resumeOnPageShow=false;if(animation.running){animation.lastTick=performance.now();queueAnimationLoop()}else if(animation.frozenFrame)resumeAutomaticAnimation();else maybeAutoStartAnimation()}else if(animation.running&&$('alignStage').classList.contains('active')){animation.lastTick=performance.now();queueAnimationLoop()}});
+window.addEventListener('pagehide',()=>{const animation=state.animation;animation.resumeOnPageShow=animation.running||!!animation.autoStartRaf;cancelPendingAutoStart();if(animation.raf)cancelAnimationFrame(animation.raf);animation.raf=0;animation.lastTick=0;stopCamera()});
+window.addEventListener('pageshow',()=>{const animation=state.animation;if(animation.resumeOnPageShow&&!document.hidden&&$('alignStage').classList.contains('active')){animation.resumeOnPageShow=false;if(animation.running){animation.lastTick=performance.now();queueAnimationLoop()}else if(animation.frozenFrame)resumeAutomaticAnimation();else maybeAutoStartAnimation()}});
+function reducedMotionChanged(event){const animation=state.animation;if(event.matches){const shouldResume=animation.running||!!animation.autoStartRaf;cancelPendingAutoStart();if(animation.running)stopAnimation({freeze:true});animation.resumeAfterMotion=shouldResume&&!animation.userFrozen;if(animation.resumeAfterMotion)$('modeStatus').textContent='Animation suspendue par le réglage iPhone « Réduire les animations ».';syncAnimationControls()}else{syncAnimationControls();if(animation.resumeAfterMotion||animation.resumeAfterGame)resumeAutomaticAnimation();else maybeAutoStartAnimation()}}
+if(reducedMotionQuery){if(reducedMotionQuery.addEventListener)reducedMotionQuery.addEventListener('change',reducedMotionChanged);else reducedMotionQuery.addListener?.(reducedMotionChanged)}
 syncRegionControls();syncAnimationControls();
 </script>
 </body>
