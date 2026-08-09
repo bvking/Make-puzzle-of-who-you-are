@@ -22,6 +22,8 @@ let agentLayer;
 const FIRST_IMAGE_SRC = "visage_homme.png";
 const SECOND_IMAGE_SRC = "visage_femme.png";
 const WHO_ARE_WE_PRESET_NAME = "who_are_we";
+const TAQUIN_PRESET_NAME = "taquin";
+const TAQUIN_PAGE_PATH = "../Taquin%20deux%20visages%20interpol%C3%A9s/index.html?v=20260809-safari-v1";
 const WHO_ARE_WE_BACKGROUND_SWITCH_THRESHOLD = 0.3;
 const WHO_ARE_WE_BACKGROUND_SWITCH_INTERVAL_MS = 500;
 
@@ -130,6 +132,18 @@ const WHO_ARE_WE_PRESET = JSON.parse(JSON.stringify(IPHONE_PRESET));
 WHO_ARE_WE_PRESET.name = WHO_ARE_WE_PRESET_NAME;
 DEFAULT_PRESETS.push(WHO_ARE_WE_PRESET);
 let presets = JSON.parse(JSON.stringify(DEFAULT_PRESETS));
+
+function ensureTaquinPreset() {
+  const existingIndex = presets.findIndex(
+    preset => preset && preset.name === TAQUIN_PRESET_NAME
+  );
+  if (existingIndex >= 0) return existingIndex;
+
+  const taquinPreset = JSON.parse(JSON.stringify(IPHONE_PRESET));
+  taquinPreset.name = TAQUIN_PRESET_NAME;
+  presets.push(taquinPreset);
+  return presets.length - 1;
+}
 
 // -------------------- PARAMS & GUI --------------------
 let params = {
@@ -280,6 +294,7 @@ function setup() {
   // charge paramètres + positions
   if (RESET_SAVED_STATE_ON_START) clearSavedState();
   loadParams();
+  ensureTaquinPreset();
   applyStartupPreset();
 
   // GUI
@@ -1099,6 +1114,14 @@ function savePreset(index) {
 function applyPreset(index, options = {}) {
   const { notify = true, updateGui = true } = options;
   if (index < 0 || index >= presets.length) return;
+
+  if (presets[index] && presets[index].name === TAQUIN_PRESET_NAME) {
+    activePresetIndex = index;
+    updateMobilePresetButton();
+    window.location.assign(new URL(TAQUIN_PAGE_PATH, window.location.href).href);
+    return true;
+  }
+
   if (!presets[index] || !presets[index].params) {
     if (notify) alert(`Le preset "${presets[index].name}" est vide!`);
     return false;
