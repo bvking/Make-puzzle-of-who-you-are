@@ -34,7 +34,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <main>
 <span class="badge">Alignement automatique du visage · 22/07/2026</span>
 <h1>Taquin — deux visages</h1>
-<p class="lead">Les yeux, le nez et la bouche sont détectés puis superposés automatiquement avant le mélange.</p>
+<p class="lead">Les yeux, le nez et la bouche servent à calculer automatiquement l’alignement avant le mélange.</p>
 <section id="captureStage" class="stage active"><div class="card">
 <div class="viewport"><video id="video" playsinline muted autoplay></video><div class="guide"></div></div>
 <div class="controls"><div class="row"><button id="startCamera">Activer la caméra</button><button id="capture" disabled>Prendre le visage 1</button></div>
@@ -62,25 +62,59 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 </div></section>
 </main>
 <script type="module">
-import {FaceLandmarker,FilesetResolver} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/+esm";
+const MEDIAPIPE_MODULE="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs";
+const MEDIAPIPE_WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm";
+const FACE_MODEL="https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
 const SIZE=768,GRID=4,$=id=>document.getElementById(id),stages=['captureStage','alignStage','gameStage'];
-const state={stream:null,facing:'user',photos:[],marks:[],step:0,tiles:[],blank:15,solutionURL:'',showing:false,landmarker:null,auto:{scale:1,rot:0,tx:0,ty:0}};
+const state={stream:null,facing:'user',photos:[],marks:[],step:0,tiles:[],blank:15,solutionURL:'',showing:false,landmarker:null,detectorState:'loading',cameraRequest:0,auto:{scale:1,rot:0,tx:0,ty:0}};
 const video=$('video'),captureBtn=$('capture'),status=$('captureStatus'),alignCanvas=$('alignCanvas'),actx=alignCanvas.getContext('2d');
 alignCanvas.width=alignCanvas.height=SIZE;
 function showStage(id){stages.forEach(s=>$(s).classList.toggle('active',s===id))}
+function landmarkerOptions(delegate){
+ const baseOptions={modelAssetPath:FACE_MODEL};
+ if(delegate)baseOptions.delegate=delegate;
+ return{baseOptions,runningMode:"IMAGE",numFaces:1,minFaceDetectionConfidence:.55,minFacePresenceConfidence:.55,minTrackingConfidence:.5}
+}
 async function initLandmarker(){
  try{
-  const vision=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm");
-  state.landmarker=await FaceLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",delegate:"GPU"},runningMode:"IMAGE",numFaces:1,minFaceDetectionConfidence:.55,minFacePresenceConfidence:.55,minTrackingConfidence:.5});
-  status.textContent='Détecteur prêt. Active la caméra et cadre le visage de face.';
- }catch(e){status.textContent='Détecteur indisponible. Le réglage manuel restera utilisable.';console.error(e)}
+  const {FaceLandmarker,FilesetResolver}=await import(MEDIAPIPE_MODULE);
+  const vision=await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM);
+  try{state.landmarker=await FaceLandmarker.createFromOptions(vision,landmarkerOptions("GPU"))}
+  catch(gpuError){
+   console.warn("Délégué GPU indisponible, nouvel essai sur CPU.",gpuError);
+   state.landmarker=await FaceLandmarker.createFromOptions(vision,landmarkerOptions())
+  }
+  state.detectorState='ready';
+  status.textContent=state.stream?'Détecteur prêt. Place le visage de face, yeux ouverts.':'Détecteur prêt. Active la caméra et cadre le visage de face.';
+ }catch(e){
+  state.landmarker=null;state.detectorState='failed';
+  status.textContent='Détecteur indisponible. Le réglage manuel reste utilisable.';
+  console.error(e)
+ }
 }
-initLandmarker();
-function stopCamera(){if(state.stream){state.stream.getTracks().forEach(t=>t.stop());state.stream=null}video.srcObject=null}
+const landmarkerReady=initLandmarker();
+function stopCamera(){
+ state.cameraRequest++;captureBtn.disabled=true;
+ if(state.stream){state.stream.getTracks().forEach(t=>t.stop());state.stream=null}
+ video.srcObject=null
+}
 async function startCamera(){
- stopCamera();status.textContent='Ouverture de la caméra…';
- try{state.stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:state.facing},width:{ideal:1280},height:{ideal:1280}}});video.srcObject=state.stream;await video.play();captureBtn.disabled=false;status.textContent=state.step?'Reproduis le cadrage du premier visage.':'Place le visage de face, yeux ouverts.'}
- catch(e){status.textContent='Caméra indisponible : '+(e.message||e)}
+ stopCamera();const request=state.cameraRequest,facing=state.facing;let stream=null;
+ status.textContent='Ouverture de la caméra…';
+ try{
+  if(!navigator.mediaDevices?.getUserMedia)throw new Error('accès caméra indisponible — ouvre cette page HTTPS dans Safari');
+  stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:1280}}});
+  if(request!==state.cameraRequest){stream.getTracks().forEach(t=>t.stop());return}
+  state.stream=stream;video.srcObject=stream;await video.play();
+  if(request!==state.cameraRequest)return;
+  captureBtn.disabled=false;
+  status.textContent=state.step?'Reproduis le cadrage du premier visage.':'Place le visage de face, yeux ouverts.'
+ }catch(e){
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  if(request!==state.cameraRequest)return;
+  state.stream=null;video.srcObject=null;captureBtn.disabled=true;
+  status.textContent='Caméra indisponible : '+(e.message||e)
+ }
 }
 function captureSquare(){
  const c=document.createElement('canvas');c.width=c.height=SIZE;const ctx=c.getContext('2d'),vw=video.videoWidth,vh=video.videoHeight;if(!vw||!vh)return null;
@@ -95,7 +129,11 @@ function anchors(lm){return[
 ]}
 function detect(c){
  if(!state.landmarker)return null;
- const r=state.landmarker.detect(c);return r.faceLandmarks?.[0]||null
+ try{return state.landmarker.detect(c).faceLandmarks?.[0]||null}
+ catch(e){
+  console.error(e);state.landmarker=null;state.detectorState='failed';
+  return null
+ }
 }
 function similarity(src,dst){
  const n=src.length,cs=src.reduce((a,p)=>({x:a.x+p.x/n,y:a.y+p.y/n}),{x:0,y:0}),cd=dst.reduce((a,p)=>({x:a.x+p.x/n,y:a.y+p.y/n}),{x:0,y:0});
@@ -107,16 +145,28 @@ function autoAlign(){
  if(state.marks[0]&&state.marks[1]){
   state.auto=similarity(anchors(state.marks[1]),anchors(state.marks[0]));
   ['offsetX','offsetY','rotation'].forEach(id=>$(id).value=0);$('scale').value=100;
-  $('alignStatus').textContent='Alignement automatique réussi : yeux, nez et bouche superposés.';
- }else{$('alignStatus').textContent='Points du visage non détectés sur une photo : utilise les réglages fins ou refais les portraits de face.'}
+  $('alignStatus').textContent='Alignement automatique calculé à partir des yeux, du nez et de la bouche.';
+ }else{state.auto={scale:1,rot:0,tx:0,ty:0};$('alignStatus').textContent='Détection incomplète : utilise les réglages manuels ou refais les portraits de face.'}
  renderBlend()
 }
-function takePhoto(){
- const c=captureSquare();if(!c)return;const lm=detect(c);
- if(state.landmarker&&!lm){status.textContent='Visage non détecté. Regarde l’objectif, éclaire le visage et recommence.';return}
+async function takePhoto(){
+ const c=captureSquare();
+ if(!c){status.textContent='Image caméra pas encore prête. Réessaie dans un instant.';return}
+ const request=state.cameraRequest;captureBtn.disabled=true;status.textContent='Analyse du visage…';
+ await landmarkerReady;
+ if(request!==state.cameraRequest)return;
+ const lm=detect(c);
+ if(state.detectorState==='ready'&&!lm){
+  const keep=window.confirm('Visage non détecté. OK pour garder cette photo et continuer avec le réglage manuel, ou Annuler pour la reprendre.');
+  if(!keep){captureBtn.disabled=false;status.textContent='Photo non conservée. Éclaire le visage, regarde l’objectif et recommence.';return}
+ }
  state.photos[state.step]=c;state.marks[state.step]=lm;$('thumb'+(state.step+1)).style.backgroundImage=`url(${c.toDataURL('image/jpeg',.85)})`;
- if(state.step===0){state.step=1;captureBtn.textContent='Prendre le visage 2';status.textContent='Garde la même distance et la tête bien droite.'}
- else{stopCamera();state.step=0;captureBtn.textContent='Prendre le visage 1';showStage('alignStage');autoAlign()}
+ if(state.step===0){
+  state.step=1;captureBtn.textContent='Prendre le visage 2';captureBtn.disabled=false;
+  status.textContent=lm?'Garde la même distance et la tête bien droite.':'Premier visage conservé sans détection. Le réglage manuel restera disponible.'
+ }else{
+  stopCamera();state.step=0;captureBtn.textContent='Prendre le visage 1';showStage('alignStage');autoAlign()
+ }
 }
 function fine(){return{x:+$('offsetX').value,y:+$('offsetY').value,s:+$('scale').value/100,r:+$('rotation').value*Math.PI/180,a:+$('blend').value/100}}
 function drawPhoto2(ctx,v,alpha){
@@ -130,15 +180,21 @@ function renderBlend(target=actx){
 }
 ['offsetX','offsetY','scale','rotation','blend'].forEach(id=>$(id).addEventListener('input',()=>renderBlend()));
 function finalImage(){const c=document.createElement('canvas');c.width=c.height=SIZE;renderBlend(c.getContext('2d'));return c}
-function buildPuzzle(){state.solutionURL=finalImage().toDataURL('image/jpeg',.92);state.tiles=Array.from({length:16},(_,i)=>i);state.blank=15;createTiles();shuffle(180);showStage('gameStage')}
+function buildPuzzle(){state.solutionURL=finalImage().toDataURL('image/jpeg',.92);state.tiles=Array.from({length:16},(_,i)=>i);state.blank=15;showStage('gameStage');createTiles();shuffle(180)}
 function createTiles(){const root=$('puzzle');root.innerHTML='';for(let i=0;i<15;i++){const el=document.createElement('div');el.className='tile';el.dataset.tile=i;el.onclick=()=>moveTile(i);root.appendChild(el)}layout()}
 function layout(){const root=$('puzzle'),w=root.clientWidth||480,ts=w/GRID;root.querySelectorAll('.tile').forEach(el=>{const tile=+el.dataset.tile,pos=state.tiles.indexOf(tile),r=Math.floor(pos/GRID),c=pos%GRID,sr=Math.floor(tile/GRID),sc=tile%GRID;Object.assign(el.style,{width:ts+'px',height:ts+'px',backgroundImage:`url(${state.solutionURL})`,backgroundSize:`${w}px ${w}px`,backgroundPosition:`${-sc*ts}px ${-sr*ts}px`,transform:`translate(${c*ts}px,${r*ts}px)`,visibility:state.showing?'hidden':'visible'})});$('win').classList.toggle('show',isSolved()&&!state.showing)}
 function adjacent(a,b){return Math.abs(Math.floor(a/GRID)-Math.floor(b/GRID))+Math.abs(a%GRID-b%GRID)===1}
 function moveTile(tile){if(state.showing)return;const p=state.tiles.indexOf(tile),b=state.tiles.indexOf(state.blank);if(!adjacent(p,b))return;[state.tiles[p],state.tiles[b]]=[state.tiles[b],state.tiles[p]];layout()}
-function shuffle(n=150){state.showing=false;let prev=-1;for(let k=0;k<n;k++){const b=state.tiles.indexOf(state.blank),opts=[];for(let i=0;i<16;i++)if(adjacent(i,b)&&i!==prev)opts.push(i);const p=opts[Math.floor(Math.random()*opts.length)];prev=b;[state.tiles[p],state.tiles[b]]=[state.tiles[b],state.tiles[p]]}$('puzzle').style.backgroundImage='none';layout()}
+function shuffle(n=150){state.showing=false;$('showSolution').textContent='Voir la solution';let prev=-1;for(let k=0;k<n;k++){const b=state.tiles.indexOf(state.blank),opts=[];for(let i=0;i<16;i++)if(adjacent(i,b)&&i!==prev)opts.push(i);const p=opts[Math.floor(Math.random()*opts.length)];prev=b;[state.tiles[p],state.tiles[b]]=[state.tiles[b],state.tiles[p]]}$('puzzle').style.background='#070707';layout()}
 function isSolved(){return state.tiles.every((v,i)=>v===i)}
 function showSolution(){state.showing=!state.showing;$('puzzle').style.background=state.showing?`#000 url(${state.solutionURL}) center/cover no-repeat`:'#070707';$('showSolution').textContent=state.showing?'Revenir au jeu':'Voir la solution';layout()}
-function resetAll(){stopCamera();state.photos=[];state.marks=[];state.step=0;captureBtn.textContent='Prendre le visage 1';captureBtn.disabled=true;$('thumb1').style.backgroundImage=$('thumb2').style.backgroundImage='none';showStage('captureStage');status.textContent=state.landmarker?'Détecteur prêt. Active la caméra.':'Chargement du détecteur…'}
+function resetAll(){
+ stopCamera();state.photos=[];state.marks=[];state.step=0;state.auto={scale:1,rot:0,tx:0,ty:0};
+ ['offsetX','offsetY','rotation'].forEach(id=>$(id).value=0);$('scale').value=100;
+ captureBtn.textContent='Prendre le visage 1';$('thumb1').style.backgroundImage=$('thumb2').style.backgroundImage='none';
+ showStage('captureStage');
+ status.textContent=state.detectorState==='ready'?'Détecteur prêt. Active la caméra.':state.detectorState==='failed'?'Détecteur indisponible. Le réglage manuel reste utilisable.':'Chargement du détecteur de visage…'
+}
 $('startCamera').onclick=startCamera;$('capture').onclick=takePhoto;$('switchCamera').onclick=()=>{state.facing=state.facing==='user'?'environment':'user';startCamera()};$('resetAll').onclick=resetAll;
 $('backCapture').onclick=resetAll;$('autoAlign').onclick=autoAlign;$('makePuzzle').onclick=buildPuzzle;$('shuffle').onclick=()=>shuffle(180);$('showSolution').onclick=showSolution;$('backAlign').onclick=()=>{state.showing=false;showStage('alignStage');renderBlend()};
 window.addEventListener('resize',()=>requestAnimationFrame(layout));window.addEventListener('pagehide',stopCamera);
