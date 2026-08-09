@@ -47,7 +47,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <div class="thumbrow"><div id="thumb1" class="thumb" role="img" aria-label="Aperçu de la photo 1"></div><div id="thumb2" class="thumb" role="img" aria-label="Aperçu de la photo 2"></div></div>
 </div></section>
 <section id="alignStage" class="stage"><div class="card">
-<div class="viewport"><canvas id="alignCanvas" role="img" aria-label="Aperçu de la composition des deux visages">Aperçu de la composition des deux visages.</canvas><span id="animationBadge" class="animation-badge" aria-hidden="true" hidden>MORPHING ACTIF</span><div class="guide"></div></div>
+<div class="viewport"><canvas id="alignCanvas" role="img" aria-label="Aperçu de la composition des deux visages">Aperçu de la composition des deux visages.</canvas><span id="animationBadge" class="animation-badge" aria-hidden="true" hidden>MORPHING ACTIF</span></div>
 <div id="alignStatus" class="status"></div>
 <div class="controls">
 <div class="source-key" role="group" aria-label="Photos sources"><div class="source-card"><div id="sourceThumb1" class="source-thumb" role="img" aria-label="Photo source 1"></div><span>Photo 1</span></div><div class="source-card"><div id="sourceThumb2" class="source-thumb" role="img" aria-label="Photo source 2"></div><span>Photo 2</span></div></div>
@@ -93,7 +93,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <div class="row"><button id="autoAlign" type="button" class="secondary">Réaligner automatiquement</button><button id="makePuzzle" type="button">Créer le taquin</button></div>
 <button id="backCapture" type="button" class="secondary">Refaire les photos</button>
 </div>
-<p class="note">En WebGL, l’animation module lentement la forme, le mélange et les réglages fins. En Régions, elle fait respirer séparément les deux moitiés, les yeux, le nez et la bouche. Les cheveux et le fond restent issus de la photo 1. En cas de détection incomplète, le fondu manuel superposé reste disponible.</p>
+<p class="note">En WebGL, l’animation module lentement la forme, le mélange et les réglages fins. En Régions, elle déforme aussi le maillage du visage tout en faisant respirer séparément les deux moitiés, les yeux, le nez et la bouche. Les cheveux et le fond restent issus de la photo 1. En cas de détection incomplète, le fondu manuel superposé reste disponible.</p>
 </div></section>
 <section id="gameStage" class="stage"><div class="card">
 <div id="puzzle" class="puzzle"></div><div id="win" class="win">Visage reconstitué.</div>
@@ -114,6 +114,7 @@ const REGION_IDS={
 };
 const REGION_KEYS=['left','right','leftEye','rightEye','nose','mouth'];
 const REGION_CONTROL_IDS={left:'regionLeft',right:'regionRight',leftEye:'regionLeftEye',rightEye:'regionRightEye',nose:'regionNose',mouth:'regionMouth'};
+const REGION_MOTION_IDS=[10,168,6,1,2,13,14,17,152,33,133,159,145,362,263,386,374,61,291,98,327];
 const state={
  stream:null,facing:'user',photos:[],marks:[],step:0,tiles:[],blank:15,solutionURL:'',showing:false,
  landmarker:null,detectorState:'loading',cameraRequest:0,auto:{scale:1,rot:0,tx:0,ty:0},
@@ -287,6 +288,9 @@ function buildPreviewTriangles(){
  for(let i=0;i<468;i+=12)ids.add(i);for(const groups of Object.values(REGION_IDS))for(const group of groups){const stride=Math.max(1,Math.ceil(group.length/6));for(let i=0;i<group.length;i+=stride)ids.add(group[i])}
  return delaunayTriangles(points,[...ids])
 }
+function buildRegionMotionTriangles(points){
+ const ids=new Set([...REGION_MOTION_IDS,...state.faceOval]),triangles=delaunayTriangles(points,[...ids]);return triangles.length>=25?triangles:state.previewTriangles
+}
 function trianglesForSize(size){return size<SIZE&&state.previewTriangles.length?state.previewTriangles:state.meshTriangles}
 function updateModeAvailability(){
  const available=canMeshMorph();document.querySelectorAll('[data-mode]').forEach(button=>{button.disabled=!available});
@@ -319,8 +323,8 @@ function expandedTriangle(points,pad=.7){
  const cx=(points[0].x+points[1].x+points[2].x)/3,cy=(points[0].y+points[1].y+points[2].y)/3;
  return points.map(p=>{const dx=p.x-cx,dy=p.y-cy,len=Math.hypot(dx,dy)||1,scale=(len+pad)/len;return{x:cx+dx*scale,y:cy+dy*scale}})
 }
-function warpTriangle(ctx,image,src,dst){
- const m=affine(src,dst);if(!m)return false;const clip=expandedTriangle(dst);
+function warpTriangle(ctx,image,src,dst,pad=.7){
+ const m=affine(src,dst);if(!m)return false;const clip=expandedTriangle(dst,pad);
  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.beginPath();ctx.moveTo(clip[0].x,clip[0].y);ctx.lineTo(clip[1].x,clip[1].y);ctx.lineTo(clip[2].x,clip[2].y);ctx.closePath();ctx.clip();
  ctx.setTransform(m.a,m.b,m.c,m.d,m.e,m.f);ctx.drawImage(image,0,0);ctx.restore();return true
 }
@@ -329,6 +333,14 @@ function warpImage(name,size,image,sourcePoints,targetPoints){
  for(const ids of trianglesForSize(size)){
   const src=ids.map(i=>sourcePoints[i]),dst=ids.map(i=>({x:targetPoints[i].x*q,y:targetPoints[i].y*q}));
   if(src.every(Boolean)&&dst.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)))warpTriangle(ctx,image,src,dst)
+ }
+ return canvas
+}
+function warpCanvasLayer(name,size,image,sourcePoints,targetPoints,triangles){
+ const canvas=getBuffer(name,size),ctx=canvas.getContext('2d'),q=size/SIZE;
+ for(const ids of triangles){
+  const src=ids.map(i=>sourcePoints[i]).map(p=>p&&({x:p.x*q,y:p.y*q})),dst=ids.map(i=>targetPoints[i]).map(p=>p&&({x:p.x*q,y:p.y*q}));
+  if(src.every(Boolean)&&dst.every(p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y)))warpTriangle(ctx,image,src,dst,1.75)
  }
  return canvas
 }
@@ -428,8 +440,8 @@ function drawExpandedHull(ctx,points,padding){
  const hull=convexHull(points);if(hull.length<3)return false;ctx.beginPath();ctx.moveTo(hull[0].x,hull[0].y);for(let i=1;i<hull.length;i++)ctx.lineTo(hull[i].x,hull[i].y);ctx.closePath();ctx.fill();
  if(padding>0){ctx.lineJoin='round';ctx.lineCap='round';ctx.lineWidth=padding*2;ctx.stroke()}return true
 }
-function regionOuterMask(size,points){
- const mask=getBuffer('advanced-region-outer-mask',size),ctx=mask.getContext('2d'),q=size/SIZE,feather=Math.max(4,size/64);ctx.fillStyle=ctx.strokeStyle='#fff';
+function regionOuterMask(size,points,name='advanced-region-outer-mask'){
+ const mask=getBuffer(name,size),ctx=mask.getContext('2d'),q=size/SIZE,feather=Math.max(4,size/64);ctx.fillStyle=ctx.strokeStyle='#fff';
  ctx.save();if('filter' in ctx)ctx.filter=`blur(${feather}px)`;if(traceOval(ctx,points,q))ctx.fill();ctx.restore();return mask
 }
 function meanPointX(points,ids){let sum=0,count=0;for(const id of ids){const point=points[id];if(point){sum+=point.x;count++}}return count?sum/count:Infinity}
@@ -482,19 +494,21 @@ function mixedRegionTexture(slot,size,a,b,mix){
 function drawMaskedRegion(ctx,source,mask,name,size){
  const layer=getBuffer(`advanced-region-layer-${name}`,size),lctx=layer.getContext('2d');lctx.drawImage(source,0,0);lctx.globalCompositeOperation='destination-in';lctx.drawImage(mask,0,0);lctx.globalCompositeOperation='source-over';ctx.drawImage(layer,0,0)
 }
-function renderRegions(canvas,v,regionMix=state.regionMix){
- const size=canvas.width,assets=regionAssets(size,v);if(!assets)return renderAlphaFallback(canvas,v);const masks=regionMasks(assets),sourceB=harmonizedRegionSource(assets,masks),textures=new Map([['0.000',assets.warpA],['1.000',sourceB]]);let textureSlot=0;
+function renderRegions(canvas,v,regionMix=state.regionMix,regionBaseValues=null){
+ const size=canvas.width,animatedPreview=!!regionBaseValues&&size<SIZE,compositionValues=animatedPreview?regionBaseValues:v,assets=regionAssets(size,compositionValues);if(!assets)return renderAlphaFallback(canvas,v);const masks=regionMasks(assets),sourceB=harmonizedRegionSource(assets,masks),textures=new Map([['0.000',assets.warpA],['1.000',sourceB]]);let textureSlot=0;
  const texture=mix=>{const value=clamp(mix,0,1),key=value.toFixed(3);if(!textures.has(key))textures.set(key,mixedRegionTexture(textureSlot++,size,assets.warpA,sourceB,value));return textures.get(key)};
  const face=getBuffer('advanced-region-composition',size),fctx=face.getContext('2d'),mix=regionMix;fctx.drawImage(texture(mix.left),0,0);
  if(Math.abs(mix.right-mix.left)>.001)drawMaskedRegion(fctx,texture(mix.right),masks.right,'right-half',size);
  for(const name of ['leftEye','rightEye'])if(Math.abs(mix[name]-mix[name==='leftEye'?'left':'right'])>.001)drawMaskedRegion(fctx,texture(mix[name]),masks[name],name,size);
  for(const name of ['nose','mouth'])if(Math.abs(mix[name]-mix.left)>.001||Math.abs(mix[name]-mix.right)>.001)drawMaskedRegion(fctx,texture(mix[name]),masks[name],name,size);
- const finalFace=getBuffer('advanced-region-final-face',size),finalCtx=finalFace.getContext('2d');finalCtx.drawImage(face,0,0);finalCtx.globalCompositeOperation='destination-in';finalCtx.drawImage(masks.outer,0,0);finalCtx.globalCompositeOperation='source-over';const ctx=drawBackground(canvas);ctx.drawImage(finalFace,0,0);
- return{fallback:false,message:`Régions avancées · gauche ${Math.round(mix.left*100)} %, droite ${Math.round(mix.right*100)} % · transitions ${Math.round(regionFeatherPixels(SIZE))} px · harmonie ${Math.round(state.regionHarmony*100)} %.`}
+ const finalFace=getBuffer('advanced-region-final-face',size),finalCtx=finalFace.getContext('2d');finalCtx.drawImage(face,0,0);finalCtx.globalCompositeOperation='destination-in';finalCtx.drawImage(masks.outer,0,0);finalCtx.globalCompositeOperation='source-over';let displayedFace=finalFace;
+ if(animatedPreview){const animatedGeometry=meshGeometry(v);if(animatedGeometry){if(!assets.motionTriangles)assets.motionTriangles=buildRegionMotionTriangles(assets.geometry.target);const warpedFace=warpCanvasLayer('advanced-region-motion-face',size,face,assets.geometry.target,animatedGeometry.target,assets.motionTriangles),motionMask=regionOuterMask(size,animatedGeometry.target,'advanced-region-motion-mask'),motionFace=getBuffer('advanced-region-motion-final-face',size),motionCtx=motionFace.getContext('2d');motionCtx.drawImage(warpedFace,0,0);motionCtx.globalCompositeOperation='destination-in';motionCtx.drawImage(motionMask,0,0);motionCtx.globalCompositeOperation='source-over';displayedFace=motionFace}}
+ const ctx=drawBackground(canvas);ctx.drawImage(displayedFace,0,0);
+ return{fallback:false,message:`Régions avancées · forme ${Math.round(v.a*100)} % · gauche ${Math.round(mix.left*100)} %, droite ${Math.round(mix.right*100)} % · transitions ${Math.round(regionFeatherPixels(SIZE))} px · harmonie ${Math.round(state.regionHarmony*100)} %.`}
 }
-function renderSelected(canvas,{updateUI=true,values=null,regionMix=null,mode=state.mode}={}){
+function renderSelected(canvas,{updateUI=true,values=null,regionMix=null,regionBaseValues=null,mode=state.mode}={}){
  if(state.photos.length<2)return null;const v=values||readControls();let info;
- if(mode==='webgl')info=renderWebGLMorph(canvas,v);else if(mode==='regions')info=renderRegions(canvas,v,regionMix||state.regionMix);else if(mode==='fallback')info=renderAlphaFallback(canvas,v);else info=renderCanvasMorph(canvas,v);
+ if(mode==='webgl')info=renderWebGLMorph(canvas,v);else if(mode==='regions')info=renderRegions(canvas,v,regionMix||state.regionMix,regionBaseValues);else if(mode==='fallback')info=renderAlphaFallback(canvas,v);else info=renderCanvasMorph(canvas,v);
  if(updateUI){updateControlLabels(v);$('modeStatus').textContent=info?.message||''}return info
 }
 function animationModeAvailable(){return canMeshMorph()&&(state.mode==='webgl'||state.mode==='regions')}
@@ -502,17 +516,17 @@ function animationSettings(){return{amplitude:+$('animationAmplitude').value/100
 function syncAnimationControls(){
  const meshReady=canMeshMorph(),modeReady=state.mode==='webgl'||state.mode==='regions',available=meshReady&&modeReady,animation=state.animation,running=animation.running,frozen=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode,{amplitude,speed}=animationSettings(),controls=$('animationControls'),badge=$('animationBadge'),reduced=automaticMotionReduced();controls.hidden=state.photos.length<2;controls.classList.toggle('is-animating',running);badge.hidden=!running;badge.textContent=running?`MORPHING ACTIF · ${state.mode==='webgl'?'WEBGL':'RÉGIONS'} · ${Math.round(amplitude*100)} %`:'MORPHING ACTIF';$('toggleAnimation').disabled=!available||amplitude<=0;$('toggleAnimation').classList.toggle('is-running',running);$('toggleAnimation').setAttribute('aria-pressed',String(running));$('toggleAnimation').textContent=running?'Arrêter et figer':frozen?'Reprendre doucement':'Démarrer l’animation';
  $('animationAmplitudeVal').textContent=Math.round(amplitude*100)+'%';$('animationAmplitude').setAttribute('aria-valuetext',`${Math.round(amplitude*100)} %`);$('animationSpeedVal').textContent=speed.toFixed(2)+'×';$('animationSpeed').setAttribute('aria-valuetext',`${speed.toFixed(2)} fois`);
- let description;if(!meshReady)description='Animation indisponible : les deux visages doivent être détectés. Reprends la photo non détectée.';else if(!modeReady)description='Choisis Triangles WebGL ou Régions pour lancer automatiquement le morphing animé.';else description=state.mode==='webgl'?'La forme, le mélange, la position, le zoom et la rotation oscillent autour de tes réglages.':'Les deux moitiés, les yeux, le nez et la bouche oscillent indépendamment ; la géométrie reste fixe pour préserver la fluidité.';if(reduced&&available&&!running)description+=' Le réglage iPhone « Réduire les animations » bloque seulement le démarrage automatique : le bouton reste utilisable.';$('animationState').textContent=running?'Animation active':frozen?'Image figée':!meshReady?'Visages non détectés':!modeReady?'Mode statique':reduced?'Prête · démarrage manuel':'Prête à démarrer';$('animationHint').textContent=description+(amplitude<=0?' Amplitude 0 % : animation suspendue.':frozen?' Les curseurs conservent les valeurs centrales.':'')
+ let description;if(!meshReady)description='Animation indisponible : les deux visages doivent être détectés. Reprends la photo non détectée.';else if(!modeReady)description='Choisis Triangles WebGL ou Régions pour lancer automatiquement le morphing animé.';else description=state.mode==='webgl'?'La forme, le mélange, la position, le zoom et la rotation oscillent autour de tes réglages.':'La forme du visage se déforme lentement pendant que les deux moitiés, les yeux, le nez et la bouche oscillent indépendamment.';if(reduced&&available&&!running)description+=' Le réglage iPhone « Réduire les animations » bloque seulement le démarrage automatique : le bouton reste utilisable.';$('animationState').textContent=running?'Animation active':frozen?'Image figée':!meshReady?'Visages non détectés':!modeReady?'Mode statique':reduced?'Prête · démarrage manuel':'Prête à démarrer';$('animationHint').textContent=description+(amplitude<=0?' Amplitude 0 % : animation suspendue.':frozen?' Les curseurs conservent les valeurs centrales.':'')
 }
 function smoothstep(value){return value*value*(3-2*value)}
 function oscillatedBounded(base,amount,wave,min,max){const low=Math.max(min,base-amount),high=Math.min(max,base+amount);return low+(high-low)*(wave+1)/2}
 function oscillatedRegionMix(base,amount,wave){return oscillatedBounded(base,amount,wave,0,1)}
-function animationSnapshot(mode,values,regionMix){return{mode,values,regionMix,auto:{...state.auto},regionFeather:state.regionFeather,regionHarmony:state.regionHarmony}}
+function animationSnapshot(mode,values,regionMix,regionBaseValues=null){return{mode,values,regionMix,regionBaseValues:regionBaseValues?{...regionBaseValues}:null,auto:{...state.auto},regionFeather:state.regionFeather,regionHarmony:state.regionHarmony}}
 function animationFrame(){
  const animation=state.animation,base=animation.baseControls,p=animation.phase,{amplitude}=animationSettings(),amount=amplitude*smoothstep(animation.ramp);if(!base)return null;
  if(state.mode==='webgl')return animationSnapshot('webgl',{x:oscillatedBounded(base.x,amount*25,Math.sin(p*.73),-100,100),y:oscillatedBounded(base.y,amount*20,Math.sin(p*.91+.8),-100,100),s:oscillatedBounded(base.s,amount*.0625,Math.sin(p*.57+1.7),.85,1.15),r:oscillatedBounded(base.r,amount*.055,Math.sin(p*.49+2.6),-8*Math.PI/180,8*Math.PI/180),a:oscillatedBounded(base.a,amount,Math.sin(p*.67+3.4),0,1)},null);
  const patterns={left:[.72,.2],right:[.83,2.2],leftEye:[1.07,4.1],rightEye:[1.19,1.4],nose:[.91,3.3],mouth:[.63,5.2]},mix={};
- for(const key of REGION_KEYS){const [frequency,offset]=patterns[key];mix[key]=oscillatedRegionMix(animation.baseRegionMix[key],amount,Math.sin(p*frequency+offset))}return animationSnapshot('regions',{...base},mix)
+ for(const key of REGION_KEYS){const [frequency,offset]=patterns[key];mix[key]=oscillatedRegionMix(animation.baseRegionMix[key],amount,Math.sin(p*frequency+offset))}const shapeAmount=Math.min(.25,amount*.8),values={...base,a:oscillatedBounded(base.a,shapeAmount,Math.sin(p*.5+.6),0,1)};return animationSnapshot('regions',values,mix,base)
 }
 function automaticMotionReduced(){return reducedMotionQuery?.matches===true}
 function cancelPendingAutoStart(){const animation=state.animation;if(animation.autoStartRaf)cancelAnimationFrame(animation.autoStartRaf);animation.autoStartRaf=0}
@@ -525,18 +539,18 @@ function resumeAutomaticAnimation(){queueAutomaticAnimationStart(true)}
 function queueAnimationLoop(){if(state.animation.running&&!state.animation.raf&&!document.hidden&&$('alignStage').classList.contains('active'))state.animation.raf=requestAnimationFrame(animationTick)}
 function animationTick(now){
  const animation=state.animation;animation.raf=0;if(!animation.running)return;if(!animationModeAvailable()){stopAnimation({render:false});return}
- const elapsed=Math.min(.1,Math.max(0,(now-animation.lastTick)/1000)),settings=animationSettings();animation.lastTick=now;animation.phase+=elapsed*.65*settings.speed;animation.ramp=Math.min(1,animation.ramp+elapsed/1.2);const interval=state.mode==='webgl'?1000/20:1000/12;
- if(now-animation.lastRender>=interval-1){const frame=animationFrame();if(frame){const info=renderSelected(alignCanvas,{updateUI:false,values:frame.values,regionMix:frame.regionMix,mode:frame.mode});animation.lastFrame=frame;animation.lastRender=now;
+ const elapsed=Math.min(.1,Math.max(0,(now-animation.lastTick)/1000)),settings=animationSettings();animation.lastTick=now;animation.phase+=elapsed*.65*settings.speed;animation.ramp=Math.min(1,animation.ramp+elapsed/1.2);const interval=state.mode==='webgl'?1000/20:1000/8;
+ if(now-animation.lastRender>=interval-1){const frame=animationFrame();if(frame){const info=renderSelected(alignCanvas,{updateUI:false,values:frame.values,regionMix:frame.regionMix,regionBaseValues:frame.regionBaseValues,mode:frame.mode});animation.lastFrame=frame;animation.lastRender=now;
    if(state.mode==='webgl'&&(!info||info.message.includes('Canvas 2D'))){stopAnimation({freeze:true,render:false});$('modeStatus').textContent='Animation WebGL figée : WebGL indisponible, cette image Canvas est conservée.';return}
   }}queueAnimationLoop()
 }
 function startAnimation(automatic=false){
- cancelPendingAutoStart();if(state.animation.exporting||automatic&&(automaticMotionReduced()||(state.mode==='webgl'&&(state.webgl?.failed||state.webgl?.lost))))return;if(!animationModeAvailable()||state.animation.running||animationSettings().amplitude<=0||!$('alignStage').classList.contains('active'))return;const animation=state.animation;animation.userFrozen=false;animation.resumeAfterGame=false;animation.resumeAfterMotion=false;animation.resumeOnPageShow=false;if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}const resuming=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode&&animation.baseControls;if(!resuming){animation.phase=0;animation.ramp=0;animation.baseControls=readControls();animation.baseRegionMix={...state.regionMix};animation.lastFrame=animationSnapshot(state.mode,{...animation.baseControls},state.mode==='regions'?{...animation.baseRegionMix}:null)}animation.frozenFrame=null;animation.running=true;animation.lastTick=performance.now();animation.lastRender=animation.lastTick-(state.mode==='webgl'?1000/20:1000/12);syncAnimationControls();const {amplitude,speed}=animationSettings();$('modeStatus').textContent=resuming?'Animation reprise doucement.':state.mode==='webgl'?`Animation WebGL active · amplitude ${Math.round(amplitude*100)} % · vitesse ${speed.toFixed(2)}×.`:`Animation Régions active · amplitude ${Math.round(amplitude*100)} % · vitesse ${speed.toFixed(2)}×.`;queueAnimationLoop()
+ cancelPendingAutoStart();if(state.animation.exporting||automatic&&(automaticMotionReduced()||(state.mode==='webgl'&&(state.webgl?.failed||state.webgl?.lost))))return;if(!animationModeAvailable()||state.animation.running||animationSettings().amplitude<=0||!$('alignStage').classList.contains('active'))return;const animation=state.animation;animation.userFrozen=false;animation.resumeAfterGame=false;animation.resumeAfterMotion=false;animation.resumeOnPageShow=false;if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}const resuming=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode&&animation.baseControls;if(!resuming){animation.phase=0;animation.ramp=0;animation.baseControls=readControls();animation.baseRegionMix={...state.regionMix};animation.lastFrame=animationSnapshot(state.mode,{...animation.baseControls},state.mode==='regions'?{...animation.baseRegionMix}:null,state.mode==='regions'?animation.baseControls:null)}animation.frozenFrame=null;animation.running=true;animation.lastTick=performance.now();animation.lastRender=animation.lastTick-(state.mode==='webgl'?1000/20:1000/8);syncAnimationControls();const {amplitude,speed}=animationSettings();$('modeStatus').textContent=resuming?'Animation reprise doucement.':state.mode==='webgl'?`Animation WebGL active · amplitude ${Math.round(amplitude*100)} % · vitesse ${speed.toFixed(2)}×.`:`Animation Régions active · déformation réelle · amplitude ${Math.round(amplitude*100)} % · jusqu’à 8 images/s.`;queueAnimationLoop()
 }
 function stopAnimation({freeze=false,render=true}={}){
  cancelPendingAutoStart();const animation=state.animation;if(!animation.running){if(!freeze&&animation.frozenFrame){animation.frozenFrame=null;animation.baseControls=null;animation.baseRegionMix=null;animation.lastFrame=null;syncAnimationControls();if(render&&state.photos.length>=2&&$('alignStage').classList.contains('active'))scheduleRender()}return}if(animation.raf)cancelAnimationFrame(animation.raf);if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}animation.raf=0;animation.running=false;if(freeze&&animation.lastFrame)animation.frozenFrame=animation.lastFrame;else{animation.frozenFrame=null;animation.baseControls=null;animation.baseRegionMix=null;animation.lastFrame=null;animation.phase=0;animation.ramp=0}syncAnimationControls();if(freeze&&render)$('modeStatus').textContent='Animation figée · Reprendre doucement pour continuer.';if(render&&state.photos.length>=2&&$('alignStage').classList.contains('active'))scheduleRender()
 }
-function frozenRenderOptions(){const frame=state.animation.frozenFrame;return frame&&frame.mode===state.mode?{updateUI:false,values:frame.values,regionMix:frame.regionMix,mode:frame.mode}:null}
+function frozenRenderOptions(){const frame=state.animation.frozenFrame;return frame&&frame.mode===state.mode?{updateUI:false,values:frame.values,regionMix:frame.regionMix,regionBaseValues:frame.regionBaseValues,mode:frame.mode}:null}
 function scheduleRender(){
  if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}
  if(state.animation.running||state.renderQueued)return;state.renderQueued=true;requestAnimationFrame(()=>{state.renderQueued=false;if(!state.animation.running)renderSelected(alignCanvas,frozenRenderOptions()||{})})
@@ -583,7 +597,7 @@ for(const id of ['animationAmplitude','animationSpeed']){$(id).addEventListener(
 
 function finalImage(snapshot=state.animation.frozenFrame){
  const c=makeCanvas(SIZE),previous={auto:state.auto,regionFeather:state.regionFeather,regionHarmony:state.regionHarmony};
- try{if(snapshot?.auto)state.auto={...snapshot.auto};if(Number.isFinite(snapshot?.regionFeather))state.regionFeather=snapshot.regionFeather;if(Number.isFinite(snapshot?.regionHarmony))state.regionHarmony=snapshot.regionHarmony;renderSelected(c,{updateUI:false,values:snapshot?.values||null,regionMix:snapshot?.regionMix||null,mode:snapshot?.mode||state.mode});return c}
+ try{if(snapshot?.auto)state.auto={...snapshot.auto};if(Number.isFinite(snapshot?.regionFeather))state.regionFeather=snapshot.regionFeather;if(Number.isFinite(snapshot?.regionHarmony))state.regionHarmony=snapshot.regionHarmony;renderSelected(c,{updateUI:false,values:snapshot?.values||null,regionMix:snapshot?.regionMix||null,regionBaseValues:snapshot?.regionBaseValues||null,mode:snapshot?.mode||state.mode});return c}
  finally{state.auto=previous.auto;state.regionFeather=previous.regionFeather;state.regionHarmony=previous.regionHarmony}
 }
 async function buildPuzzle(){

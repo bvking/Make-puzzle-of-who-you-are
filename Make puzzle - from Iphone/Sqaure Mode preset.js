@@ -23,7 +23,7 @@ const FIRST_IMAGE_SRC = "visage_homme.png";
 const SECOND_IMAGE_SRC = "visage_femme.png";
 const WHO_ARE_WE_PRESET_NAME = "who_are_we";
 const TAQUIN_PRESET_NAME = "taquin";
-const TAQUIN_PAGE_PATH = "../Taquin%20deux%20visages%20interpol%C3%A9s/index.html?v=20260809-visible-animation-v5";
+const TAQUIN_PAGE_PATH = "../Taquin%20deux%20visages%20interpol%C3%A9s/index.html?v=20260809-real-region-morph-v6";
 const WHO_ARE_WE_BACKGROUND_SWITCH_THRESHOLD = 0.3;
 const WHO_ARE_WE_BACKGROUND_SWITCH_INTERVAL_MS = 500;
 
