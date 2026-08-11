@@ -23,7 +23,7 @@ const FIRST_IMAGE_SRC = "visage_homme.png";
 const SECOND_IMAGE_SRC = "visage_femme.png";
 const WHO_ARE_WE_PRESET_NAME = "who_are_we";
 const TAQUIN_PRESET_NAME = "taquin";
-const TAQUIN_PAGE_PATH = "../Taquin%20deux%20visages%20interpol%C3%A9s/index.html?v=20260811-four-face-emergence-v7";
+const TAQUIN_PAGE_PATH = "../Taquin%20deux%20visages%20interpol%C3%A9s/index.html?v=20260811-uniform-face-light-v8";
 const WHO_ARE_WE_BACKGROUND_SWITCH_THRESHOLD = 0.3;
 const WHO_ARE_WE_BACKGROUND_SWITCH_INTERVAL_MS = 500;
 
