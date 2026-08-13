@@ -36,7 +36,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 </head>
 <body>
 <main>
-<span class="badge">Morphing animé WebGL et Régions · 11/08/2026</span>
+<span class="badge">Alignement précis et morphing animé · 13/08/2026</span>
 <h1>Taquin — deux visages</h1>
 <p class="lead">Choisis WebGL ou Régions. La lumière des deux visages est homogénéisée avant que les traits apparaissent de manière progressive, aléatoire, pulsée ou explosive.</p>
 <section id="captureStage" class="stage active"><div class="card">
@@ -100,7 +100,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <div class="row"><button id="autoAlign" type="button" class="secondary">Réaligner automatiquement</button><button id="makePuzzle" type="button">Créer le taquin</button></div>
 <button id="backCapture" type="button" class="secondary">Refaire les photos</button>
 </div>
-<p class="note">En WebGL, l’animation module lentement la forme, le mélange et les réglages fins. En Régions, le style choisi pilote la sortie des yeux, du nez, de la bouche et du contour sans éclairage additif, tandis que le maillage se déforme. Les cheveux et le fond restent issus de la photo 1. En cas de détection incomplète, le fondu manuel superposé reste disponible.</p>
+<p class="note">En WebGL, l’animation module lentement la forme et le mélange tout en conservant l’alignement global. En Régions, le style choisi pilote la sortie des yeux, du nez, de la bouche et du contour sans éclairage additif, tandis que le maillage se déforme. Les cheveux et le fond restent issus de la photo 1. En cas de détection incomplète, le fondu manuel superposé reste disponible.</p>
 </div></section>
 <section id="gameStage" class="stage"><div class="card">
 <div id="puzzle" class="puzzle"></div><div id="win" class="win">Visage reconstitué.</div>
@@ -128,7 +128,7 @@ const state={
  stream:null,facing:'user',photos:[],marks:[],step:0,tiles:[],blank:15,solutionURL:'',showing:false,
  landmarker:null,detectorState:'loading',cameraRequest:0,auto:{scale:1,rot:0,tx:0,ty:0},
  mode:'canvas',regionMix:{left:0,right:0,leftEye:1,rightEye:1,nose:0,mouth:1},regionFeather:.5,regionHarmony:1,regionAnimationStyle:'progressive',regionCache:null,
- meshTriangles:[],previewTriangles:[],previewTrianglesVersion:-1,faceOval:FALLBACK_FACE_OVAL.slice(),
+ meshTriangles:[],morphTriangles:[],morphTopologyVersion:0,previewTriangles:[],previewTrianglesVersion:-1,faceOval:FALLBACK_FACE_OVAL.slice(),
  buffers:new Map(),webgl:null,photoVersion:0,lighting:{version:-1,corrected:null,blended:null,blendKey:'',stats:null},renderQueued:false,quickRenderQueued:false,accurateRenderTimer:null,
  animation:{running:false,raf:0,autoStartRaf:0,exporting:false,phase:0,ramp:0,lastTick:0,lastRender:0,randomSeed:137,styleTransition:null,baseControls:null,baseRegionMix:null,lastFrame:null,frozenFrame:null,userFrozen:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false}
 };
@@ -181,6 +181,7 @@ async function initLandmarker(){
  try{
   const {FaceLandmarker,FilesetResolver}=await import(MEDIAPIPE_MODULE);
   state.meshTriangles=trianglesFromConnections(FaceLandmarker.FACE_LANDMARKS_TESSELATION||[]);
+  state.morphTriangles=state.meshTriangles.slice();
   state.faceOval=orderedLoop(FaceLandmarker.FACE_LANDMARKS_FACE_OVAL||[]);
   const eyes=[idsFromConnections(FaceLandmarker.FACE_LANDMARKS_LEFT_EYE),idsFromConnections(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE)];
   const brows=[idsFromConnections(FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW),idsFromConnections(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW)],mouth=idsFromConnections(FaceLandmarker.FACE_LANDMARKS_LIPS);
@@ -217,7 +218,7 @@ function captureSquare(){
  const side=Math.min(vw,vh),sx=(vw-side)/2,sy=(vh-side)/2;ctx.save();ctx.translate(SIZE,0);ctx.scale(-1,1);ctx.drawImage(video,sx,sy,side,side,0,0,SIZE,SIZE);ctx.restore();return c
 }
 function average(lm,ids){let x=0,y=0;ids.forEach(i=>{x+=lm[i].x*SIZE;y+=lm[i].y*SIZE});return{x:x/ids.length,y:y/ids.length}}
-function anchors(lm){return[average(lm,[33,133,159,145]),average(lm,[362,263,386,374]),average(lm,[1,4]),average(lm,[13,14,61,291])]}
+function eyeAnchors(lm){return[average(lm,[33,133]),average(lm,[362,263])].sort((a,b)=>a.x-b.x)}
 function detect(c){
  if(!state.landmarker)return null;
  try{return state.landmarker.detect(c).faceLandmarks?.[0]||null}
@@ -229,12 +230,17 @@ function similarity(src,dst){
  const scale=Math.hypot(A,B)/Math.max(D,1e-6),rot=Math.atan2(B,A),co=Math.cos(rot),si=Math.sin(rot);
  return{scale,rot,tx:cd.x-scale*(co*cs.x-si*cs.y),ty:cd.y-scale*(si*cs.x+co*cs.y)}
 }
+function pointDistance(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+function alignmentCompatibility(){
+ if(!state.marks[0]||!state.marks[1])return'';const metrics=state.marks.map(lm=>{const eyes=eyeAnchors(lm),interEye=Math.max(1,pointDistance(eyes[0],eyes[1])),mouth=pointDistance(average(lm,[13]),average(lm,[14]))/interEye,eyeOpen=(pointDistance(average(lm,[159]),average(lm,[145]))+pointDistance(average(lm,[386]),average(lm,[374])))/(2*interEye);return{mouth,eyeOpen}}),warnings=[];
+ if(Math.abs(metrics[0].mouth-metrics[1].mouth)>.055)warnings.push('ouverture de bouche très différente');if(Math.abs(metrics[0].eyeOpen-metrics[1].eyeOpen)>.025)warnings.push('ouverture des yeux différente');return warnings.length?` Pour le résultat le plus propre, reprends les photos avec une expression similaire : ${warnings.join(' et ')}.`:''
+}
 function autoAlign(){
  stopAnimation({render:false});
  if(state.marks[0]&&state.marks[1]){
-  state.auto=similarity(anchors(state.marks[1]),anchors(state.marks[0]));
+  state.auto=similarity(eyeAnchors(state.marks[1]),eyeAnchors(state.marks[0]));
   ['offsetX','offsetY','rotation'].forEach(id=>$(id).value=0);$('scale').value=100;
-  $('alignStatus').textContent='Alignement calculé à partir des yeux, du nez et de la bouche.'
+  const scalePercent=Math.round(state.auto.scale*100),scaleText=scalePercent>101?`visage 2 agrandi à ${scalePercent} %`:scalePercent<99?`visage 2 réduit à ${scalePercent} %`:'taille globale conservée';$('alignStatus').textContent=`Alignement verrouillé sur les deux yeux · ${scaleText} · nez et bouche ajustés localement par le maillage.${alignmentCompatibility()}`
  }else{
   state.auto={scale:1,rot:0,tx:0,ty:0};$('alignStatus').textContent='Détection incomplète : le fondu manuel superposé et les réglages restent disponibles.'
  }
@@ -299,7 +305,7 @@ function circumcircle(a,b,c){
  return{x,y,r2:(x-a.x)*(x-a.x)+(y-a.y)*(y-a.y)}
 }
 function delaunayTriangles(points,indices){
- const vertices=[...new Set(indices)].map(id=>({x:points[id].x,y:points[id].y,id})).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y));if(vertices.length<3)return[];
+ const vertices=[...new Set(indices)].map(id=>{const point=points[id];return point&&Number.isFinite(point.x)&&Number.isFinite(point.y)?{x:point.x,y:point.y,id}:null}).filter(Boolean);if(vertices.length<3)return[];
  const xs=vertices.map(p=>p.x),ys=vertices.map(p=>p.y),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),span=Math.max(maxX-minX,maxY-minY)||1,cx=(minX+maxX)/2,cy=(minY+maxY)/2,n=vertices.length;
  vertices.push({x:cx-24*span,y:cy-span,id:-1},{x:cx,y:cy+24*span,id:-2},{x:cx+24*span,y:cy-span,id:-3});let triangles=[[n,n+1,n+2]];
  for(let p=0;p<n;p++){
@@ -311,25 +317,30 @@ function delaunayTriangles(points,indices){
  }
  return triangles.filter(triangle=>triangle.every(index=>index<n)).map(triangle=>triangle.map(index=>vertices[index].id))
 }
+function commonLandmarkCount(){return Math.min(state.marks[0]?.length||0,state.marks[1]?.length||0,478)}
+function topologyGeometry(){const count=commonLandmarkCount(),first=landmarkPoints(0)?.slice(0,count);return count>=468&&first?{count,first}:null}
 function buildPreviewTriangles(){
- const points=landmarkPoints(0);if(!points)return[];const ids=new Set(state.faceOval);
- for(let i=0;i<468;i+=12)ids.add(i);for(const groups of Object.values(REGION_IDS))for(const group of groups){const stride=Math.max(1,Math.ceil(group.length/6));for(let i=0;i<group.length;i+=stride)ids.add(group[i])}
- return delaunayTriangles(points,[...ids])
+ const geometry=topologyGeometry();if(!geometry)return[];const ids=new Set(state.faceOval);
+ for(let i=0;i<468;i+=12)ids.add(i);for(const groups of Object.values(REGION_IDS))for(const group of groups)for(const id of group)if(id<geometry.count)ids.add(id);
+ return delaunayTriangles(geometry.first,[...ids])
 }
 function buildRegionMotionTriangles(points){
- const ids=new Set([...REGION_MOTION_IDS,...state.faceOval]),triangles=delaunayTriangles(points,[...ids]);return triangles.length>=25?triangles:state.previewTriangles
+ const ids=new Set([...REGION_MOTION_IDS,...state.faceOval]);for(const groups of Object.values(REGION_IDS))for(const group of groups)for(const id of group)if(id<468)ids.add(id);const triangles=delaunayTriangles(points,[...ids]);return triangles.length>=25?triangles:state.previewTriangles
 }
-function trianglesForSize(size){return size<SIZE&&state.previewTriangles.length?state.previewTriangles:state.meshTriangles}
+function buildMorphTriangles(){
+ const geometry=topologyGeometry();if(!geometry)return state.meshTriangles.slice();const triangles=delaunayTriangles(geometry.first,Array.from({length:468},(_,i)=>i));return triangles.length>850?triangles:state.meshTriangles.slice()
+}
+function trianglesForSize(size){return size<SIZE&&state.previewTriangles.length?state.previewTriangles:state.morphTriangles}
 function updateModeAvailability(){
  const available=canMeshMorph();document.querySelectorAll('[data-mode]').forEach(button=>{button.disabled=!available});
- if(available&&state.previewTrianglesVersion!==state.photoVersion){state.previewTriangles=buildPreviewTriangles();state.previewTrianglesVersion=state.photoVersion}
+ if(available&&state.previewTrianglesVersion!==state.photoVersion){state.morphTriangles=buildMorphTriangles();state.previewTriangles=buildPreviewTriangles();state.morphTopologyVersion++;state.previewTrianglesVersion=state.photoVersion;if(state.webgl)state.webgl.indexVersion=''}
  if(!available){stopAnimation({render:false});state.mode='fallback';document.querySelectorAll('[data-mode]').forEach(button=>{button.classList.remove('is-active');button.setAttribute('aria-pressed','false')});$('regionControls').hidden=true;$('blendLabelText').textContent='Mélange'}
  else if(state.mode==='fallback')setMode('canvas')
  syncAnimationControls()
 }
 function meshGeometry(v){
  if(!canMeshMorph())return null;
- const raw1=landmarkPoints(0),raw2=landmarkPoints(1),m=photo2Matrix(v),aligned2=raw2.map(p=>mapPoint(m,p));
+ const count=commonLandmarkCount(),raw1=landmarkPoints(0).slice(0,count),raw2=landmarkPoints(1).slice(0,count),m=photo2Matrix(v),aligned2=raw2.map(p=>mapPoint(m,p));
  const target=raw1.map((p,i)=>({x:p.x+(aligned2[i].x-p.x)*v.a,y:p.y+(aligned2[i].y-p.y)*v.a}));
  return{raw1,raw2,aligned2,target,t:v.a}
 }
@@ -356,9 +367,9 @@ function warpTriangle(ctx,image,src,dst,pad=.7){
  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.beginPath();ctx.moveTo(clip[0].x,clip[0].y);ctx.lineTo(clip[1].x,clip[1].y);ctx.lineTo(clip[2].x,clip[2].y);ctx.closePath();ctx.clip();
  ctx.setTransform(m.a,m.b,m.c,m.d,m.e,m.f);ctx.drawImage(image,0,0);ctx.restore();return true
 }
-function warpImage(name,size,image,sourcePoints,targetPoints){
+function warpImage(name,size,image,sourcePoints,targetPoints,triangles=trianglesForSize(size)){
  const canvas=getBuffer(name,size),ctx=canvas.getContext('2d'),q=size/SIZE;
- for(const ids of trianglesForSize(size)){
+ for(const ids of triangles){
   const src=ids.map(i=>sourcePoints[i]),dst=ids.map(i=>({x:targetPoints[i].x*q,y:targetPoints[i].y*q}));
   if(src.every(Boolean)&&dst.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)))warpTriangle(ctx,image,src,dst)
  }
@@ -409,7 +420,7 @@ function createWebGLResources(renderer){
  if(!renderer.position||!renderer.uv1||!renderer.uv2||!renderer.index||!renderer.tex1||!renderer.tex2)throw new Error('Ressource WebGL indisponible');
  renderer.locations={position:gl.getAttribLocation(program,'aPosition'),uv1:gl.getAttribLocation(program,'aUv1'),uv2:gl.getAttribLocation(program,'aUv2'),resolution:gl.getUniformLocation(program,'uResolution'),mix:gl.getUniformLocation(program,'uMix'),texture1:gl.getUniformLocation(program,'uTexture1'),texture2:gl.getUniformLocation(program,'uTexture2')};
  if(renderer.locations.position<0||renderer.locations.uv1<0||renderer.locations.uv2<0||!renderer.locations.resolution||!renderer.locations.mix||!renderer.locations.texture1||!renderer.locations.texture2)throw new Error('Attribut ou uniforme WebGL introuvable');
- const indices=new Uint16Array(state.meshTriangles.flat());gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,renderer.index);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);renderer.indexCount=indices.length;assertWebGL(gl,'Initialisation');renderer.failed=false;renderer.lost=false
+ Object.assign(renderer,{indexVersion:'',indexCount:0});assertWebGL(gl,'Initialisation');renderer.failed=false;renderer.lost=false
 }
 function disposeWebGL(renderer){
  if(!renderer?.gl||renderer.gl.isContextLost())return;const gl=renderer.gl;
@@ -440,6 +451,7 @@ function uploadAttribute(gl,buffer,location,data){gl.bindBuffer(gl.ARRAY_BUFFER,
 function renderWebGLFace(size,geometry){
  const r=initWebGLRenderer();if(r.failed||r.lost)return null;const {gl}=r;if(gl.isContextLost()){r.lost=true;return null}while(gl.getError()!==gl.NO_ERROR){}if(r.canvas.width!==size||r.canvas.height!==size){r.canvas.width=r.canvas.height=size}
  gl.viewport(0,0,size,size);gl.useProgram(r.program);
+ const activeTriangles=state.morphTriangles.length?state.morphTriangles:state.meshTriangles,indexVersion=`${state.morphTopologyVersion}|${activeTriangles.length}`;if(r.indexVersion!==indexVersion){const indices=new Uint16Array(activeTriangles.flat());gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,r.index);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);r.indexCount=indices.length;r.indexVersion=indexVersion;assertWebGL(gl,'Chargement de la topologie')}
  const textureVersion=morphPhoto2Key();if(r.textureVersion!==textureVersion){uploadTexture(gl,r.tex1,state.photos[0],gl.TEXTURE0);uploadTexture(gl,r.tex2,morphPhoto(1),gl.TEXTURE1);assertWebGL(gl,'Chargement des textures');r.textureVersion=textureVersion}
  const count=geometry.raw1.length,positions=new Float32Array(count*2),uv1=new Float32Array(count*2),uv2=new Float32Array(count*2),q=size/SIZE;
  for(let i=0;i<count;i++){positions[i*2]=geometry.target[i].x*q;positions[i*2+1]=geometry.target[i].y*q;uv1[i*2]=geometry.raw1[i].x/SIZE;uv1[i*2+1]=geometry.raw1[i].y/SIZE;uv2[i*2]=geometry.raw2[i].x/SIZE;uv2[i*2+1]=geometry.raw2[i].y/SIZE}
@@ -452,7 +464,7 @@ function renderWebGLMorph(canvas,v){
  try{
   const webglFace=renderWebGLFace(canvas.width,geometry);if(!webglFace){const result=renderCanvasMorph(canvas,v,geometry);result.message='WebGL indisponible : morphing Canvas 2D utilisé.';return result}
   const ctx=drawBackground(canvas);ctx.drawImage(maskedFaceLayer(canvas.width,webglFace,geometry.target,'webglFaceLayer'),0,0);
-  return{fallback:false,message:`Morphing géométrique WebGL · lumière homogène ${Math.round(state.regionHarmony*100)} % · ${state.meshTriangles.length} triangles.`}
+  return{fallback:false,message:`Morphing géométrique WebGL · traits alignés · lumière homogène ${Math.round(state.regionHarmony*100)} % · ${state.morphTriangles.length||state.meshTriangles.length} triangles.`}
  }catch(e){console.error(e);if(state.webgl){state.webgl.failed=true;state.webgl.failedAt=performance.now();state.webgl.error=e.message||String(e)}const result=renderCanvasMorph(canvas,v,geometry);result.message='Erreur WebGL : morphing Canvas 2D utilisé.';return result}
 }
 
@@ -500,8 +512,8 @@ function regionAssets(size,v){
 }
 function regionMasks(assets){
  const {size,geometry}=assets,feather=regionFeatherPixels(size),key=`${assets.key}|${feather.toFixed(3)}`;if(assets.maskKey===key)return assets.masks;
- const outer=regionOuterMask(size,geometry.target),eyeGroups=screenEyeGroups(geometry.target),padding=Math.max(3,size/96);
- const masks={outer,contour:regionContourMask(size,geometry.target,outer,feather),right:rightHalfRegionMask(size,geometry.target,outer,feather),leftEye:featureRegionMask('left-eye',size,geometry.target,eyeGroups[0]?.ids||[],outer,feather,padding),rightEye:featureRegionMask('right-eye',size,geometry.target,eyeGroups[1]?.ids||[],outer,feather,padding),nose:featureRegionMask('nose',size,geometry.target,REGION_IDS.nose[0],outer,feather,padding*1.15),mouth:featureRegionMask('mouth',size,geometry.target,REGION_IDS.mouth[0],outer,feather,padding)};
+ const outer=regionOuterMask(size,geometry.target),eyeGroups=screenEyeGroups(geometry.target),padding=Math.max(3,size/96),mouthOpen=Math.hypot(geometry.target[13].x-geometry.target[14].x,geometry.target[13].y-geometry.target[14].y)*size/SIZE,mouthPadding=padding+mouthOpen*.45;
+ const masks={outer,contour:regionContourMask(size,geometry.target,outer,feather),right:rightHalfRegionMask(size,geometry.target,outer,feather),leftEye:featureRegionMask('left-eye',size,geometry.target,eyeGroups[0]?.ids||[],outer,feather,padding),rightEye:featureRegionMask('right-eye',size,geometry.target,eyeGroups[1]?.ids||[],outer,feather,padding),nose:featureRegionMask('nose',size,geometry.target,REGION_IDS.nose[0],outer,feather,padding*1.15),mouth:featureRegionMask('mouth',size,geometry.target,REGION_IDS.mouth[0],outer,feather,mouthPadding)};
  assets.maskKey=key;assets.masks=masks;return masks
 }
 function mixedRegionTexture(slot,size,a,b,mix){
@@ -537,7 +549,7 @@ function syncAnimationControls(){
  const meshReady=canMeshMorph(),modeReady=state.mode==='webgl'||state.mode==='regions',available=meshReady&&modeReady,animation=state.animation,running=animation.running,frozen=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode,{amplitude,speed}=animationSettings(),controls=$('animationControls'),badge=$('animationBadge'),reduced=automaticMotionReduced(),styleLabel=REGION_ANIMATION_LABELS[state.regionAnimationStyle]||REGION_ANIMATION_LABELS.progressive,styles=$('regionAnimationStyles');controls.hidden=state.photos.length<2;styles.hidden=state.mode!=='regions';document.querySelectorAll('[data-region-animation-style]').forEach(button=>{const active=button.dataset.regionAnimationStyle===state.regionAnimationStyle;button.classList.toggle('is-active',active);button.setAttribute('aria-pressed',String(active))});controls.classList.toggle('is-animating',running);badge.hidden=!running;badge.textContent=running?`MORPHING ACTIF · ${state.mode==='webgl'?'WEBGL':`RÉGIONS · ${styleLabel.toUpperCase()}`} · ${Math.round(amplitude*100)} %`:'MORPHING ACTIF';$('toggleAnimation').disabled=!available||amplitude<=0;$('toggleAnimation').classList.toggle('is-running',running);$('toggleAnimation').setAttribute('aria-pressed',String(running));$('toggleAnimation').textContent=running?'Arrêter et figer':frozen?'Reprendre doucement':'Démarrer l’animation';
  $('regionHarmony').disabled=state.photos.length<2||!meshReady;
  $('animationAmplitudeVal').textContent=Math.round(amplitude*100)+'%';$('animationAmplitude').setAttribute('aria-valuetext',`${Math.round(amplitude*100)} %`);$('animationSpeedVal').textContent=speed.toFixed(2)+'×';$('animationSpeed').setAttribute('aria-valuetext',`${speed.toFixed(2)} fois`);
- let description;if(!meshReady)description='Animation indisponible : les deux visages doivent être détectés. Reprends la photo non détectée.';else if(!modeReady)description='Choisis Triangles WebGL ou Régions pour lancer automatiquement le morphing animé.';else description=state.mode==='webgl'?'La forme, le mélange, la position, le zoom et la rotation oscillent autour de tes réglages.':REGION_ANIMATION_HINTS[state.regionAnimationStyle];if(reduced&&available&&!running)description+=' Le réglage iPhone « Réduire les animations » bloque seulement le démarrage automatique : le bouton reste utilisable.';$('animationState').textContent=running?'Animation active':frozen?'Image figée':!meshReady?'Visages non détectés':!modeReady?'Mode statique':reduced?'Prête · démarrage manuel':'Prête à démarrer';$('animationHint').textContent=description+(amplitude<=0?' Amplitude 0 % : animation suspendue.':frozen?' Les curseurs conservent les valeurs centrales.':'')
+ let description;if(!meshReady)description='Animation indisponible : les deux visages doivent être détectés. Reprends la photo non détectée.';else if(!modeReady)description='Choisis Triangles WebGL ou Régions pour lancer automatiquement le morphing animé.';else description=state.mode==='webgl'?'La forme et le mélange oscillent sans déplacer, tourner ni redimensionner le recalage global.':REGION_ANIMATION_HINTS[state.regionAnimationStyle];if(reduced&&available&&!running)description+=' Le réglage iPhone « Réduire les animations » bloque seulement le démarrage automatique : le bouton reste utilisable.';$('animationState').textContent=running?'Animation active':frozen?'Image figée':!meshReady?'Visages non détectés':!modeReady?'Mode statique':reduced?'Prête · démarrage manuel':'Prête à démarrer';$('animationHint').textContent=description+(amplitude<=0?' Amplitude 0 % : animation suspendue.':frozen?' Les curseurs conservent les valeurs centrales.':'')
 }
 function smoothstep(value){return value*value*(3-2*value)}
 function smoother(value){const x=clamp(value,0,1);return x*x*x*(x*(x*6-15)+10)}
@@ -556,7 +568,7 @@ function applyStyleTransition(frame){
 }
 function animationFrame(){
  const animation=state.animation,base=animation.baseControls,p=animation.phase,{amplitude}=animationSettings(),amount=amplitude*smoothstep(animation.ramp);if(!base)return null;
- if(state.mode==='webgl')return animationSnapshot('webgl',{x:oscillatedBounded(base.x,amount*25,Math.sin(p*.73),-100,100),y:oscillatedBounded(base.y,amount*20,Math.sin(p*.91+.8),-100,100),s:oscillatedBounded(base.s,amount*.0625,Math.sin(p*.57+1.7),.85,1.15),r:oscillatedBounded(base.r,amount*.055,Math.sin(p*.49+2.6),-8*Math.PI/180,8*Math.PI/180),a:oscillatedBounded(base.a,amount,Math.sin(p*.67+3.4),0,1)},null);
+ if(state.mode==='webgl')return animationSnapshot('webgl',{...base,a:oscillatedBounded(base.a,amount,Math.sin(p*.67+3.4),0,1)},null);
  const style=state.regionAnimationStyle,weights={},shapeAmount=Math.min(.25,amount*.8),strength=clamp(amount/.45,0,1);let shapeWave=0,explosiveDirection=0;
  if(style==='progressive'){const u=fract(p*.9/(Math.PI*2)),fade=1-smoother((u-.84)/.16),onsets={leftEye:.02,rightEye:.06,nose:.24,mouth:.4,left:.58,right:.62};for(const key of REGION_KEYS)weights[key]=smoother((u-onsets[key])/.14)*fade;shapeWave=2*smoother((u-.64)/.14)*fade-1}
  else if(style==='random'){REGION_KEYS.forEach((key,index)=>weights[key]=smoothSeeded(p*.9+index*.137,animation.randomSeed+index*31));shapeWave=2*smoothSeeded(p*.48,animation.randomSeed+311)-1}
@@ -654,7 +666,7 @@ function shuffle(n=150){state.showing=false;$('showSolution').textContent='Voir 
 function isSolved(){return state.tiles.every((v,i)=>v===i)}
 function showSolution(){state.showing=!state.showing;$('puzzle').style.background=state.showing?`#000 url(${state.solutionURL}) center/cover no-repeat`:'#070707';$('showSolution').textContent=state.showing?'Revenir au jeu':'Voir la solution';layout()}
 function resetAll(preserveAnimationSettings=false){
- stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,autoStartRaf:0,exporting:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();state.photos=[];state.marks=[];state.step=0;state.photoVersion++;state.previewTriangles=[];state.previewTrianglesVersion=-1;state.auto={scale:1,rot:0,tx:0,ty:0};state.buffers.clear();invalidateFaceLighting();
+ stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,autoStartRaf:0,exporting:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();state.photos=[];state.marks=[];state.step=0;state.photoVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.morphTopologyVersion++;state.previewTrianglesVersion=-1;state.auto={scale:1,rot:0,tx:0,ty:0};state.buffers.clear();invalidateFaceLighting();
  if(!preserveAnimationSettings){state.regionAnimationStyle='progressive';state.regionHarmony=1;state.animation.randomSeed=137;$('animationAmplitude').value=45;$('animationSpeed').value=110}
  ['offsetX','offsetY','rotation'].forEach(id=>$(id).value=0);$('scale').value=100;$('blend').value=50;
  captureBtn.textContent='Prendre le visage 1';for(const id of ['thumb1','thumb2','sourceThumb1','sourceThumb2'])$(id).style.backgroundImage='none';showStage('captureStage');
