@@ -25,6 +25,7 @@ button.secondary{background:#222;color:#fff;border:1px solid #383838}button.dang
 .animation-controls{display:grid;gap:8px;padding:10px;border:1px solid #315465;border-radius:12px;background:#08141a;transition:border-color .25s,box-shadow .25s}.animation-controls label{grid-template-columns:88px 1fr 48px}.animation-controls button.is-running{background:#9fe7ff;color:#061014;border-color:#9fe7ff}.animation-controls.is-animating{border-color:#9fe7ff;box-shadow:0 0 18px #52d8ff42}.animation-state{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:750;color:#b8c4c9}.animation-state:before{content:"";width:9px;height:9px;border-radius:50%;background:#68757a}.animation-controls.is-animating .animation-state{color:#9fe7ff}.animation-controls.is-animating .animation-state:before{background:#65e6ff;box-shadow:0 0 0 0 #65e6ff99;animation:animationPulse 1.3s ease-out infinite}.region-animation-styles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.region-animation-styles .region-animation-title{grid-column:1/-1;color:#9fe7ff;font-size:12px;font-weight:750}.region-animation-styles button{min-width:0;min-height:46px;padding:8px 5px;font-size:12px}.region-animation-styles button.is-active{background:#9fe7ff;color:#061014;border-color:#9fe7ff}.animation-badge{position:absolute;z-index:3;top:10px;left:10px;max-width:calc(100% - 20px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px;border-radius:999px;background:#06151be8;border:1px solid #9fe7ff;color:#9fe7ff;font-size:11px;font-weight:850;letter-spacing:.04em;box-shadow:0 0 16px #52d8ff55}.animation-badge:before{content:"●";margin-right:6px}.animation-hint{font-size:12px;line-height:1.35;color:#a8c8d5}@keyframes animationPulse{70%{box-shadow:0 0 0 7px #65e6ff00}100%{box-shadow:0 0 0 0 #65e6ff00}}@media(prefers-reduced-motion:reduce){.animation-controls.is-animating .animation-state:before{animation:none}}
 [hidden]{display:none!important}
 .status{min-height:20px;color:#9fe7ff;font-size:13px;margin:8px 2px 0}
+.compatibility{display:grid;gap:7px;margin-top:10px;padding:11px;border:1px solid #3b3b3b;border-radius:12px;background:#0a0a0a}.compatibility strong{font-size:14px}.compatibility p{margin:0;color:#d1d1d1;font-size:12px;line-height:1.45}.compatibility.is-good{border-color:#376d4b;background:#08140d}.compatibility.is-good strong{color:#9fffc0}.compatibility.is-bad{border-color:#824747;background:#1a0b0b}.compatibility.is-bad strong{color:#ffd0d0}
 label{display:grid;grid-template-columns:92px 1fr 46px;gap:8px;align-items:center;font-size:13px;color:#ddd}
 input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-numeric:tabular-nums}
 .thumbrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.thumb{aspect-ratio:1;border-radius:10px;background:#000 center/cover no-repeat;border:1px solid #333}
@@ -36,19 +37,23 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 </head>
 <body>
 <main>
-<span class="badge">Éclairage local adaptatif et alignement précis · 13/08/2026</span>
+<span class="badge">Validation structurelle et reprise guidée · 13/08/2026</span>
 <h1>Taquin — deux visages</h1>
-<p class="lead">Choisis WebGL ou Régions. La lumière des deux visages est homogénéisée avant que les traits apparaissent de manière progressive, aléatoire, pulsée ou explosive.</p>
+<p class="lead">Les visages sont d’abord adaptés par homothétie, rotation et maillage. Si leur pose ou leur expression reste trop différente, la photo 1 est conservée et l’iPhone guide uniquement la reprise de la photo 2.</p>
 <section id="captureStage" class="stage active"><div class="card">
 <div class="viewport"><video id="video" playsinline muted></video><div class="guide"></div></div>
 <div class="controls"><div class="row"><button id="startCamera" type="button">Activer la caméra</button><button id="capture" type="button" disabled>Prendre le visage 1</button></div>
 <div class="row"><button id="switchCamera" type="button" class="secondary">Changer caméra</button><button id="resetAll" type="button" class="danger">Recommencer</button></div></div>
-<div id="captureStatus" class="status">Chargement du détecteur de visage…</div>
+<div id="captureStatus" class="status" role="status" aria-live="polite" tabindex="-1">Chargement du détecteur de visage…</div>
 <div class="thumbrow"><div id="thumb1" class="thumb" role="img" aria-label="Aperçu de la photo 1"></div><div id="thumb2" class="thumb" role="img" aria-label="Aperçu de la photo 2"></div></div>
 </div></section>
 <section id="alignStage" class="stage"><div class="card">
 <div class="viewport"><canvas id="alignCanvas" role="img" aria-label="Aperçu de la composition des deux visages">Aperçu de la composition des deux visages.</canvas><span id="animationBadge" class="animation-badge" aria-hidden="true" hidden>MORPHING ACTIF</span></div>
-<div id="alignStatus" class="status"></div>
+<div id="alignStatus" class="status" role="status" aria-live="polite" tabindex="-1"></div>
+<div id="compatibilityPanel" class="compatibility" role="status" aria-live="polite" hidden>
+<strong id="compatibilityTitle"></strong><p id="compatibilityText"></p>
+<button id="retakePhoto2" type="button" class="danger" aria-describedby="compatibilityTitle compatibilityText" hidden>Reprendre uniquement le visage 2</button>
+</div>
 <div class="controls">
 <div class="source-key" role="group" aria-label="Photos sources"><div class="source-card"><div id="sourceThumb1" class="source-thumb" role="img" aria-label="Photo source 1"></div><span>Photo 1</span></div><div class="source-card"><div id="sourceThumb2" class="source-thumb" role="img" aria-label="Photo source 2"></div><span>Photo 2</span></div></div>
 <div id="modePicker" class="mode-picker" role="group" aria-label="Mode de composition">
@@ -127,6 +132,7 @@ const REGION_MOTION_IDS=[10,168,6,1,2,13,14,17,152,33,133,159,145,362,263,386,37
 const state={
  stream:null,facing:'user',photos:[],marks:[],step:0,tiles:[],blank:15,solutionURL:'',showing:false,
  landmarker:null,detectorState:'loading',cameraRequest:0,auto:{scale:1,rot:0,tx:0,ty:0},
+ pair:{status:'empty',score:null,reasons:[],advice:[],metrics:null,hint:''},
  mode:'canvas',regionMix:{left:0,right:0,leftEye:1,rightEye:1,nose:0,mouth:1},regionFeather:.5,regionHarmony:1,regionAnimationStyle:'progressive',regionCache:null,
  meshTriangles:[],morphTriangles:[],morphTopologyVersion:0,previewTriangles:[],previewTrianglesVersion:-1,faceOval:FALLBACK_FACE_OVAL.slice(),
  buffers:new Map(),webgl:null,photoVersion:0,lighting:{version:-1,corrected:null,blended:null,blendKey:'',stats:null},renderQueued:false,quickRenderQueued:false,accurateRenderTimer:null,
@@ -189,9 +195,10 @@ async function initLandmarker(){
   const vision=await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM);
   state.landmarker=await FaceLandmarker.createFromOptions(vision,landmarkerOptions());
   state.detectorState='ready';
+  if(state.stream)captureBtn.disabled=false;
   status.textContent=state.stream?'Détecteur prêt. Place le visage de face, yeux ouverts.':'Détecteur prêt. Active la caméra et cadre le visage de face.'
  }catch(e){
-  state.landmarker=null;state.detectorState='failed';status.textContent='Détecteur indisponible. Le réglage manuel reste utilisable.';console.error(e)
+  state.landmarker=null;state.detectorState='failed';captureBtn.disabled=true;status.textContent='Détecteur indisponible : le contrôle de compatibilité exige MediaPipe. Recharge la page puis réessaie.';console.error(e)
  }
 }
 const landmarkerReady=initLandmarker();
@@ -207,7 +214,7 @@ async function startCamera(){
   stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:1280}}});
   if(request!==state.cameraRequest){stream.getTracks().forEach(t=>t.stop());return}
   state.stream=stream;video.srcObject=stream;await video.play();if(request!==state.cameraRequest)return;
-  captureBtn.disabled=false;status.textContent=state.step?'Reproduis le cadrage du premier visage.':'Place le visage de face, yeux ouverts.'
+  captureBtn.disabled=state.detectorState!=='ready';status.textContent=state.detectorState==='failed'?'Détecteur indisponible : recharge la page avant de reprendre les photos.':state.detectorState==='loading'?'Caméra prête · attente du détecteur de visage…':state.step?(state.pair.hint||'Reproduis le cadrage, l’angle et l’expression du premier visage.'):'Place le visage de face, yeux ouverts.'
  }catch(e){
   if(stream)stream.getTracks().forEach(t=>t.stop());if(request!==state.cameraRequest)return;
   state.stream=null;video.srcObject=null;captureBtn.disabled=true;status.textContent='Caméra indisponible : '+(e.message||e)
@@ -231,37 +238,66 @@ function similarity(src,dst){
  return{scale,rot,tx:cd.x-scale*(co*cs.x-si*cs.y),ty:cd.y-scale*(si*cs.x+co*cs.y)}
 }
 function pointDistance(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
-function alignmentCompatibility(){
- if(!state.marks[0]||!state.marks[1])return'';const metrics=state.marks.map(lm=>{const eyes=eyeAnchors(lm),interEye=Math.max(1,pointDistance(eyes[0],eyes[1])),mouth=pointDistance(average(lm,[13]),average(lm,[14]))/interEye,eyeOpen=(pointDistance(average(lm,[159]),average(lm,[145]))+pointDistance(average(lm,[386]),average(lm,[374])))/(2*interEye);return{mouth,eyeOpen}}),warnings=[];
- if(Math.abs(metrics[0].mouth-metrics[1].mouth)>.055)warnings.push('ouverture de bouche très différente');if(Math.abs(metrics[0].eyeOpen-metrics[1].eyeOpen)>.025)warnings.push('ouverture des yeux différente');return warnings.length?` Pour le résultat le plus propre, reprends les photos avec une expression similaire : ${warnings.join(' et ')}.`:''
+function faceCoordinateFrame(lm){
+ if(!lm||lm.length<468)return null;const eyes=eyeAnchors(lm),origin={x:(eyes[0].x+eyes[1].x)/2,y:(eyes[0].y+eyes[1].y)/2},distance=Math.max(1,pointDistance(eyes[0],eyes[1])),ux=(eyes[1].x-eyes[0].x)/distance,uy=(eyes[1].y-eyes[0].y)/distance;let vx=-uy,vy=ux;const chin={x:lm[152].x*SIZE,y:lm[152].y*SIZE};if((chin.x-origin.x)*vx+(chin.y-origin.y)*vy<0){vx=-vx;vy=-vy}const point=value=>({x:((value.x-origin.x)*ux+(value.y-origin.y)*uy)/distance,y:((value.x-origin.x)*vx+(value.y-origin.y)*vy)/distance}),at=id=>point({x:lm[id].x*SIZE,y:lm[id].y*SIZE});return{eyes,origin,distance,angle:Math.atan2(eyes[1].y-eyes[0].y,eyes[1].x-eyes[0].x),at,point}
 }
-function autoAlign(){
+function faceCaptureMetrics(lm){
+ const frame=faceCoordinateFrame(lm);if(!frame)return null;const p=id=>({x:lm[id].x*SIZE,y:lm[id].y*SIZE}),distance=(a,b)=>pointDistance(p(a),p(b)),qAverage=ids=>frame.point(average(lm,ids)),leftEye=(distance(159,145)+distance(158,153))/(2*Math.max(1,distance(33,133))),rightEye=(distance(386,374)+distance(387,373))/(2*Math.max(1,distance(362,263))),mouthWidth=Math.max(1,distance(61,291)),mouthOpen=distance(13,14)/mouthWidth,mouthCurve=(qAverage([13,14]).y-qAverage([61,291]).y)/Math.max(.05,mouthWidth/frame.distance),nose=frame.at(1),mouth=qAverage([13,14,61,291]),cheekLeft=Math.abs(frame.at(234).x-nose.x),cheekRight=Math.abs(frame.at(454).x-nose.x),cheekAsym=(cheekLeft-cheekRight)/Math.max(.05,cheekLeft+cheekRight),oval=state.faceOval.map(id=>lm[id]).filter(Boolean),inFrame=oval.filter(point=>point.x>=.01&&point.x<=.99&&point.y>=.01&&point.y<=.99).length/Math.max(1,oval.length),xs=oval.map(point=>point.x),ys=oval.map(point=>point.y);return{frame,leftEye,rightEye,mouthOpen,mouthCurve,nose,mouth,cheekAsym,inFrame,width:Math.max(...xs)-Math.min(...xs),height:Math.max(...ys)-Math.min(...ys)}
+}
+function quantile(values,part){if(!values.length)return 0;const sorted=values.slice().sort((a,b)=>a-b),position=(sorted.length-1)*part,low=Math.floor(position),high=Math.ceil(position);return sorted[low]+(sorted[high]-sorted[low])*(position-low)}
+function referenceCaptureQuality(lm){const metrics=faceCaptureMetrics(lm),reasons=[];if(!metrics)return{ok:false,reasons:['visage non détecté']};if(metrics.inFrame<.92)reasons.push('le contour du visage doit rester entièrement dans le cadre');if(metrics.width<.22||metrics.height<.30)reasons.push('rapproche légèrement l’iPhone du visage');if(metrics.width>.9||metrics.height>.97)reasons.push('éloigne légèrement l’iPhone pour garder tout le contour');return{ok:!reasons.length,reasons,metrics}}
+function compatibilityWarpMetrics(first,second){
+ const frameA=faceCoordinateFrame(first),frameB=faceCoordinateFrame(second),triangles=buildPreviewTriangles(),pointsA=Array.from({length:468},(_,id)=>frameA.at(id)),pointsB=Array.from({length:468},(_,id)=>frameB.at(id)),ratios=[];let inverted=0,invertedArea=0,totalArea=0,maxInvertedArea=0;
+ for(const ids of triangles){const a=ids.map(id=>pointsA[id]),b=ids.map(id=>pointsB[id]),areaA=(a[1].x-a[0].x)*(a[2].y-a[0].y)-(a[1].y-a[0].y)*(a[2].x-a[0].x),areaB=(b[1].x-b[0].x)*(b[2].y-b[0].y)-(b[1].y-b[0].y)*(b[2].x-b[0].x);if(Math.abs(areaA)<1e-5||Math.abs(areaB)<1e-5)continue;const area=(Math.abs(areaA)+Math.abs(areaB))/4;totalArea+=area;if(areaA*areaB<0){inverted++;invertedArea+=area;maxInvertedArea=Math.max(maxInvertedArea,area)}ratios.push(Math.abs(areaB/areaA))}
+ const median=quantile(ratios,.5)||1,bad=ratios.filter(value=>value/median<.22||value/median>4.5).length;return{triangles:ratios.length,inverted,invertedAreaRatio:invertedArea/Math.max(.001,totalArea),maxInvertedAreaRatio:maxInvertedArea/Math.max(.001,totalArea),badRatio:bad/Math.max(1,ratios.length)}
+}
+function severity(value,soft,hard){return clamp((value-soft)/Math.max(.0001,hard-soft),0,1)}
+function evaluateMorphCompatibility(first,second){
+ const a=faceCaptureMetrics(first),b=faceCaptureMetrics(second);if(!a||!b)return{compatible:false,score:0,reasons:['Les deux visages doivent être détectés.'],advice:['Regarde l’objectif, éclaire le visage et reprends uniquement la photo 2.'],metrics:null};
+ const scale=a.frame.distance/b.frame.distance,roll=Math.abs(Math.atan2(Math.sin(b.frame.angle-a.frame.angle),Math.cos(b.frame.angle-a.frame.angle)))*180/Math.PI,dxNose=b.nose.x-a.nose.x,dyNose=b.nose.y-a.nose.y,dxMouth=b.mouth.x-a.mouth.x,dyMouth=b.mouth.y-a.mouth.y,noseX=Math.abs(dxNose),cheek=Math.abs(a.cheekAsym-b.cheekAsym),noseY=Math.abs(dyNose),mouthCenter=Math.hypot(dxMouth,dyMouth),mouthOpen=Math.abs(a.mouthOpen-b.mouthOpen),mouthCurve=Math.abs(a.mouthCurve-b.mouthCurve),eyeLeft=Math.abs(a.leftEye-b.leftEye),eyeRight=Math.abs(a.rightEye-b.rightEye),eye=Math.max(eyeLeft,eyeRight),closedMismatch=(a.leftEye<.08&&b.leftEye>.16)||(b.leftEye<.08&&a.leftEye>.16)||(a.rightEye<.08&&b.rightEye>.16)||(b.rightEye<.08&&a.rightEye>.16),mouthStateMismatch=Math.min(a.mouthOpen,b.mouthOpen)<.08&&Math.max(a.mouthOpen,b.mouthOpen)>.2,frameA=a.frame,frameB=b.frame,contour=state.faceOval.map(id=>{const p=frameA.at(id),q=frameB.at(id);return Math.hypot(p.x-q.x,p.y-q.y)}),contourMedian=quantile(contour,.5),contourP90=quantile(contour,.9),warp=compatibilityWarpMetrics(first,second),hard=[],reasons=[],advice=[];
+ const add=(reason,hint,isHard=false)=>{if(!reasons.includes(reason))reasons.push(reason);if(hint&&!advice.includes(hint))advice.push(hint);if(isHard&&!hard.includes(reason))hard.push(reason)};
+ const extremes=[10,152,234,454],extremeInFrame=extremes.every(id=>[first[id],second[id]].every(point=>point&&point.x>=.01&&point.x<=.99&&point.y>=.01&&point.y<=.99));if(Math.min(a.inFrame,b.inFrame)<.92||!extremeInFrame)add('contour du visage coupé par le cadre','Garde le front, le menton et les deux joues entièrement visibles.',true);
+ if(scale<.75||scale>1.35)add('distance différente, corrigée au maximum par homothétie',scale>1?'Rapproche un peu le visage 2 si tu souhaites une reprise encore plus précise.':'Éloigne un peu le visage 2 si tu souhaites une reprise encore plus précise.');if(roll>12)add('inclinaison de tête différente, corrigée par rotation','Garde la même inclinaison de tête que sur la photo 1.');
+ const yawExtreme=noseX>.22||cheek>.28,yawConcordant=noseX>.14&&cheek>.12;if(yawExtreme||yawConcordant)add('angle de vue trop différent','Regarde l’objectif bien de face, avec le nez centré entre les deux yeux.',true);else if(noseX>.1&&cheek>.08)add('orientation du visage différente','Regarde l’objectif bien de face, comme sur la photo 1.');
+ if(mouthStateMismatch||mouthOpen>.2||mouthCurve>.17)add('expression de la bouche trop différente','Reproduis l’ouverture et la forme de la bouche de la photo 1.',true);else if(mouthOpen>.11||mouthCurve>.09)add('bouche dans un état différent','Garde les lèvres dans le même état que sur la photo 1.');
+ if(closedMismatch||eye>.15)add('ouverture des yeux trop différente','Ouvre ou ferme les yeux comme sur la photo 1 et regarde au même endroit.',true);else if(eye>.075)add('ouverture des yeux différente','Reproduis l’ouverture des yeux de la photo 1.');
+ const pitchConcordant=Math.sign(dyNose)===Math.sign(dyMouth)&&noseY>.16&&Math.abs(dyMouth)>.18;if(pitchConcordant&&(contourP90>.24||mouthCenter>.22))add('perspective ou hauteur du menton trop différente','Place le menton à la même hauteur et garde l’iPhone au même niveau.',true);else if(pitchConcordant)add('hauteur du visage différente','Garde le menton et l’iPhone à la même hauteur que sur la photo 1.');
+ if(warp.invertedAreaRatio>.01||warp.maxInvertedAreaRatio>.003||warp.badRatio>.12)add('déformation locale trop forte pour un maillage propre','Reprends le visage 2 avec le même angle et la même expression que la photo 1.',true);
+ const expression=Math.max(severity(mouthOpen,.1,.2),severity(mouthCurve,.08,.17),severity(eye,.07,.15),closedMismatch||mouthStateMismatch?1:0),yaw=Math.max(severity(noseX,.08,.22)*severity(cheek,.08,.28),severity(noseX,.14,.22)*.7,severity(cheek,.18,.28)*.7),pitch=pitchConcordant*Math.max(severity(noseY,.14,.27),severity(Math.abs(dyMouth),.16,.29)),mesh=Math.max(severity(warp.invertedAreaRatio,.002,.01),severity(warp.badRatio,.04,.12)),rawScore=Math.max(0,Math.round(100-40*expression-35*Math.max(yaw,pitch)-25*mesh)),score=hard.length?Math.min(64,rawScore):rawScore,compatible=!hard.length&&!(expression>.65&&(yaw>.65||pitch>.65||mesh>.65))&&!(Math.max(yaw,pitch)>.65&&mesh>.65);
+ if(!compatible&&!reasons.length)add('écarts structurels cumulés','Reproduis plus fidèlement le cadrage, l’angle et l’expression de la photo 1.');
+ return{compatible,score,reasons,advice,metrics:{scale,roll,noseX,cheek,noseY,mouthCenter,mouthOpen,mouthCurve,eyeLeft,eyeRight,contourMedian,contourP90,warp}}
+}
+function pairSummary(){const pair=state.pair;if(pair.status==='accepted')return`Compatibilité ${pair.score}/100 : contour, yeux, nez et bouche suffisamment proches après adaptation.`;if(pair.status==='rejected')return`Compatibilité ${pair.score}/100. ${pair.reasons.slice(0,3).join(' · ')}.`;return''}
+function syncPairUI(){
+ const pair=state.pair,panel=$('compatibilityPanel'),accepted=pair.status==='accepted',rejected=pair.status==='rejected',checking=pair.status==='checking',blocked=state.photos.length>=2&&!accepted,unavailable=state.photos.length<2||blocked;panel.hidden=!(accepted||rejected||checking);panel.classList.toggle('is-good',accepted);panel.classList.toggle('is-bad',rejected);$('compatibilityTitle').textContent=accepted?`Paire compatible · ${pair.score}/100`:rejected?`Photo 2 à reprendre · ${pair.score}/100`:'Vérification des deux visages…';$('compatibilityText').textContent=accepted?'L’homothétie, la rotation et le maillage ont suffisamment rapproché les deux structures. L’animation est disponible.':rejected?`${pair.reasons.slice(0,3).join(' · ')}. ${pair.advice.slice(0,2).join(' ')}`:'Adaptation automatique en cours.';$('retakePhoto2').hidden=!rejected;$('makePuzzle').disabled=!accepted;$('autoAlign').disabled=unavailable;
+ for(const id of ['offsetX','offsetY','scale','rotation','blend','regionHarmony','animationAmplitude','animationSpeed'])$(id).disabled=unavailable;document.querySelectorAll('#regionControls button,#regionControls input,#regionAnimationStyles button').forEach(control=>control.disabled=unavailable)
+}
+function autoAlign({activate=true,focusRejected=false}={}){
  stopAnimation({render:false});
  if(state.marks[0]&&state.marks[1]){
   state.auto=similarity(eyeAnchors(state.marks[1]),eyeAnchors(state.marks[0]));
   ['offsetX','offsetY','rotation'].forEach(id=>$(id).value=0);$('scale').value=100;
-  const scalePercent=Math.round(state.auto.scale*100),scaleText=scalePercent>101?`visage 2 agrandi à ${scalePercent} %`:scalePercent<99?`visage 2 réduit à ${scalePercent} %`:'taille globale conservée';$('alignStatus').textContent=`Alignement verrouillé sur les deux yeux · ${scaleText} · nez et bouche ajustés localement par le maillage.${alignmentCompatibility()}`
+  const result=evaluateMorphCompatibility(state.marks[0],state.marks[1]);state.pair={status:result.compatible?'accepted':'rejected',score:result.score,reasons:result.reasons,advice:result.advice,metrics:result.metrics,hint:''};const scalePercent=Math.round(state.auto.scale*100),scaleText=scalePercent>101?`visage 2 agrandi à ${scalePercent} %`:scalePercent<99?`visage 2 réduit à ${scalePercent} %`:'taille globale conservée';$('alignStatus').textContent=result.compatible?`Alignement verrouillé sur les deux yeux · ${scaleText} · nez, bouche et contour ajustés localement par le maillage.`:`Adaptation maximale essayée · ${scaleText}. La structure reste trop différente pour une animation propre.`
  }else{
-  state.auto={scale:1,rot:0,tx:0,ty:0};$('alignStatus').textContent='Détection incomplète : le fondu manuel superposé et les réglages restent disponibles.'
+  state.auto={scale:1,rot:0,tx:0,ty:0};state.pair={status:'rejected',score:0,reasons:['visage non détecté'],advice:['Reprends uniquement la photo 2 en regardant l’objectif.'],metrics:null,hint:''};$('alignStatus').textContent='Contrôle impossible : les deux visages doivent être détectés.'
  }
+ syncPairUI();
  updateModeAvailability();
- scheduleRender();maybeAutoStartAnimation()
+ scheduleRender();if(activate&&state.pair.status==='accepted')maybeAutoStartAnimation();if(focusRejected)requestAnimationFrame(()=>(state.pair.status==='rejected'?$('retakePhoto2'):$('alignStatus')).focus())
 }
 async function takePhoto(){
  const c=captureSquare();if(!c){status.textContent='Image caméra pas encore prête. Réessaie dans un instant.';return}
- const request=state.cameraRequest;captureBtn.disabled=true;status.textContent='Analyse du visage…';await landmarkerReady;if(request!==state.cameraRequest)return;
+ const request=state.cameraRequest,target=state.step;captureBtn.disabled=true;status.textContent='Analyse du visage…';await landmarkerReady;if(request!==state.cameraRequest||target!==state.step)return;
  const lm=detect(c);
- if(state.detectorState==='ready'&&!lm){
-  const keep=window.confirm('Visage non détecté. OK pour garder cette photo et continuer avec le fondu manuel, ou Annuler pour la reprendre.');
-  if(!keep){captureBtn.disabled=false;status.textContent='Photo non conservée. Éclaire le visage, regarde l’objectif et recommence.';return}
- }
+ if(!lm){captureBtn.disabled=state.detectorState!=='ready';status.textContent=state.detectorState==='ready'?'Visage non détecté. Éclaire le visage, regarde l’objectif et reprends la photo.':'Contrôle automatique indisponible : recharge la page pour rétablir le détecteur.';return}
+ const quality=referenceCaptureQuality(lm);if(!quality.ok){captureBtn.disabled=false;status.textContent=`Photo à reprendre : ${quality.reasons.join(' · ')}.`;return}
  state.photos[state.step]=c;state.marks[state.step]=lm;state.photoVersion++;invalidateFaceLighting();
  const photoNumber=state.step+1,thumbURL=`url(${c.toDataURL('image/jpeg',.85)})`;$('thumb'+photoNumber).style.backgroundImage=thumbURL;$('sourceThumb'+photoNumber).style.backgroundImage=thumbURL;
  if(state.step===0){
-  state.step=1;captureBtn.textContent='Prendre le visage 2';captureBtn.disabled=false;
-  status.textContent=lm?'Garde la même distance et la tête bien droite.':'Premier visage conservé sans détection. Le fondu manuel restera disponible.'
+  state.step=1;state.pair={status:'capturing2',score:null,reasons:[],advice:[],metrics:null,hint:'Photo 1 conservée. Reproduis sa distance, son angle, l’ouverture des yeux et de la bouche.'};captureBtn.textContent='Prendre le visage 2';captureBtn.disabled=false;
+  status.textContent=state.pair.hint
  }else{
-  stopCamera();state.step=0;captureBtn.textContent='Prendre le visage 1';showStage('alignStage');updatePreviewSize();state.animation.userFrozen=false;autoAlign();if(canMeshMorph())setMode(state.mode==='regions'?'regions':'webgl');maybeAutoStartAnimation()
+  state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};stopCamera();state.step=0;captureBtn.textContent='Prendre le visage 1';showStage('alignStage');updatePreviewSize();state.animation.userFrozen=false;syncPairUI();autoAlign({activate:false,focusRejected:true});if(canMeshMorph()){setMode(state.mode==='regions'?'regions':'webgl');maybeAutoStartAnimation()}
  }
 }
 
@@ -278,7 +314,8 @@ function photo2Matrix(v){
 }
 function mapPoint(m,p){return{x:m.a*p.x+m.c*p.y+m.e,y:m.b*p.x+m.d*p.y+m.f}}
 function landmarkPoints(index){return state.marks[index]?.map(p=>({x:p.x*SIZE,y:p.y*SIZE}))||null}
-function canMeshMorph(){return state.meshTriangles.length>800&&state.faceOval.length>=30&&state.marks[0]?.length>=468&&state.marks[1]?.length>=468}
+function hasLandmarkPair(){return state.meshTriangles.length>800&&state.faceOval.length>=30&&state.marks[0]?.length>=468&&state.marks[1]?.length>=468}
+function canMeshMorph(){return hasLandmarkPair()&&state.pair.status==='accepted'}
 function rawFaceLightingMask(index,size,scale=1,blur=0){
  const marks=state.marks[index];if(!marks||marks.length<468)return null;const points=state.faceOval.map(id=>marks[id]).filter(Boolean);if(points.length<30)return null;const center=points.reduce((sum,p)=>({x:sum.x+p.x,y:sum.y+p.y}),{x:0,y:0});center.x/=points.length;center.y/=points.length;const mask=makeCanvas(size),ctx=mask.getContext('2d');ctx.save();if(blur>0&&'filter' in ctx)ctx.filter=`blur(${blur}px)`;ctx.fillStyle='#fff';ctx.beginPath();points.forEach((p,i)=>{const x=(center.x+(p.x-center.x)*scale)*size,y=(center.y+(p.y-center.y)*scale)*size;if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y)});ctx.closePath();ctx.fill();ctx.restore();return mask
 }
@@ -317,10 +354,10 @@ function ensureFaceLighting(){
   for(let y=0,p=0;y<SIZE;y++)for(let x=0;x<SIZE;x++,p++){const i=p*4,weight=mask[i+3]/255;if(weight<=.001)continue;const sx=x*(sampleSize-1)/(SIZE-1),sy=y*(sampleSize-1)/(SIZE-1),logFactor=clamp(weight*bilinearSample(adjustment,sampleSize,sampleSize,sx,sy),-.64,.64),rawFactor=exp[Math.round((logFactor+.64)*expScale)],r=sourceLinear.lut[data[i]],g=sourceLinear.lut[data[i+1]],b=sourceLinear.lut[data[i+2]],maxChannel=Math.max(r,g,b),factor=rawFactor>1&&maxChannel>0?Math.min(rawFactor,.995/maxChannel):rawFactor;data[i]=encode[Math.round(clamp(r*factor,0,1)*encodeMax)];data[i+1]=encode[Math.round(clamp(g*factor,0,1)*encodeMax)];data[i+2]=encode[Math.round(clamp(b*factor,0,1)*encodeMax)]}ctx.putImageData(image,0,0);lighting.corrected=corrected;lighting.stats={sigma,detailGain,commonCoverage:commonCount/Math.max(1,sourceCount)};state.lighting=lighting;return lighting
  }catch(error){console.warn('Harmonisation locale indisponible',error);lighting.stats={error:String(error?.message||error)};state.lighting=lighting;return lighting}
 }
-function morphPhoto2Key(){if(state.regionHarmony<=.001)return`${state.photoVersion}|raw`;const lighting=ensureFaceLighting();return`${state.photoVersion}|${lighting.corrected?'normalized':'raw'}|${state.regionHarmony.toFixed(3)}`}
+function morphPhoto2Key(){if(state.pair.status!=='accepted'||state.regionHarmony<=.001)return`${state.photoVersion}|raw`;const lighting=ensureFaceLighting();return`${state.photoVersion}|${lighting.corrected?'normalized':'raw'}|${state.regionHarmony.toFixed(3)}`}
 function lightingStatus(){if(state.regionHarmony<=.001)return'lumière brute';const lighting=ensureFaceLighting();return lighting.corrected?`lumière locale ${Math.round(state.regionHarmony*100)} %`:'harmonisation indisponible'}
 function morphPhoto(index){
- if(index!==1)return state.photos[index];const amount=clamp(state.regionHarmony,0,1);if(amount<=.001)return state.photos[1];const lighting=ensureFaceLighting();if(!lighting.corrected)return state.photos[1];if(amount>=.999)return lighting.corrected;const key=amount.toFixed(3);if(lighting.blendKey!==key){if(!lighting.blended)lighting.blended=makeCanvas(SIZE);const ctx=lighting.blended.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,SIZE,SIZE);ctx.drawImage(state.photos[1],0,0);ctx.globalAlpha=amount;ctx.drawImage(lighting.corrected,0,0);ctx.globalAlpha=1;lighting.blendKey=key}return lighting.blended
+ if(index!==1)return state.photos[index];const amount=clamp(state.regionHarmony,0,1);if(state.pair.status!=='accepted'||amount<=.001)return state.photos[1];const lighting=ensureFaceLighting();if(!lighting.corrected)return state.photos[1];if(amount>=.999)return lighting.corrected;const key=amount.toFixed(3);if(lighting.blendKey!==key){if(!lighting.blended)lighting.blended=makeCanvas(SIZE);const ctx=lighting.blended.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,SIZE,SIZE);ctx.drawImage(state.photos[1],0,0);ctx.globalAlpha=amount;ctx.drawImage(lighting.corrected,0,0);ctx.globalAlpha=1;lighting.blendKey=key}return lighting.blended
 }
 function invalidateFaceLighting(){state.lighting={version:-1,corrected:null,blended:null,blendKey:'',stats:null};state.regionCache=null;if(state.webgl)state.webgl.textureVersion=-1}
 function circumcircle(a,b,c){
@@ -361,7 +398,7 @@ function updateModeAvailability(){
  if(available&&state.previewTrianglesVersion!==state.photoVersion){state.morphTriangles=buildMorphTriangles();state.previewTriangles=buildPreviewTriangles();state.morphTopologyVersion++;state.previewTrianglesVersion=state.photoVersion;if(state.webgl)state.webgl.indexVersion=''}
  if(!available){stopAnimation({render:false});state.mode='fallback';document.querySelectorAll('[data-mode]').forEach(button=>{button.classList.remove('is-active');button.setAttribute('aria-pressed','false')});$('regionControls').hidden=true;$('blendLabelText').textContent='Mélange'}
  else if(state.mode==='fallback')setMode('canvas')
- syncAnimationControls()
+ syncAnimationControls();syncPairUI()
 }
 function meshGeometry(v){
  if(!canMeshMorph())return null;
@@ -375,7 +412,7 @@ function drawPhoto2(ctx,v,alpha,outSize){
 function renderAlphaFallback(canvas,v){
  const ctx=canvas.getContext('2d'),size=canvas.width;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,size,size);ctx.globalAlpha=1;
  ctx.drawImage(state.photos[0],0,0,size,size);drawPhoto2(ctx,v,v.a,size);ctx.globalAlpha=1;
- return{fallback:true,message:'Landmarks incomplets : fondu manuel superposé utilisé.'}
+ return{fallback:true,message:state.pair.status==='rejected'?`Morphing bloqué · ${pairSummary()} Reprends uniquement la photo 2.`:'Contrôle structurel incomplet : animation indisponible.'}
 }
 function affine(src,dst){
  const [s0,s1,s2]=src,[d0,d1,d2]=dst,sx1=s1.x-s0.x,sy1=s1.y-s0.y,sx2=s2.x-s0.x,sy2=s2.y-s0.y;
@@ -574,7 +611,7 @@ function syncAnimationControls(){
  const meshReady=canMeshMorph(),modeReady=state.mode==='webgl'||state.mode==='regions',available=meshReady&&modeReady,animation=state.animation,running=animation.running,frozen=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode,{amplitude,speed}=animationSettings(),controls=$('animationControls'),badge=$('animationBadge'),reduced=automaticMotionReduced(),styleLabel=REGION_ANIMATION_LABELS[state.regionAnimationStyle]||REGION_ANIMATION_LABELS.progressive,styles=$('regionAnimationStyles');controls.hidden=state.photos.length<2;styles.hidden=state.mode!=='regions';document.querySelectorAll('[data-region-animation-style]').forEach(button=>{const active=button.dataset.regionAnimationStyle===state.regionAnimationStyle;button.classList.toggle('is-active',active);button.setAttribute('aria-pressed',String(active))});controls.classList.toggle('is-animating',running);badge.hidden=!running;badge.textContent=running?`MORPHING ACTIF · ${state.mode==='webgl'?'WEBGL':`RÉGIONS · ${styleLabel.toUpperCase()}`} · ${Math.round(amplitude*100)} %`:'MORPHING ACTIF';$('toggleAnimation').disabled=!available||amplitude<=0;$('toggleAnimation').classList.toggle('is-running',running);$('toggleAnimation').setAttribute('aria-pressed',String(running));$('toggleAnimation').textContent=running?'Arrêter et figer':frozen?'Reprendre doucement':'Démarrer l’animation';
  $('regionHarmony').disabled=state.photos.length<2||!meshReady;
  $('animationAmplitudeVal').textContent=Math.round(amplitude*100)+'%';$('animationAmplitude').setAttribute('aria-valuetext',`${Math.round(amplitude*100)} %`);$('animationSpeedVal').textContent=speed.toFixed(2)+'×';$('animationSpeed').setAttribute('aria-valuetext',`${speed.toFixed(2)} fois`);
- let description;if(!meshReady)description='Animation indisponible : les deux visages doivent être détectés. Reprends la photo non détectée.';else if(!modeReady)description='Choisis Triangles WebGL ou Régions pour lancer automatiquement le morphing animé.';else description=state.mode==='webgl'?'La forme et le mélange oscillent sans déplacer, tourner ni redimensionner le recalage global.':REGION_ANIMATION_HINTS[state.regionAnimationStyle];if(reduced&&available&&!running)description+=' Le réglage iPhone « Réduire les animations » bloque seulement le démarrage automatique : le bouton reste utilisable.';$('animationState').textContent=running?'Animation active':frozen?'Image figée':!meshReady?'Visages non détectés':!modeReady?'Mode statique':reduced?'Prête · démarrage manuel':'Prête à démarrer';$('animationHint').textContent=description+(amplitude<=0?' Amplitude 0 % : animation suspendue.':frozen?' Les curseurs conservent les valeurs centrales.':'')
+ let description;if(state.pair.status==='rejected')description='Animation bloquée : conserve la photo 1 et reprends la photo 2 selon les indications ci-dessus.';else if(!meshReady)description='Animation indisponible : les deux visages doivent être détectés et jugés compatibles.';else if(!modeReady)description='Choisis Triangles WebGL ou Régions pour lancer automatiquement le morphing animé.';else description=state.mode==='webgl'?'La forme et le mélange oscillent sans déplacer, tourner ni redimensionner le recalage global.':REGION_ANIMATION_HINTS[state.regionAnimationStyle];if(reduced&&available&&!running)description+=' Le réglage iPhone « Réduire les animations » bloque seulement le démarrage automatique : le bouton reste utilisable.';$('animationState').textContent=running?'Animation active':frozen?'Image figée':state.pair.status==='rejected'?'Photo 2 à reprendre':!meshReady?'Paire non validée':!modeReady?'Mode statique':reduced?'Prête · démarrage manuel':'Prête à démarrer';$('animationHint').textContent=description+(amplitude<=0?' Amplitude 0 % : animation suspendue.':frozen?' Les curseurs conservent les valeurs centrales.':'')
 }
 function smoothstep(value){return value*value*(3-2*value)}
 function smoother(value){const x=clamp(value,0,1);return x*x*x*(x*(x*6-15)+10)}
@@ -679,7 +716,7 @@ function finalImage(snapshot=state.animation.frozenFrame){
  finally{state.auto=previous.auto;state.regionFeather=previous.regionFeather;state.regionHarmony=previous.regionHarmony}
 }
 async function buildPuzzle(){
- if(state.animation.exporting)return;const animation=state.animation,pendingStart=!!animation.autoStartRaf;cancelPendingAutoStart();const snapshot=animation.running?animation.lastFrame:animation.frozenFrame||animation.styleTransition?.from||animation.lastFrame;animation.resumeAfterGame=animation.running||pendingStart;if(animation.running)stopAnimation({freeze:true,render:false});animation.exporting=true;const controls=[...document.querySelectorAll('#alignStage button,#alignStage input')],disabled=controls.map(control=>control.disabled);controls.forEach(control=>control.disabled=true);$('modeStatus').textContent='Création du visage 768 × 768…';await new Promise(resolve=>requestAnimationFrame(resolve));let created=false;
+ if(state.animation.exporting)return;if(!canMeshMorph()){$('modeStatus').textContent='Création bloquée : conserve la photo 1 et reprends le visage 2.';$('retakePhoto2').focus();return}const animation=state.animation,pendingStart=!!animation.autoStartRaf;cancelPendingAutoStart();const snapshot=animation.running?animation.lastFrame:animation.frozenFrame||animation.styleTransition?.from||animation.lastFrame;animation.resumeAfterGame=animation.running||pendingStart;if(animation.running)stopAnimation({freeze:true,render:false});animation.exporting=true;const controls=[...document.querySelectorAll('#alignStage button,#alignStage input')],disabled=controls.map(control=>control.disabled);controls.forEach(control=>control.disabled=true);$('modeStatus').textContent='Création du visage 768 × 768…';await new Promise(resolve=>requestAnimationFrame(resolve));let created=false;
  try{state.solutionURL=finalImage(snapshot).toDataURL('image/jpeg',.92);state.tiles=Array.from({length:16},(_,i)=>i);state.blank=15;showStage('gameStage');createTiles();shuffle(180);created=true}
  catch(e){console.error(e);$('modeStatus').textContent='Création impossible : '+(e.message||e)}finally{state.animation.exporting=false;controls.forEach((control,index)=>control.disabled=disabled[index]);if(!created&&state.animation.resumeAfterGame)resumeAutomaticAnimation()}
 }
@@ -691,22 +728,25 @@ function shuffle(n=150){state.showing=false;$('showSolution').textContent='Voir 
 function isSolved(){return state.tiles.every((v,i)=>v===i)}
 function showSolution(){state.showing=!state.showing;$('puzzle').style.background=state.showing?`#000 url(${state.solutionURL}) center/cover no-repeat`:'#070707';$('showSolution').textContent=state.showing?'Revenir au jeu':'Voir la solution';layout()}
 function resetAll(preserveAnimationSettings=false){
- stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,autoStartRaf:0,exporting:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();state.photos=[];state.marks=[];state.step=0;state.photoVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.morphTopologyVersion++;state.previewTrianglesVersion=-1;state.auto={scale:1,rot:0,tx:0,ty:0};state.buffers.clear();invalidateFaceLighting();
+ stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,autoStartRaf:0,exporting:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();state.photos=[];state.marks=[];state.step=0;state.pair={status:'empty',score:null,reasons:[],advice:[],metrics:null,hint:''};state.photoVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.morphTopologyVersion++;state.previewTrianglesVersion=-1;state.auto={scale:1,rot:0,tx:0,ty:0};state.buffers.clear();invalidateFaceLighting();
  if(!preserveAnimationSettings){state.regionAnimationStyle='progressive';state.regionHarmony=1;state.animation.randomSeed=137;$('animationAmplitude').value=45;$('animationSpeed').value=110}
  ['offsetX','offsetY','rotation'].forEach(id=>$(id).value=0);$('scale').value=100;$('blend').value=50;
  captureBtn.textContent='Prendre le visage 1';for(const id of ['thumb1','thumb2','sourceThumb1','sourceThumb2'])$(id).style.backgroundImage='none';showStage('captureStage');
- status.textContent=state.detectorState==='ready'?'Détecteur prêt. Active la caméra.':state.detectorState==='failed'?'Détecteur indisponible. Le réglage manuel reste utilisable.':'Chargement du détecteur de visage…';syncRegionControls();syncAnimationControls()
+ status.textContent=state.detectorState==='ready'?'Détecteur prêt. Active la caméra.':state.detectorState==='failed'?'Détecteur indisponible : recharge la page pour activer le contrôle de compatibilité.':'Chargement du détecteur de visage…';syncRegionControls();syncAnimationControls();syncPairUI()
+}
+function retakePhoto2(){
+ const guidance=state.pair.advice?.slice(0,2).join(' ')||'Reproduis le cadrage, l’angle et l’expression de la photo 1.';stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();state.photos.length=Math.min(1,state.photos.length);state.marks.length=Math.min(1,state.marks.length);state.step=1;state.pair={status:'capturing2',score:null,reasons:[],advice:[],metrics:null,hint:`Photo 1 conservée. ${guidance}`};state.photoVersion++;state.auto={scale:1,rot:0,tx:0,ty:0};state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.morphTopologyVersion++;state.previewTrianglesVersion=-1;state.regionCache=null;state.solutionURL='';state.buffers.clear();invalidateFaceLighting();if(state.webgl)state.webgl.indexVersion='';for(const id of ['thumb2','sourceThumb2'])$(id).style.backgroundImage='none';captureBtn.textContent='Prendre le visage 2';showStage('captureStage');syncPairUI();updateModeAvailability();status.textContent=state.pair.hint;status.focus();startCamera()
 }
 $('startCamera').onclick=startCamera;$('capture').onclick=takePhoto;$('switchCamera').onclick=()=>{state.facing=state.facing==='user'?'environment':'user';startCamera()};$('resetAll').onclick=()=>resetAll(false);
-$('backCapture').onclick=()=>resetAll(true);$('autoAlign').onclick=autoAlign;$('makePuzzle').onclick=buildPuzzle;$('shuffle').onclick=()=>shuffle(180);$('showSolution').onclick=showSolution;
+$('backCapture').onclick=()=>resetAll(true);$('retakePhoto2').onclick=retakePhoto2;$('autoAlign').onclick=()=>autoAlign();$('makePuzzle').onclick=buildPuzzle;$('shuffle').onclick=()=>shuffle(180);$('showSolution').onclick=showSolution;
 $('backAlign').onclick=()=>{state.showing=false;showStage('alignStage');updatePreviewSize();scheduleRender();if(state.animation.resumeAfterGame){state.animation.userFrozen=false;resumeAutomaticAnimation()}};
 window.addEventListener('resize',()=>requestAnimationFrame(()=>{if($('alignStage').classList.contains('active'))updatePreviewSize();layout()}));
-document.addEventListener('visibilitychange',()=>{const animation=state.animation;if(document.hidden){if(animation.raf)cancelAnimationFrame(animation.raf);animation.raf=0;animation.lastTick=0}else if(animation.resumeOnPageShow&&$('alignStage').classList.contains('active')){animation.resumeOnPageShow=false;if(animation.running){animation.lastTick=performance.now();queueAnimationLoop()}else if(animation.frozenFrame)resumeAutomaticAnimation();else maybeAutoStartAnimation()}else if(animation.running&&$('alignStage').classList.contains('active')){animation.lastTick=performance.now();queueAnimationLoop()}});
+document.addEventListener('visibilitychange',()=>{const animation=state.animation;if(document.hidden){if(animation.raf)cancelAnimationFrame(animation.raf);animation.raf=0;animation.lastTick=0;if($('captureStage').classList.contains('active'))stopCamera()}else if($('captureStage').classList.contains('active')&&!state.stream){captureBtn.disabled=true;status.textContent=state.detectorState==='failed'?'Détecteur indisponible : recharge la page avant de reprendre les photos.':`Caméra arrêtée. Appuie sur « Activer la caméra » pour continuer ${state.step?'le visage 2':'le visage 1'}.`}else if(animation.resumeOnPageShow&&$('alignStage').classList.contains('active')){animation.resumeOnPageShow=false;if(animation.running){animation.lastTick=performance.now();queueAnimationLoop()}else if(animation.frozenFrame)resumeAutomaticAnimation();else maybeAutoStartAnimation()}else if(animation.running&&$('alignStage').classList.contains('active')){animation.lastTick=performance.now();queueAnimationLoop()}});
 window.addEventListener('pagehide',()=>{const animation=state.animation;animation.resumeOnPageShow=animation.running||!!animation.autoStartRaf;cancelPendingAutoStart();if(animation.raf)cancelAnimationFrame(animation.raf);animation.raf=0;animation.lastTick=0;stopCamera()});
-window.addEventListener('pageshow',()=>{const animation=state.animation;if(animation.resumeOnPageShow&&!document.hidden&&$('alignStage').classList.contains('active')){animation.resumeOnPageShow=false;if(animation.running){animation.lastTick=performance.now();queueAnimationLoop()}else if(animation.frozenFrame)resumeAutomaticAnimation();else maybeAutoStartAnimation()}});
+window.addEventListener('pageshow',event=>{const animation=state.animation;if(event.persisted&&$('captureStage').classList.contains('active')&&!state.stream){captureBtn.disabled=true;status.textContent=state.detectorState==='failed'?'Détecteur indisponible : recharge la page avant de reprendre les photos.':`Caméra arrêtée. Appuie sur « Activer la caméra » pour continuer ${state.step?'le visage 2':'le visage 1'}.`}if(animation.resumeOnPageShow&&!document.hidden&&$('alignStage').classList.contains('active')){animation.resumeOnPageShow=false;if(animation.running){animation.lastTick=performance.now();queueAnimationLoop()}else if(animation.frozenFrame)resumeAutomaticAnimation();else maybeAutoStartAnimation()}});
 function reducedMotionChanged(event){const animation=state.animation;if(event.matches){const shouldResume=animation.running||!!animation.autoStartRaf;cancelPendingAutoStart();if(animation.running)stopAnimation({freeze:true});animation.resumeAfterMotion=shouldResume&&!animation.userFrozen;if(animation.resumeAfterMotion)$('modeStatus').textContent='Animation suspendue par le réglage iPhone « Réduire les animations ».';syncAnimationControls()}else{syncAnimationControls();if(animation.resumeAfterMotion||animation.resumeAfterGame)resumeAutomaticAnimation();else maybeAutoStartAnimation()}}
 if(reducedMotionQuery){if(reducedMotionQuery.addEventListener)reducedMotionQuery.addEventListener('change',reducedMotionChanged);else reducedMotionQuery.addListener?.(reducedMotionChanged)}
-syncRegionControls();syncAnimationControls();
+syncRegionControls();syncAnimationControls();syncPairUI();
 </script>
 </body>
 </html>
