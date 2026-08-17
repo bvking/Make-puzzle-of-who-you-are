@@ -37,9 +37,9 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 </head>
 <body>
 <main>
-<span class="badge">Morphing inter-identités · version de validation</span>
+<span class="badge">Morphing inter-identités · version 13</span>
 <h1>Taquin — deux visages</h1>
-<p class="lead">L’application distingue le recalage global de la transformation des traits, privilégie le maillage facial sémantique et mélange progressivement le contexte de la tête.</p>
+<p class="lead">L’application distingue le recalage global de la transformation des traits, privilégie le maillage facial sémantique et mélange progressivement le portrait entier.</p>
 <section id="captureStage" class="stage active"><div class="card">
 <div class="viewport"><video id="video" playsinline muted></video><div class="guide"></div></div>
 <div class="controls"><div class="row"><button id="startCamera" type="button">Activer la caméra</button><button id="capture" type="button" disabled>Prendre le visage 1</button></div>
@@ -61,8 +61,8 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <button type="button" class="secondary" data-mode="webgl" aria-pressed="false">Triangles WebGL</button>
 <button type="button" class="secondary" data-mode="regions" aria-pressed="false">Régions</button>
 </div>
-<label>Lumière visage <input id="regionHarmony" type="range" min="0" max="100" value="100"><span id="regionHarmonyVal" class="value">100%</span></label>
-<span class="region-title">Calculé à nouveau pour chaque paire : 100 % rapproche les ombres, le contraste et la lumière locale du visage 2 de ceux du visage 1.</span>
+<label>Lumière visage <input id="regionHarmony" type="range" min="0" max="100" value="0"><span id="regionHarmonyVal" class="value">0%</span></label>
+<span class="region-title">Optionnel : augmente ce réglage seulement si les deux photos ont des éclairages très différents.</span>
 <div id="modeStatus" class="status" aria-live="polite"></div>
 <div id="animationControls" class="animation-controls" role="group" aria-label="Animation douce du morphing" hidden>
 <button id="toggleAnimation" type="button" class="secondary" aria-pressed="false">Animer doucement</button>
@@ -105,7 +105,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <div class="row"><button id="autoAlign" type="button" class="secondary">Réaligner automatiquement</button><button id="makePuzzle" type="button">Créer le taquin</button></div>
 <button id="backCapture" type="button" class="secondary">Refaire les photos</button>
 </div>
-<p class="note">En WebGL et Triangles 2D, la tête et les cheveux du visage 2 apparaissent progressivement autour du morphing facial ; le fond extérieur reste celui de la photo 1. Régions conserve volontairement le principe de collage artistique. Les deux visages doivent être détectés pour construire et contrôler le maillage.</p>
+<p class="note">En WebGL et Triangles 2D, le portrait passe entièrement de la photo 1 à la photo 2 pendant que les traits sont transformés par le maillage. Régions conserve volontairement le principe de collage artistique. Les deux visages doivent être détectés pour construire et contrôler le maillage.</p>
 </div></section>
 <section id="gameStage" class="stage"><div class="card">
 <div id="puzzle" class="puzzle"></div><div id="win" class="win">Visage reconstitué.</div>
@@ -124,6 +124,10 @@ const REGION_IDS={
  nose:[[168,6,197,195,5,4,1,2,98,97,64,45,220,129,358,327,326,294,275,440]],
  mouth:[[61,146,91,181,84,17,314,405,321,375,291,308,324,318,402,317,14,87,178,88,95,78,191,80,81,82,13,312,311,310,415]]
 };
+const REFINED_EYE_MESH_IDS=[
+ [33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246,468,469,470,471,472],
+ [362,382,381,380,374,373,390,249,263,466,388,387,386,385,384,398,473,474,475,476,477]
+];
 const REGION_KEYS=['left','right','leftEye','rightEye','nose','mouth'];
 const REGION_CONTROL_IDS={left:'regionLeft',right:'regionRight',leftEye:'regionLeftEye',rightEye:'regionRightEye',nose:'regionNose',mouth:'regionMouth'};
 const REGION_ANIMATION_LABELS={progressive:'Progressif',random:'Aléatoire',pulse:'Pulsé',explosive:'Explosif'};
@@ -133,7 +137,7 @@ const state={
  stream:null,facing:'user',photos:[],marks:[],step:0,tiles:[],blank:15,solutionURL:'',showing:false,
  landmarker:null,detectorState:'loading',cameraRequest:0,auto:{scale:1,rot:0,tx:0,ty:0},
  pair:{status:'empty',score:null,reasons:[],advice:[],metrics:null,hint:''},
- mode:'canvas',regionMix:{left:0,right:0,leftEye:1,rightEye:1,nose:0,mouth:1},regionFeather:.5,regionHarmony:1,regionAnimationStyle:'progressive',regionCache:null,
+ mode:'canvas',regionMix:{left:0,right:0,leftEye:1,rightEye:1,nose:0,mouth:1},regionFeather:.5,regionHarmony:0,regionAnimationStyle:'progressive',regionCache:null,
  meshTriangles:[],morphTriangles:[],morphTrianglesVersion:-1,morphTopologyVersion:0,previewTriangles:[],previewTrianglesVersion:-1,validatedControls:{x:0,y:0,s:1,r:0},faceOval:FALLBACK_FACE_OVAL.slice(),
  buffers:new Map(),webgl:null,photoVersion:0,lighting:{version:-1,corrected:null,blended:null,blendKey:'',stats:null},renderQueued:false,quickRenderQueued:false,accurateRenderTimer:null,
  animation:{running:false,raf:0,autoStartRaf:0,exporting:false,phase:0,ramp:0,lastTick:0,lastRender:0,randomSeed:137,styleTransition:null,baseControls:null,baseRegionMix:null,lastFrame:null,frozenFrame:null,userFrozen:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false}
@@ -333,11 +337,11 @@ function updateControlLabels(v){
  $('offsetXVal').textContent=Math.round(v.x*10)/10;$('offsetYVal').textContent=Math.round(v.y*10)/10;$('scaleVal').textContent=Math.round(v.s*100)+'%';
  $('rotationVal').textContent=(v.r*180/Math.PI).toFixed(1)+'°';$('blendVal').textContent=Math.round(v.a*100)+'%'
 }
-function photo2Matrix(v){
+function photo2Matrix(v,strength=1){
  const A=state.auto,cx=SIZE/2,cy=SIZE/2,ca=Math.cos(A.rot),sa=Math.sin(A.rot);
  const centerX=A.scale*(ca*cx-sa*cy)+A.tx+v.x,centerY=A.scale*(sa*cx+ca*cy)+A.ty+v.y;
- const k=A.scale*v.s,r=A.rot+v.r,co=Math.cos(r),si=Math.sin(r),a=k*co,b=k*si,c=-k*si,d=k*co;
- return{a,b,c,d,e:centerX-a*cx-c*cy,f:centerY-b*cx-d*cy}
+ const amount=clamp(strength,0,1),fullScale=Math.max(.001,A.scale*v.s),k=Math.exp(Math.log(fullScale)*amount),r=(A.rot+v.r)*amount,co=Math.cos(r),si=Math.sin(r),a=k*co,b=k*si,c=-k*si,d=k*co,partialCenterX=cx+(centerX-cx)*amount,partialCenterY=cy+(centerY-cy)*amount;
+ return{a,b,c,d,e:partialCenterX-a*cx-c*cy,f:partialCenterY-b*cx-d*cy}
 }
 function mapPoint(m,p){return{x:m.a*p.x+m.c*p.y+m.e,y:m.b*p.x+m.d*p.y+m.f}}
 function landmarkPoints(index){return state.marks[index]?.map(p=>({x:p.x*SIZE,y:p.y*SIZE}))||null}
@@ -429,10 +433,11 @@ function updateModeAvailability(){
 }
 function meshGeometry(v){
  if(!canMeshMorph())return null;
- const count=commonLandmarkCount(),raw1=landmarkPoints(0).slice(0,count),raw2=landmarkPoints(1).slice(0,count),m=photo2Matrix(v),aligned2=raw2.map(p=>mapPoint(m,p));
- const target=raw1.map((p,i)=>({x:p.x+(aligned2[i].x-p.x)*v.a,y:p.y+(aligned2[i].y-p.y)*v.a}));
- return{raw1,raw2,aligned2,target,t:v.a}
+ const count=commonLandmarkCount(),raw1=landmarkPoints(0).slice(0,count),raw2=landmarkPoints(1).slice(0,count),aligned2=raw2.map(point=>mapPoint(photo2Matrix(v),point)),alignmentStrength=1-smoother(clamp(v.a,0,1)),frame2=raw2.map(point=>mapPoint(photo2Matrix(v,alignmentStrength),point));
+ const target=raw1.map((point,index)=>({x:point.x+(frame2[index].x-point.x)*v.a,y:point.y+(frame2[index].y-point.y)*v.a})),topologyShape=raw1.map((point,index)=>({x:(point.x+aligned2[index].x)/2,y:(point.y+aligned2[index].y)/2})),eyeTriangles=count>=478?REFINED_EYE_MESH_IDS.flatMap(ids=>delaunayTriangles(topologyShape,ids)):[];
+ return{raw1,raw2,aligned2,frame2,target,eyeTriangles,t:v.a}
 }
+function morphTrianglesForGeometry(geometry){const base=state.morphTriangles.length?state.morphTriangles:state.meshTriangles;return geometry.eyeTriangles?.length?base.concat(geometry.eyeTriangles):base}
 function manualGeometryIsSafe(v){if(!hasLandmarkPair()||!state.morphTriangles.length)return false;const first=landmarkPoints(0).slice(0,468),second=landmarkPoints(1).slice(0,468).map(point=>mapPoint(photo2Matrix(v),point)),metrics=assessMorphTopology(first,second,state.morphTriangles,'réglage manuel'),cropA=faceOvalCrop(first),cropB=faceOvalCrop(second),outsideArea=Math.max(cropA.outsideArea,cropB.outsideArea),maxOverflow=Math.max(cropA.maxOverflow,cropB.maxOverflow);return!topologyTechnicallyUnusable(metrics,outsideArea,maxOverflow)}
 function drawPhoto2(ctx,v,alpha,outSize){
  const m=photo2Matrix(v),q=outSize/SIZE;ctx.save();ctx.globalAlpha=alpha;ctx.setTransform(m.a*q,m.b*q,m.c*q,m.d*q,m.e*q,m.f*q);ctx.drawImage(morphPhoto(1),0,0);ctx.restore()
@@ -478,25 +483,21 @@ function traceOval(ctx,points,q=1){
  ctx.beginPath();ctx.moveTo(valid[0].x*q,valid[0].y*q);for(let i=1;i<valid.length;i++)ctx.lineTo(valid[i].x*q,valid[i].y*q);ctx.closePath();return true
 }
 function faceMask(size,points){
- const mask=getBuffer('faceMask',size),ctx=mask.getContext('2d'),q=size/SIZE,feather=Math.max(4,size/64);
- ctx.save();if('filter' in ctx)ctx.filter=`blur(${feather}px)`;ctx.fillStyle='#fff';if(traceOval(ctx,points,q))ctx.fill();ctx.restore();return mask
+ const mask=getBuffer('faceMask',size),ctx=mask.getContext('2d'),q=size/SIZE,oval=state.faceOval.map(id=>points[id]).filter(Boolean);if(oval.length<20)return mask;const xs=oval.map(point=>point.x*q),ys=oval.map(point=>point.y*q),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),cx=(minX+maxX)/2,cy=(minY+maxY)/2,rx=(maxX-minX)*.56,ry=(maxY-minY)*.54;ctx.save();ctx.translate(cx,cy);ctx.scale(rx,ry);const gradient=ctx.createRadialGradient(0,0,.84,0,0,1);gradient.addColorStop(0,'rgba(255,255,255,1)');gradient.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=gradient;ctx.beginPath();ctx.arc(0,0,1,0,Math.PI*2);ctx.fill();ctx.restore();return mask
 }
 function maskedFaceLayer(size,source,points,name='faceLayer'){
  const layer=getBuffer(name,size),ctx=layer.getContext('2d');ctx.drawImage(source,0,0);ctx.globalCompositeOperation='destination-in';ctx.drawImage(faceMask(size,points),0,0);ctx.globalCompositeOperation='source-over';return layer
 }
 function drawBackground(canvas){const ctx=canvas.getContext('2d'),size=canvas.width;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,size,size);ctx.drawImage(state.photos[0],0,0,size,size);return ctx}
-function headContextMask(size,points){
- const mask=getBuffer('head-context-mask',size),ctx=mask.getContext('2d'),oval=state.faceOval.map(id=>points[id]).filter(Boolean);if(oval.length<20)return mask;const q=size/SIZE,xs=oval.map(point=>point.x*q),ys=oval.map(point=>point.y*q),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),width=maxX-minX,height=maxY-minY,cx=(minX+maxX)/2,cy=(minY+maxY)/2-height*.08,rx=width*.72,ry=height*.78,feather=Math.max(10,width*.075);ctx.save();ctx.fillStyle='#fff';if('filter' in ctx)ctx.filter=`blur(${feather}px)`;ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);ctx.fill();ctx.restore();return mask
-}
 function drawMorphBackground(canvas,v,geometry){
- const ctx=drawBackground(canvas),size=canvas.width,amount=smoother(clamp(geometry.t,0,1));if(amount<=.001)return ctx;const transformed=getBuffer('head-context-photo-2',size),transformedCtx=transformed.getContext('2d');drawPhoto2(transformedCtx,v,1,size);const layer=getBuffer('head-context-layer',size),layerCtx=layer.getContext('2d');layerCtx.drawImage(transformed,0,0);layerCtx.globalCompositeOperation='destination-in';layerCtx.drawImage(headContextMask(size,geometry.target),0,0);layerCtx.globalCompositeOperation='source-over';ctx.globalAlpha=amount;ctx.drawImage(layer,0,0);ctx.globalAlpha=1;return ctx
+ const ctx=drawBackground(canvas),size=canvas.width,amount=smoother(clamp(geometry.t,0,1));if(amount>.001){ctx.globalAlpha=amount;ctx.drawImage(state.photos[1],0,0,size,size);ctx.globalAlpha=1}return ctx
 }
 function renderCanvasMorph(canvas,v,geometry=meshGeometry(v)){
  if(!geometry)return renderAlphaFallback(canvas,v);const size=canvas.width;
- const warpA=warpImage('warpA',size,state.photos[0],geometry.raw1,geometry.target),warpB=warpImage('warpB',size,morphPhoto(1),geometry.raw2,geometry.target);
+ const triangles=morphTrianglesForGeometry(geometry),warpA=warpImage('warpA',size,state.photos[0],geometry.raw1,geometry.target,triangles),warpB=warpImage('warpB',size,morphPhoto(1),geometry.raw2,geometry.target,triangles);
  const mixed=getBuffer('mixedFace',size),mctx=mixed.getContext('2d');mctx.drawImage(warpA,0,0);mctx.globalAlpha=geometry.t;mctx.drawImage(warpB,0,0);mctx.globalAlpha=1;
  const ctx=drawMorphBackground(canvas,v,geometry);ctx.drawImage(maskedFaceLayer(size,mixed,geometry.target),0,0);
- return{fallback:false,message:`Morphing géométrique Canvas 2D · ${lightingStatus()} · ${trianglesForSize(size).length} triangles en aperçu.`}
+ return{fallback:false,message:`Morphing géométrique Canvas 2D · ${lightingStatus()} · ${triangles.length} triangles en aperçu.`}
 }
 
 function compileShader(gl,type,source){
@@ -547,7 +548,7 @@ function uploadAttribute(gl,buffer,location,data){gl.bindBuffer(gl.ARRAY_BUFFER,
 function renderWebGLFace(size,geometry){
  const r=initWebGLRenderer();if(r.failed||r.lost)return null;const {gl}=r;if(gl.isContextLost()){r.lost=true;return null}while(gl.getError()!==gl.NO_ERROR){}if(r.canvas.width!==size||r.canvas.height!==size){r.canvas.width=r.canvas.height=size}
  gl.viewport(0,0,size,size);gl.useProgram(r.program);
- const activeTriangles=state.morphTriangles.length?state.morphTriangles:state.meshTriangles,indexVersion=`${state.morphTopologyVersion}|${activeTriangles.length}`;if(r.indexVersion!==indexVersion){const indices=new Uint16Array(activeTriangles.flat());gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,r.index);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);r.indexCount=indices.length;r.indexVersion=indexVersion;assertWebGL(gl,'Chargement de la topologie')}
+ const activeTriangles=morphTrianglesForGeometry(geometry),eyeKey=geometry.eyeTriangles?.flat().join('.')||'',indexVersion=`${state.morphTopologyVersion}|${activeTriangles.length}|${eyeKey}`;if(r.indexVersion!==indexVersion){const indices=new Uint16Array(activeTriangles.flat());gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,r.index);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);r.indexCount=indices.length;r.indexVersion=indexVersion;assertWebGL(gl,'Chargement de la topologie')}
  const textureVersion=morphPhoto2Key();if(r.textureVersion!==textureVersion){uploadTexture(gl,r.tex1,state.photos[0],gl.TEXTURE0);uploadTexture(gl,r.tex2,morphPhoto(1),gl.TEXTURE1);assertWebGL(gl,'Chargement des textures');r.textureVersion=textureVersion}
  const count=geometry.raw1.length,positions=new Float32Array(count*2),uv1=new Float32Array(count*2),uv2=new Float32Array(count*2),q=size/SIZE;
  for(let i=0;i<count;i++){positions[i*2]=geometry.target[i].x*q;positions[i*2+1]=geometry.target[i].y*q;uv1[i*2]=geometry.raw1[i].x/SIZE;uv1[i*2+1]=geometry.raw1[i].y/SIZE;uv2[i*2]=geometry.raw2[i].x/SIZE;uv2[i*2+1]=geometry.raw2[i].y/SIZE}
@@ -560,7 +561,7 @@ function renderWebGLMorph(canvas,v){
  try{
   const webglFace=renderWebGLFace(canvas.width,geometry);if(!webglFace){const result=renderCanvasMorph(canvas,v,geometry);result.message='WebGL indisponible : morphing Canvas 2D utilisé.';return result}
   const ctx=drawMorphBackground(canvas,v,geometry);ctx.drawImage(maskedFaceLayer(canvas.width,webglFace,geometry.target,'webglFaceLayer'),0,0);
-  return{fallback:false,message:`Morphing géométrique WebGL · traits alignés · ${lightingStatus()} · ${state.morphTriangles.length||state.meshTriangles.length} triangles.`}
+  return{fallback:false,message:`Morphing géométrique WebGL · traits alignés · ${lightingStatus()} · ${morphTrianglesForGeometry(geometry).length} triangles.`}
  }catch(e){console.error(e);if(state.webgl){state.webgl.failed=true;state.webgl.failedAt=performance.now();state.webgl.error=e.message||String(e)}const result=renderCanvasMorph(canvas,v,geometry);result.message='Erreur WebGL : morphing Canvas 2D utilisé.';return result}
 }
 
@@ -764,7 +765,7 @@ function isSolved(){return state.tiles.every((v,i)=>v===i)}
 function showSolution(){state.showing=!state.showing;$('puzzle').style.background=state.showing?`#000 url(${state.solutionURL}) center/cover no-repeat`:'#070707';$('showSolution').textContent=state.showing?'Revenir au jeu':'Voir la solution';layout()}
 function resetAll(preserveAnimationSettings=false){
  stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,autoStartRaf:0,exporting:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();state.photos=[];state.marks=[];state.step=0;state.pair={status:'empty',score:null,reasons:[],advice:[],metrics:null,hint:''};state.photoVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.morphTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTrianglesVersion=-1;state.auto={scale:1,rot:0,tx:0,ty:0};state.validatedControls={x:0,y:0,s:1,r:0};state.buffers.clear();invalidateFaceLighting();
- if(!preserveAnimationSettings){state.regionAnimationStyle='progressive';state.regionHarmony=1;state.animation.randomSeed=137;$('animationAmplitude').value=45;$('animationSpeed').value=110}
+ if(!preserveAnimationSettings){state.regionAnimationStyle='progressive';state.regionHarmony=0;state.animation.randomSeed=137;$('animationAmplitude').value=45;$('animationSpeed').value=110}
  ['offsetX','offsetY','rotation'].forEach(id=>$(id).value=0);$('scale').value=100;$('blend').value=50;
  captureBtn.textContent='Prendre le visage 1';for(const id of ['thumb1','thumb2','sourceThumb1','sourceThumb2'])$(id).style.backgroundImage='none';showStage('captureStage');
  status.textContent=state.detectorState==='ready'?'Détecteur prêt. Active la caméra.':state.detectorState==='failed'?'Détecteur indisponible : recharge la page pour activer le contrôle de compatibilité.':'Chargement du détecteur de visage…';syncRegionControls();syncAnimationControls();syncPairUI()
@@ -775,8 +776,9 @@ function retakePhoto2(){
 async function loadDemoPortrait(src){
  const image=await new Promise((resolve,reject)=>{const element=new Image();element.decoding='async';element.onload=()=>resolve(element);element.onerror=()=>reject(new Error(`Image de démonstration introuvable : ${src}`));element.src=src}),canvas=makeCanvas(SIZE),ctx=canvas.getContext('2d'),side=Math.min(image.naturalWidth,image.naturalHeight),sx=(image.naturalWidth-side)/2,sy=(image.naturalHeight-side)/2;ctx.drawImage(image,sx,sy,side,side,0,0,SIZE,SIZE);return canvas
 }
+async function loadDemoLandmarks(src){const response=await fetch(src,{cache:'no-store'});if(!response.ok)throw new Error(`Repères de démonstration indisponibles (${response.status})`);return response.json()}
 async function loadDemoPair(){
- await landmarkerReady;if(!state.landmarker)throw new Error('Détecteur MediaPipe indisponible');stopCamera();const base='../Make%20puzzle%20-%20from%20Iphone/',photos=await Promise.all([loadDemoPortrait(base+'visage_homme.png'),loadDemoPortrait(base+'visage_femme.png')]),marks=photos.map(photo=>detect(photo));if(marks.some(mark=>!mark||mark.length<468))throw new Error('Les visages de démonstration ne sont pas détectés');state.photos=photos;state.marks=marks;state.step=0;state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;invalidateFaceLighting();photos.forEach((photo,index)=>{const url=`url(${photo.toDataURL('image/jpeg',.9)})`;$('thumb'+(index+1)).style.backgroundImage=url;$('sourceThumb'+(index+1)).style.backgroundImage=url});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();syncPairUI();autoAlign({activate:false,render:false});updateModeAvailability();if(canMeshMorph()){setMode('webgl');maybeAutoStartAnimation()}else scheduleRender()
+ await landmarkerReady;stopCamera();const base='../Make%20puzzle%20-%20from%20Iphone/',[photos,fixture]=await Promise.all([Promise.all([loadDemoPortrait(base+'visage_homme.png'),loadDemoPortrait(base+'visage_femme.png')]),loadDemoLandmarks('./qa/portrait-landmarks.json?v=20260817')]),marks=[fixture['visage_homme.png'],fixture['visage_femme.png']];if(state.meshTriangles.length<800||marks.some(mark=>!mark||mark.length<478))throw new Error('Maillage de démonstration incomplet');state.photos=photos;state.marks=marks;state.step=0;state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;invalidateFaceLighting();photos.forEach((photo,index)=>{const url=`url(${photo.toDataURL('image/jpeg',.9)})`;$('thumb'+(index+1)).style.backgroundImage=url;$('sourceThumb'+(index+1)).style.backgroundImage=url});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();syncPairUI();autoAlign({activate:false,render:false});updateModeAvailability();if(canMeshMorph()){setMode('webgl');maybeAutoStartAnimation()}else scheduleRender()
 }
 $('startCamera').onclick=startCamera;$('capture').onclick=takePhoto;$('switchCamera').onclick=()=>{state.facing=state.facing==='user'?'environment':'user';startCamera()};$('resetAll').onclick=()=>resetAll(false);
 $('backCapture').onclick=()=>resetAll(true);$('retakePhoto2').onclick=retakePhoto2;$('autoAlign').onclick=()=>autoAlign();$('makePuzzle').onclick=buildPuzzle;$('shuffle').onclick=()=>shuffle(180);$('showSolution').onclick=showSolution;
