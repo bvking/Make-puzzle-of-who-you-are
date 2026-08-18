@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#050505">
+<title>Taquin — deux visages</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:#050505;color:#fff;overscroll-behavior:none}
+body{padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom)}
+main{width:min(100%,520px);margin:auto;padding:12px 0 28px}
+h1{font-size:21px;margin:4px 0}.lead{margin:0 0 14px;color:#b8b8b8;font-size:13px;line-height:1.35}
+.stage{display:none}.stage.active{display:block}.card{background:#111;border:1px solid #2b2b2b;border-radius:18px;padding:12px;box-shadow:0 10px 30px #0008}
+.viewport{position:relative;aspect-ratio:1;overflow:hidden;border-radius:14px;background:#000;touch-action:none}
+video,.viewport canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}video{transform:scaleX(-1)}
+.guide{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 31% 42% at 50% 46%,transparent 68%,rgba(0,0,0,.68) 69%);border:1px solid #ffffff20}
+.guide:before,.guide:after{content:"";position:absolute;left:33%;right:33%;height:1px;background:#68d8ffcc}.guide:before{top:39%}.guide:after{top:52%}
+.controls{display:grid;gap:9px;margin-top:12px}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
+button{appearance:none;border:0;border-radius:12px;padding:13px 14px;font-weight:750;font-size:15px;background:#f1f1f1;color:#050505;min-height:46px}
+button.secondary{background:#222;color:#fff;border:1px solid #383838}button.danger{background:#3a1717;color:#ffdede}button:disabled{opacity:.45}
+.mode-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.mode-picker button{min-width:0;padding:10px 6px;font-size:12px}.mode-picker button.is-active{background:#9fe7ff;color:#061014;border-color:#9fe7ff}
+.region-controls{display:grid;gap:9px;padding:10px;border:1px solid #303030;border-radius:12px;background:#0a0a0a}.region-title{font-size:12px;color:#bbb}.region-presets{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.region-presets button{min-height:44px;padding:8px;font-size:12px}.region-presets button:last-child{grid-column:1/-1}.region-mixers{display:grid;gap:7px}.region-mixers label,.region-options label{grid-template-columns:105px 1fr 42px}.region-options{display:grid;gap:7px;padding-top:9px;border-top:1px solid #292929}.source-key{display:grid;grid-template-columns:1fr 1fr;gap:8px}.source-card{display:grid;grid-template-columns:50px 1fr;gap:8px;align-items:center;padding:6px;border:1px solid #303030;border-radius:10px;background:#090909;font-size:12px;color:#ccc}.source-thumb{width:50px;aspect-ratio:1;border-radius:8px;background:#000 center/cover no-repeat;border:1px solid #333}
+.animation-controls{display:grid;gap:8px;padding:10px;border:1px solid #315465;border-radius:12px;background:#08141a;transition:border-color .25s,box-shadow .25s}.animation-controls label{grid-template-columns:88px 1fr 48px}.animation-controls button.is-running{background:#9fe7ff;color:#061014;border-color:#9fe7ff}.animation-controls.is-animating{border-color:#9fe7ff;box-shadow:0 0 18px #52d8ff42}.animation-state{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:750;color:#b8c4c9}.animation-state:before{content:"";width:9px;height:9px;border-radius:50%;background:#68757a}.animation-controls.is-animating .animation-state{color:#9fe7ff}.animation-controls.is-animating .animation-state:before{background:#65e6ff;box-shadow:0 0 0 0 #65e6ff99;animation:animationPulse 1.3s ease-out infinite}.region-animation-styles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.region-animation-styles .region-animation-title{grid-column:1/-1;color:#9fe7ff;font-size:12px;font-weight:750}.region-animation-styles button{min-width:0;min-height:46px;padding:8px 5px;font-size:12px}.region-animation-styles button.is-active{background:#9fe7ff;color:#061014;border-color:#9fe7ff}.animation-badge{position:absolute;z-index:3;top:10px;left:10px;max-width:calc(100% - 20px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px;border-radius:999px;background:#06151be8;border:1px solid #9fe7ff;color:#9fe7ff;font-size:11px;font-weight:850;letter-spacing:.04em;box-shadow:0 0 16px #52d8ff55}.animation-badge:before{content:"●";margin-right:6px}.animation-hint{font-size:12px;line-height:1.35;color:#a8c8d5}@keyframes animationPulse{70%{box-shadow:0 0 0 7px #65e6ff00}100%{box-shadow:0 0 0 0 #65e6ff00}}@media(prefers-reduced-motion:reduce){.animation-controls.is-animating .animation-state:before{animation:none}}
+[hidden]{display:none!important}
+.status{min-height:20px;color:#9fe7ff;font-size:13px;margin:8px 2px 0}
+.compatibility{display:grid;gap:7px;margin-top:10px;padding:11px;border:1px solid #3b3b3b;border-radius:12px;background:#0a0a0a}.compatibility strong{font-size:14px}.compatibility p{margin:0;color:#d1d1d1;font-size:12px;line-height:1.45}.compatibility.is-good{border-color:#376d4b;background:#08140d}.compatibility.is-good strong{color:#9fffc0}.compatibility.is-adapted{border-color:#8b7337;background:#181306}.compatibility.is-adapted strong{color:#ffe29a}.compatibility.is-bad{border-color:#824747;background:#1a0b0b}.compatibility.is-bad strong{color:#ffd0d0}
+label{display:grid;grid-template-columns:92px 1fr 46px;gap:8px;align-items:center;font-size:13px;color:#ddd}
+input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-numeric:tabular-nums}
+.thumbrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.thumb{aspect-ratio:1;border-radius:10px;background:#000 center/cover no-repeat;border:1px solid #333}
+.puzzle{position:relative;aspect-ratio:1;background:#070707;border-radius:14px;overflow:hidden;touch-action:none}
+.tile{position:absolute;background-repeat:no-repeat;border:1px solid rgba(255,255,255,.28);transition:transform .16s ease;border-radius:4px}
+.win{padding:10px 4px 2px;text-align:center;font-weight:800;color:#9fffc0;display:none}.win.show{display:block}
+.note{font-size:12px;color:#aaa;line-height:1.4;margin:10px 2px 0}.badge{display:inline-block;border:1px solid #3b3b3b;border-radius:999px;padding:4px 8px;font-size:11px;color:#bbb;margin-bottom:8px}
+</style>
+</head>
+<body>
+<main>
+<span class="badge">Morphing de portrait · version 14</span>
+<h1>Taquin — deux visages</h1>
+<p class="lead">L’application transforme ensemble les traits, le contour de la tête et les cheveux, puis raccorde le portrait entier jusqu’aux bords de l’image.</p>
+<section id="captureStage" class="stage active"><div class="card">
+<div class="viewport"><video id="video" playsinline muted></video><div class="guide"></div></div>
+<div class="controls"><div class="row"><button id="startCamera" type="button">Activer la caméra</button><button id="capture" type="button" disabled>Prendre le visage 1</button></div>
+<div class="row"><button id="switchCamera" type="button" class="secondary">Changer caméra</button><button id="resetAll" type="button" class="danger">Recommencer</button></div></div>
+<div id="captureStatus" class="status" role="status" aria-live="polite" tabindex="-1">Chargement du détecteur de visage…</div>
+<div class="thumbrow"><div id="thumb1" class="thumb" role="img" aria-label="Aperçu de la photo 1"></div><div id="thumb2" class="thumb" role="img" aria-label="Aperçu de la photo 2"></div></div>
+</div></section>
+<section id="alignStage" class="stage"><div class="card">
+<div class="viewport"><canvas id="alignCanvas" role="img" aria-label="Aperçu de la composition des deux visages">Aperçu de la composition des deux visages.</canvas><span id="animationBadge" class="animation-badge" aria-hidden="true" hidden>MORPHING ACTIF</span></div>
+<div id="alignStatus" class="status" role="status" aria-live="polite" tabindex="-1"></div>
+<div id="compatibilityPanel" class="compatibility" role="status" aria-live="polite" hidden>
+<strong id="compatibilityTitle"></strong><p id="compatibilityText"></p>
+<button id="retakePhoto2" type="button" class="danger" aria-describedby="compatibilityTitle compatibilityText" hidden>Reprendre uniquement le visage 2</button>
+</div>
+<div class="controls">
+<div class="source-key" role="group" aria-label="Photos sources"><div class="source-card"><div id="sourceThumb1" class="source-thumb" role="img" aria-label="Photo source 1"></div><span>Photo 1</span></div><div class="source-card"><div id="sourceThumb2" class="source-thumb" role="img" aria-label="Photo source 2"></div><span>Photo 2</span></div></div>
+<div id="modePicker" class="mode-picker" role="group" aria-label="Mode de composition">
+<button type="button" class="secondary is-active" data-mode="canvas" aria-pressed="true">Triangles 2D</button>
+<button type="button" class="secondary" data-mode="webgl" aria-pressed="false">Triangles WebGL</button>
+<button type="button" class="secondary" data-mode="regions" aria-pressed="false">Régions</button>
+</div>
+<label>Lumière visage <input id="regionHarmony" type="range" min="0" max="100" value="0"><span id="regionHarmonyVal" class="value">0%</span></label>
+<span class="region-title">Optionnel : augmente ce réglage seulement si les deux photos ont des éclairages très différents.</span>
+<div id="modeStatus" class="status" aria-live="polite"></div>
+<div id="animationControls" class="animation-controls" role="group" aria-label="Animation douce du morphing" hidden>
+<button id="toggleAnimation" type="button" class="secondary" aria-pressed="false">Animer doucement</button>
+<span id="animationState" class="animation-state">Animation en attente</span>
+<div id="regionAnimationStyles" class="region-animation-styles" role="group" aria-label="Manière de faire apparaître les formes du visage" hidden>
+<span class="region-animation-title">Apparition des formes</span>
+<button type="button" class="secondary is-active" data-region-animation-style="progressive" aria-pressed="true">Progressif</button>
+<button type="button" class="secondary" data-region-animation-style="random" aria-pressed="false">Aléatoire</button>
+<button type="button" class="secondary" data-region-animation-style="pulse" aria-pressed="false">Pulsé</button>
+<button type="button" class="secondary" data-region-animation-style="explosive" aria-pressed="false">Explosif</button>
+</div>
+<label>Amplitude <input id="animationAmplitude" type="range" min="0" max="45" value="45"><span id="animationAmplitudeVal" class="value">45%</span></label>
+<label>Vitesse <input id="animationSpeed" type="range" min="20" max="180" value="110"><span id="animationSpeedVal" class="value">1.10×</span></label>
+<span id="animationHint" class="animation-hint"></span>
+</div>
+<div id="regionControls" class="region-controls" hidden>
+<span class="region-title">0 % = photo 1 · 100 % = photo 2 · gauche/droite = écran</span>
+<div class="region-presets" role="group" aria-label="Compositions rapides">
+<button type="button" class="secondary" data-region-preset="all1">Tout photo 1</button><button type="button" class="secondary" data-region-preset="all2">Tout photo 2</button>
+<button type="button" class="secondary" data-region-preset="halves">Moitié 1 | 2</button><button type="button" class="secondary" data-region-preset="alternate">Alterné</button>
+<button type="button" class="secondary" data-region-preset="invert">Inverser 1 ↔ 2</button>
+</div>
+<div class="region-mixers">
+<label>Moitié gauche <input id="regionLeft" data-region-mix="left" type="range" min="0" max="100" value="0"><span id="regionLeftVal" class="value">0%</span></label>
+<label>Moitié droite <input id="regionRight" data-region-mix="right" type="range" min="0" max="100" value="0"><span id="regionRightVal" class="value">0%</span></label>
+<label>Œil + sourcil G <input id="regionLeftEye" data-region-mix="leftEye" type="range" min="0" max="100" value="100"><span id="regionLeftEyeVal" class="value">100%</span></label>
+<label>Œil + sourcil D <input id="regionRightEye" data-region-mix="rightEye" type="range" min="0" max="100" value="100"><span id="regionRightEyeVal" class="value">100%</span></label>
+<label>Nez <input id="regionNose" data-region-mix="nose" type="range" min="0" max="100" value="0"><span id="regionNoseVal" class="value">0%</span></label>
+<label>Bouche <input id="regionMouth" data-region-mix="mouth" type="range" min="0" max="100" value="100"><span id="regionMouthVal" class="value">100%</span></label>
+</div>
+<div class="region-options">
+<label>Transitions <input id="regionFeather" type="range" min="0" max="100" value="50"><span id="regionFeatherVal" class="value">12 px</span></label>
+</div>
+</div>
+<label>Horizontal <input id="offsetX" type="range" min="-100" max="100" value="0"><span id="offsetXVal" class="value">0</span></label>
+<label>Vertical <input id="offsetY" type="range" min="-100" max="100" value="0"><span id="offsetYVal" class="value">0</span></label>
+<label>Zoom fin <input id="scale" type="range" min="85" max="115" value="100"><span id="scaleVal" class="value">100%</span></label>
+<label>Rotation fin <input id="rotation" type="range" min="-8" max="8" step="0.1" value="0"><span id="rotationVal" class="value">0°</span></label>
+<label><span id="blendLabelText">Mélange</span><input id="blend" type="range" min="0" max="100" value="50"><span id="blendVal" class="value">50%</span></label>
+<div class="row"><button id="autoAlign" type="button" class="secondary">Réaligner automatiquement</button><button id="makePuzzle" type="button">Créer le taquin</button></div>
+<button id="backCapture" type="button" class="secondary">Refaire les photos</button>
+</div>
+<p class="note">En WebGL et Triangles 2D, un seul maillage transforme le visage, la tête, les cheveux et le reste du cadre. La silhouette est détectée sur chaque photo ; un contour géométrique de secours prend le relais si nécessaire. Régions conserve volontairement le principe de collage artistique.</p>
+</div></section>
+<section id="gameStage" class="stage"><div class="card">
+<div id="puzzle" class="puzzle"></div><div id="win" class="win">Visage reconstitué.</div>
+<div class="controls"><div class="row"><button id="shuffle" type="button" class="secondary">Mélanger</button><button id="showSolution" type="button" class="secondary">Voir la solution</button></div><button id="backAlign" type="button">Modifier le morphing</button></div>
+</div></section>
+</main>
+<script type="module">
+const MEDIAPIPE_MODULE="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs";
+const MEDIAPIPE_WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm";
+const FACE_MODEL="https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
+const PORTRAIT_MODEL="https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/latest/selfie_multiclass_256x256.tflite";
+const SIZE=768,PREVIEW_SIZE=384,GRID=4,$=id=>document.getElementById(id),stages=['captureStage','alignStage','gameStage'];
+const FALLBACK_FACE_OVAL=[10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
+const REGION_IDS={
+ eyes:[[33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246],[362,382,381,380,374,373,390,249,263,466,388,387,386,385,384,398]],
+ brows:[[70,63,105,66,107,55,65,52,53,46],[300,293,334,296,336,285,295,282,283,276]],
+ nose:[[168,6,197,195,5,4,1,2,98,97,64,45,220,129,358,327,326,294,275,440]],
+ mouth:[[61,146,91,181,84,17,314,405,321,375,291,308,324,318,402,317,14,87,178,88,95,78,191,80,81,82,13,312,311,310,415]]
+};
+const REFINED_EYE_MESH_IDS=[
+ [33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246,468,469,470,471,472],
+ [362,382,381,380,374,373,390,249,263,466,388,387,386,385,384,398,473,474,475,476,477]
+];
+const MOUTH_HOLE_IDS=[14,87,178,88,95,78,191,80,81,82,13,312,311,310,415,308,324,318,402,317];
+const REGION_KEYS=['left','right','leftEye','rightEye','nose','mouth'];
+const REGION_CONTROL_IDS={left:'regionLeft',right:'regionRight',leftEye:'regionLeftEye',rightEye:'regionRightEye',nose:'regionNose',mouth:'regionMouth'};
+const REGION_ANIMATION_LABELS={progressive:'Progressif',random:'Aléatoire',pulse:'Pulsé',explosive:'Explosif'};
+const REGION_ANIMATION_HINTS={progressive:'Les yeux apparaissent, puis le nez, la bouche et enfin le contour.',random:'Chaque trait apparaît indépendamment avec des transitions aléatoires lissées.',pulse:'Tous les traits respirent ensemble dans une pulsation lente.',explosive:'Les traits émergent rapidement du centre vers la bouche, les yeux puis le contour.'};
+const REGION_MOTION_IDS=[10,168,6,1,2,13,14,17,152,33,133,159,145,362,263,386,374,61,291,98,327];
+const state={
+ stream:null,facing:'user',photos:[],marks:[],step:0,tiles:[],blank:15,solutionURL:'',showing:false,
+ landmarker:null,detectorState:'loading',cameraRequest:0,auto:{scale:1,rot:0,tx:0,ty:0},
+ segmenter:null,segmenterCtor:null,visionFileset:null,segmenterPromise:null,segmenterGeneration:0,segmentationState:'loading',headRings:[],headTopology:{version:-1,amount:0,metrics:null},
+ pair:{status:'empty',score:null,reasons:[],advice:[],metrics:null,hint:''},
+ mode:'canvas',regionMix:{left:0,right:0,leftEye:1,rightEye:1,nose:0,mouth:1},regionFeather:.5,regionHarmony:0,regionAnimationStyle:'progressive',regionCache:null,
+ meshTriangles:[],morphTriangles:[],morphTrianglesVersion:-1,morphTopologyVersion:0,previewTriangles:[],previewTrianglesVersion:-1,validatedControls:{x:0,y:0,s:1,r:0},faceOval:FALLBACK_FACE_OVAL.slice(),
+ buffers:new Map(),webgl:null,photoVersion:0,lighting:{version:-1,corrected:null,blended:null,blendKey:'',stats:null},renderQueued:false,quickRenderQueued:false,accurateRenderTimer:null,
+ animation:{running:false,raf:0,autoStartRaf:0,exporting:false,phase:0,ramp:0,lastTick:0,lastRender:0,randomSeed:137,styleTransition:null,baseControls:null,baseRegionMix:null,lastFrame:null,frozenFrame:null,userFrozen:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false}
+};
+const video=$('video'),captureBtn=$('capture'),status=$('captureStatus'),alignCanvas=$('alignCanvas');
+const reducedMotionQuery=window.matchMedia?.('(prefers-reduced-motion: reduce)')||null;
+alignCanvas.width=alignCanvas.height=PREVIEW_SIZE;
+
+function showStage(id){stages.forEach(s=>$(s).classList.toggle('active',s===id))}
+function makeCanvas(size){const c=document.createElement('canvas');c.width=c.height=size;return c}
+function getBuffer(name,size){
+ let c=state.buffers.get(name);
+ if(!c){c=makeCanvas(size);state.buffers.set(name,c)}
+ if(c.width!==size||c.height!==size){c.width=c.height=size}
+ const ctx=c.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';if('filter' in ctx)ctx.filter='none';ctx.clearRect(0,0,size,size);
+ ctx.imageSmoothingEnabled=true;if('imageSmoothingQuality' in ctx)ctx.imageSmoothingQuality='high';
+ return c
+}
+function trianglesFromConnections(connections){
+ const triangles=[],seen=new Set();
+ for(let i=0;i+2<connections.length;i+=3){
+  const ids=[];
+  for(let j=i;j<i+3;j++)for(const id of [connections[j].start,connections[j].end])if(!ids.includes(id))ids.push(id);
+  if(ids.length!==3)continue;
+  const key=ids.slice().sort((a,b)=>a-b).join('-');
+  if(!seen.has(key)){seen.add(key);triangles.push(ids)}
+ }
+ return triangles
+}
+function idsFromConnections(connections){const ids=new Set();for(const connection of connections||[]){ids.add(connection.start);ids.add(connection.end)}return[...ids]}
+function orderedLoop(connections){
+ if(!connections?.length)return FALLBACK_FACE_OVAL.slice();
+ const adjacency=new Map();
+ for(const {start,end} of connections){
+  if(!adjacency.has(start))adjacency.set(start,[]);if(!adjacency.has(end))adjacency.set(end,[]);
+  adjacency.get(start).push(end);adjacency.get(end).push(start)
+ }
+ const first=connections[0].start,path=[],used=new Set();let current=first;
+ while(path.length<=connections.length){
+  path.push(current);const candidates=adjacency.get(current)||[];let next=null;
+  for(const candidate of candidates){const key=current<candidate?`${current}-${candidate}`:`${candidate}-${current}`;if(!used.has(key)){used.add(key);next=candidate;break}}
+  if(next===null||next===first)break;current=next
+ }
+ return path.length>=20?path:FALLBACK_FACE_OVAL.slice()
+}
+function landmarkerOptions(delegate){
+ const baseOptions={modelAssetPath:FACE_MODEL};if(delegate)baseOptions.delegate=delegate;
+ return{baseOptions,runningMode:'IMAGE',numFaces:1,minFaceDetectionConfidence:.55,minFacePresenceConfidence:.55,minTrackingConfidence:.5}
+}
+function ensureSegmenter(){
+ if(state.segmenter)return Promise.resolve(state.segmenter);if(state.segmenterPromise)return state.segmenterPromise;if(state.segmentationState==='failed')return Promise.resolve(null);if(!state.segmenterCtor||!state.visionFileset){state.segmentationState='failed';return Promise.resolve(null)}
+ const generation=state.segmenterGeneration;state.segmentationState='loading';let promise=null;promise=state.segmenterCtor.createFromOptions(state.visionFileset,{baseOptions:{modelAssetPath:PORTRAIT_MODEL,delegate:'CPU'},runningMode:'IMAGE',outputCategoryMask:true,outputConfidenceMasks:false}).then(segmenter=>{if(generation!==state.segmenterGeneration){segmenter.close();return null}state.segmenter=segmenter;state.segmentationState='ready';return segmenter}).catch(error=>{console.warn('Segmentation de silhouette indisponible, contour géométrique utilisé.',error);if(generation===state.segmenterGeneration)state.segmentationState='failed';return null}).finally(()=>{if(state.segmenterPromise===promise)state.segmenterPromise=null});state.segmenterPromise=promise;return promise
+}
+function closeSegmenter(){state.segmenterGeneration++;try{state.segmenter?.close()}catch(error){console.warn(error)}state.segmenter=null;state.segmenterPromise=null;if(state.segmenterCtor&&state.visionFileset)state.segmentationState='idle'}
+async function initLandmarker(){
+ try{
+  const {FaceLandmarker,FilesetResolver,ImageSegmenter}=await import(MEDIAPIPE_MODULE);
+  state.meshTriangles=trianglesFromConnections(FaceLandmarker.FACE_LANDMARKS_TESSELATION||[]);
+  state.morphTriangles=state.meshTriangles.slice();
+  state.faceOval=orderedLoop(FaceLandmarker.FACE_LANDMARKS_FACE_OVAL||[]);
+  const eyes=[idsFromConnections(FaceLandmarker.FACE_LANDMARKS_LEFT_EYE),idsFromConnections(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE)];
+  const brows=[idsFromConnections(FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW),idsFromConnections(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW)],mouth=idsFromConnections(FaceLandmarker.FACE_LANDMARKS_LIPS);
+  if(eyes.every(ids=>ids.length>=12)&&brows.every(ids=>ids.length>=8)){REGION_IDS.eyes=eyes;REGION_IDS.brows=brows}if(mouth.length>=30)REGION_IDS.mouth=[mouth];
+  const vision=await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM);
+  state.segmenterCtor=ImageSegmenter;state.visionFileset=vision;
+  state.landmarker=await FaceLandmarker.createFromOptions(vision,landmarkerOptions());
+  state.detectorState='ready';
+  if(state.stream)captureBtn.disabled=false;
+  status.textContent=state.stream?'Détecteur prêt. Place le visage de face, yeux ouverts.':'Détecteur prêt. Active la caméra et cadre le visage de face.';ensureSegmenter()
+ }catch(e){
+  state.landmarker=null;state.detectorState='failed';captureBtn.disabled=true;status.textContent='Détecteur indisponible : le contrôle de compatibilité exige MediaPipe. Recharge la page puis réessaie.';console.error(e)
+ }
+}
+const landmarkerReady=initLandmarker();
+function stopCamera(){
+ state.cameraRequest++;captureBtn.disabled=true;
+ if(state.stream){state.stream.getTracks().forEach(t=>t.stop());state.stream=null}
+ video.srcObject=null
+}
+async function startCamera(){
+ stopCamera();const request=state.cameraRequest,facing=state.facing;let stream=null;status.textContent='Ouverture de la caméra…';
+ try{
+  if(!navigator.mediaDevices?.getUserMedia)throw new Error('accès caméra indisponible — ouvre cette page HTTPS dans Safari');
+  stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:1280}}});
+  if(request!==state.cameraRequest){stream.getTracks().forEach(t=>t.stop());return}
+  state.stream=stream;video.srcObject=stream;await video.play();if(request!==state.cameraRequest)return;
+  captureBtn.disabled=state.detectorState!=='ready';status.textContent=state.detectorState==='failed'?'Détecteur indisponible : recharge la page avant de reprendre les photos.':state.detectorState==='loading'?'Caméra prête · attente du détecteur de visage…':state.step?(state.pair.hint||'Reproduis le cadrage, l’angle et l’expression du premier visage.'):'Place le visage de face, yeux ouverts.'
+ }catch(e){
+  if(stream)stream.getTracks().forEach(t=>t.stop());if(request!==state.cameraRequest)return;
+  state.stream=null;video.srcObject=null;captureBtn.disabled=true;status.textContent='Caméra indisponible : '+(e.message||e)
+ }
+}
+function captureSquare(){
+ const c=makeCanvas(SIZE),ctx=c.getContext('2d'),vw=video.videoWidth,vh=video.videoHeight;if(!vw||!vh)return null;
+ const side=Math.min(vw,vh),sx=(vw-side)/2,sy=(vh-side)/2;ctx.save();ctx.translate(SIZE,0);ctx.scale(-1,1);ctx.drawImage(video,sx,sy,side,side,0,0,SIZE,SIZE);ctx.restore();return c
+}
+function average(lm,ids){let x=0,y=0;ids.forEach(i=>{x+=lm[i].x*SIZE;y+=lm[i].y*SIZE});return{x:x/ids.length,y:y/ids.length}}
+function eyeAnchors(lm){return[average(lm,[33,133]),average(lm,[362,263])].sort((a,b)=>a.x-b.x)}
+function detect(c){
+ if(!state.landmarker)return null;
+ try{return state.landmarker.detect(c).faceLandmarks?.[0]||null}
+ catch(e){console.error(e);state.landmarker=null;state.detectorState='failed';return null}
+}
+function headRingBasis(points){
+ const oval=state.faceOval.map(id=>points[id]).filter(Boolean);if(oval.length!==state.faceOval.length)return null;const center=oval.reduce((sum,point)=>({x:sum.x+point.x/oval.length,y:sum.y+point.y/oval.length}),{x:0,y:0}),mean=ids=>ids.reduce((sum,id)=>({x:sum.x+points[id].x/ids.length,y:sum.y+points[id].y/ids.length}),{x:0,y:0}),eyes=[mean([33,133]),mean([362,263])].sort((a,b)=>a.x-b.x),length=Math.max(1,pointDistance(eyes[0],eyes[1])),horizontal={x:(eyes[1].x-eyes[0].x)/length,y:(eyes[1].y-eyes[0].y)/length};let down={x:-horizontal.y,y:horizontal.x};const chin=points[152];if((chin.x-(eyes[0].x+eyes[1].x)/2)*down.x+(chin.y-(eyes[0].y+eyes[1].y)/2)*down.y<0)down={x:-down.x,y:-down.y};return{oval,center,horizontal,down}
+}
+function headScaleProfile(direction,basis){
+ const horizontalness=Math.abs(direction.x*basis.horizontal.x+direction.y*basis.horizontal.y),signedDown=direction.x*basis.down.x+direction.y*basis.down.y,upness=Math.max(0,-signedDown),downness=Math.max(0,signedDown),maximum=clamp(1.18+.62*Math.pow(upness,1.45)+.13*Math.pow(horizontalness,1.7)-.13*Math.pow(downness,1.4),1.012,1.82),fallback=clamp(1.08+.5*upness+.12*horizontalness-.08*downness,1.012,maximum);return{fallback,maximum}
+}
+function smoothCircular(values){
+ const weights=[1,2,4,2,1],total=10;return values.map((_,index)=>weights.reduce((sum,weight,offset)=>sum+weight*values[(index+offset-2+values.length)%values.length],0)/total)
+}
+function headRingFromScales(points,scales,caps){
+ const basis=headRingBasis(points);if(!basis)return null;const filtered=smoothCircular(scales);return basis.oval.map((point,index)=>{const dx=point.x-basis.center.x,dy=point.y-basis.center.y,distance=Math.max(1,Math.hypot(dx,dy)),direction={x:dx/distance,y:dy/distance},maximum=caps?.[index]??headScaleProfile(direction,basis).maximum,minimum=Math.min(1.012,maximum),scale=clamp(filtered[index],minimum,maximum),margin=2.5;return{x:clamp(basis.center.x+dx*scale,margin,SIZE-margin),y:clamp(basis.center.y+dy*scale,margin,SIZE-margin)}})
+}
+function fallbackHeadRing(points){
+ const basis=headRingBasis(points);if(!basis)return null;const edge=frameBoundaryRing(basis.oval.length);return basis.oval.map((point,index)=>lerpPoint(point,edge[index],.38))
+}
+function headRingFromCategoryMask(points,width,height,data){
+ const basis=headRingBasis(points);if(!basis||!width||!height||data.length<width*height)return fallbackHeadRing(points);const sx=width/SIZE,sy=height/SIZE,gapLimit=Math.max(3,Math.round(Math.min(width,height)*.012)),isHead=value=>value===1||value===2||value===3||value===5,sample=(x,y)=>{const cx=Math.round(x),cy=Math.round(y);let inside=0,total=0;for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){const ix=clamp(cx+ox,0,width-1),iy=clamp(cy+oy,0,height-1);inside+=Number(isHead(data[iy*width+ix]));total++}return inside>=Math.ceil(total/3)},scales=[],caps=[];let valid=0;
+ for(const point of basis.oval){const radial={x:point.x-basis.center.x,y:point.y-basis.center.y},faceRadius=Math.max(1,Math.hypot(radial.x,radial.y)),direction={x:radial.x/faceRadius,y:radial.y/faceRadius},{fallback,maximum:profileCap}=headScaleProfile(direction,basis),margin=2.5;let frameCap=Infinity;if(radial.x>1e-8)frameCap=Math.min(frameCap,(SIZE-margin-basis.center.x)/radial.x);else if(radial.x<-1e-8)frameCap=Math.min(frameCap,(margin-basis.center.x)/radial.x);if(radial.y>1e-8)frameCap=Math.min(frameCap,(SIZE-margin-basis.center.y)/radial.y);else if(radial.y<-1e-8)frameCap=Math.min(frameCap,(margin-basis.center.y)/radial.y);const maximum=Math.min(profileCap,Math.max(1.002,frameCap)),ox=basis.center.x*sx,oy=basis.center.y*sy,dx=radial.x*sx,dy=radial.y*sy,base=Math.max(1,Math.hypot(dx,dy)),ux=dx/base,uy=dy/base;let last=base,seen=false,gap=0;for(let distance=base*.86;distance<=base*maximum;distance+=.6){if(sample(ox+ux*distance,oy+uy*distance)){seen=true;last=distance;gap=0}else if(seen&&distance>base*.98&&++gap>=gapLimit)break}if(seen&&last>=base*.96)valid++;const detected=seen?(last+1.1)/base:Math.min(fallback,maximum);scales.push(clamp(detected,Math.min(1.012,maximum),maximum));caps.push(maximum)}
+ return valid>=Math.ceil(basis.oval.length*2/3)?headRingFromScales(points,scales,caps)||fallbackHeadRing(points):fallbackHeadRing(points)
+}
+async function extractHeadRing(photo,landmarks){
+ const points=landmarks.map(point=>({x:point.x*SIZE,y:point.y*SIZE})),fallback=fallbackHeadRing(points),segmenter=await ensureSegmenter();if(!segmenter)return fallback;let result=null;
+ try{result=segmenter.segment(photo);const mask=result.categoryMask;if(!mask)return fallback;const data=mask.getAsUint8Array().slice();return headRingFromCategoryMask(points,mask.width,mask.height,data)||fallback}
+ catch(error){console.warn('Contour tête/cheveux non détecté, contour géométrique utilisé.',error);return fallback}
+ finally{try{if(result?.close)result.close();else result?.categoryMask?.close()}catch(error){console.warn(error)}}
+}
+function similarity(src,dst){
+ const n=src.length,cs=src.reduce((a,p)=>({x:a.x+p.x/n,y:a.y+p.y/n}),{x:0,y:0}),cd=dst.reduce((a,p)=>({x:a.x+p.x/n,y:a.y+p.y/n}),{x:0,y:0});
+ let A=0,B=0,D=0;for(let i=0;i<n;i++){const sx=src[i].x-cs.x,sy=src[i].y-cs.y,dx=dst[i].x-cd.x,dy=dst[i].y-cd.y;A+=sx*dx+sy*dy;B+=sx*dy-sy*dx;D+=sx*sx+sy*sy}
+ const scale=Math.hypot(A,B)/Math.max(D,1e-6),rot=Math.atan2(B,A),co=Math.cos(rot),si=Math.sin(rot);
+ return{scale,rot,tx:cd.x-scale*(co*cs.x-si*cs.y),ty:cd.y-scale*(si*cs.x+co*cs.y)}
+}
+function weightedSimilarity(src,dst,weights){
+ const total=weights.reduce((sum,value)=>sum+Math.max(0,value),0)||1,cs=src.reduce((sum,p,index)=>({x:sum.x+p.x*weights[index]/total,y:sum.y+p.y*weights[index]/total}),{x:0,y:0}),cd=dst.reduce((sum,p,index)=>({x:sum.x+p.x*weights[index]/total,y:sum.y+p.y*weights[index]/total}),{x:0,y:0});
+ let A=0,B=0,D=0;for(let i=0;i<src.length;i++){const weight=Math.max(0,weights[i]),sx=src[i].x-cs.x,sy=src[i].y-cs.y,dx=dst[i].x-cd.x,dy=dst[i].y-cd.y;A+=weight*(sx*dx+sy*dy);B+=weight*(sx*dy-sy*dx);D+=weight*(sx*sx+sy*sy)}
+ const scale=Math.hypot(A,B)/Math.max(D,1e-6),rot=Math.atan2(B,A),co=Math.cos(rot),si=Math.sin(rot);return{scale,rot,tx:cd.x-scale*(co*cs.x-si*cs.y),ty:cd.y-scale*(si*cs.x+co*cs.y)}
+}
+function faceAlignment(src,dst){
+ const srcEyes=eyeAnchors(src),dstEyes=eyeAnchors(dst),bridgeIds=[168,6,197,195],srcBridge=average(src,bridgeIds),dstBridge=average(dst,bridgeIds);
+ return weightedSimilarity([srcEyes[0],srcEyes[1],srcBridge],[dstEyes[0],dstEyes[1],dstBridge],[4,4,.6])
+}
+function pointDistance(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+function faceCoordinateFrame(lm){
+ if(!lm||lm.length<468)return null;const eyes=eyeAnchors(lm),origin={x:(eyes[0].x+eyes[1].x)/2,y:(eyes[0].y+eyes[1].y)/2},distance=Math.max(1,pointDistance(eyes[0],eyes[1])),ux=(eyes[1].x-eyes[0].x)/distance,uy=(eyes[1].y-eyes[0].y)/distance;let vx=-uy,vy=ux;const chin={x:lm[152].x*SIZE,y:lm[152].y*SIZE};if((chin.x-origin.x)*vx+(chin.y-origin.y)*vy<0){vx=-vx;vy=-vy}const point=value=>({x:((value.x-origin.x)*ux+(value.y-origin.y)*uy)/distance,y:((value.x-origin.x)*vx+(value.y-origin.y)*vy)/distance}),at=id=>point({x:lm[id].x*SIZE,y:lm[id].y*SIZE});return{eyes,origin,distance,angle:Math.atan2(eyes[1].y-eyes[0].y,eyes[1].x-eyes[0].x),at,point}
+}
+function faceCaptureMetrics(lm){
+ const frame=faceCoordinateFrame(lm);if(!frame)return null;const p=id=>({x:lm[id].x*SIZE,y:lm[id].y*SIZE}),distance=(a,b)=>pointDistance(p(a),p(b)),qAverage=ids=>frame.point(average(lm,ids)),leftEye=(distance(159,145)+distance(158,153))/(2*Math.max(1,distance(33,133))),rightEye=(distance(386,374)+distance(387,373))/(2*Math.max(1,distance(362,263))),mouthWidth=Math.max(1,distance(61,291)),mouthOpen=distance(13,14)/mouthWidth,mouthCurve=(qAverage([13,14]).y-qAverage([61,291]).y)/Math.max(.05,mouthWidth/frame.distance),nose=frame.at(1),mouth=qAverage([13,14,61,291]),cheekLeft=Math.abs(frame.at(234).x-nose.x),cheekRight=Math.abs(frame.at(454).x-nose.x),cheekAsym=(cheekLeft-cheekRight)/Math.max(.05,cheekLeft+cheekRight),oval=state.faceOval.map(id=>lm[id]).filter(Boolean),inFrame=oval.filter(point=>point.x>=.01&&point.x<=.99&&point.y>=.01&&point.y<=.99).length/Math.max(1,oval.length),xs=oval.map(point=>point.x),ys=oval.map(point=>point.y);return{frame,leftEye,rightEye,mouthOpen,mouthCurve,nose,mouth,cheekAsym,inFrame,width:Math.max(...xs)-Math.min(...xs),height:Math.max(...ys)-Math.min(...ys)}
+}
+function referenceCaptureQuality(lm){const metrics=faceCaptureMetrics(lm),reasons=[];if(!metrics)return{ok:false,reasons:['visage non détecté']};const ovalVisible=state.faceOval.every(id=>{const point=lm[id];return point&&point.x>=0&&point.x<=1&&point.y>=0&&point.y<=1});if(metrics.inFrame<.9||!ovalVisible)reasons.push('garde tout le front, le menton et les deux joues dans le cadre');if(metrics.width<.18||metrics.height<.25)reasons.push('rapproche légèrement l’iPhone du visage');if(metrics.width>.96||metrics.height>1.02)reasons.push('éloigne légèrement l’iPhone pour garder le contour');return{ok:!reasons.length,reasons,metrics}}
+function polygonArea(points){let area=0;for(let i=0;i<points.length;i++){const a=points[i],b=points[(i+1)%points.length];area+=a.x*b.y-a.y*b.x}return Math.abs(area)/2}
+function clipPolygon(points,inside,intersect){const output=[];if(!points.length)return output;let previous=points.at(-1),previousInside=inside(previous);for(const current of points){const currentInside=inside(current);if(currentInside!==previousInside)output.push(intersect(previous,current));if(currentInside)output.push(current);previous=current;previousInside=currentInside}return output}
+function clippedToCanvas(points){let clipped=points.slice(),divide=(numerator,denominator)=>numerator/(Math.abs(denominator)<1e-9?(denominator<0?-1e-9:1e-9):denominator);const cuts=[
+ [point=>point.x>=0,(a,b)=>({x:0,y:a.y+(b.y-a.y)*divide(-a.x,b.x-a.x)})],
+ [point=>point.x<=SIZE,(a,b)=>({x:SIZE,y:a.y+(b.y-a.y)*divide(SIZE-a.x,b.x-a.x)})],
+ [point=>point.y>=0,(a,b)=>({x:a.x+(b.x-a.x)*divide(-a.y,b.y-a.y),y:0})],
+ [point=>point.y<=SIZE,(a,b)=>({x:a.x+(b.x-a.x)*divide(SIZE-a.y,b.y-a.y),y:SIZE})]
+ ];for(const [inside,intersect] of cuts)clipped=clipPolygon(clipped,inside,intersect);return clipped}
+function polynomialRoots(q0,q1,q2){if(Math.abs(q2)<1e-10)return Math.abs(q1)<1e-10?[]:[-q0/q1];const discriminant=q1*q1-4*q2*q0;if(discriminant<0)return[];const root=Math.sqrt(discriminant);return[(-q1-root)/(2*q2),(-q1+root)/(2*q2)]}
+function integratedAbsoluteQuadratic(q0,q1,q2){const primitive=t=>q0*t+q1*t*t/2+q2*t*t*t/3,cuts=[0,...polynomialRoots(q0,q1,q2).filter(root=>root>0&&root<1).sort((a,b)=>a-b),1];let area=0;for(let i=1;i<cuts.length;i++)area+=Math.abs(primitive(cuts[i])-primitive(cuts[i-1]));return area}
+function triangleStretch(a,b){const ax1=a[1].x-a[0].x,ay1=a[1].y-a[0].y,ax2=a[2].x-a[0].x,ay2=a[2].y-a[0].y,bx1=b[1].x-b[0].x,by1=b[1].y-b[0].y,bx2=b[2].x-b[0].x,by2=b[2].y-b[0].y,det=ax1*ay2-ax2*ay1;if(Math.abs(det)<1e-8)return{stretch:Infinity,condition:Infinity};const m00=(bx1*ay2-bx2*ay1)/det,m01=(-bx1*ax2+bx2*ax1)/det,m10=(by1*ay2-by2*ay1)/det,m11=(-by1*ax2+by2*ax1)/det,c00=m00*m00+m10*m10,c01=m00*m01+m10*m11,c11=m01*m01+m11*m11,trace=c00+c11,disc=Math.sqrt(Math.max(0,(c00-c11)*(c00-c11)+4*c01*c01)),smax=Math.sqrt(Math.max(0,(trace+disc)/2)),smin=Math.sqrt(Math.max(0,(trace-disc)/2));return{stretch:Math.max(smax,1/Math.max(1e-8,smin)),condition:smax/Math.max(1e-8,smin)}}
+function weightedQuantile(entries,part){if(!entries.length)return Infinity;const sorted=entries.slice().sort((a,b)=>a.value-b.value),total=sorted.reduce((sum,entry)=>sum+entry.weight,0),target=total*part;let sum=0;for(const entry of sorted){sum+=entry.weight;if(sum>=target)return entry.value}return sorted.at(-1).value}
+function assessMorphTopology(first,second,triangles,name){let totalWeight=0,flipWeight=0,collapseWeight=0,severeWeight=0,largestUnstable=0,valid=0;const stretchValues=[];
+ for(const ids of triangles){const a=ids.map(id=>first[id]),b=ids.map(id=>second[id]);if(!a.every(Boolean)||!b.every(Boolean))continue;const e1={x:a[1].x-a[0].x,y:a[1].y-a[0].y},e2={x:a[2].x-a[0].x,y:a[2].y-a[0].y},d1={x:(b[1].x-b[0].x)-e1.x,y:(b[1].y-b[0].y)-e1.y},d2={x:(b[2].x-b[0].x)-e2.x,y:(b[2].y-b[0].y)-e2.y},q0=e1.x*e2.y-e1.y*e2.x,q1=d1.x*e2.y-d1.y*e2.x+e1.x*d2.y-e1.y*d2.x,q2=d1.x*d2.y-d1.y*d2.x,at=t=>q0+q1*t+q2*t*t,area0=Math.abs(q0),area1=Math.abs(at(1)),weight=integratedAbsoluteQuadratic(q0,q1,q2);if(weight<1e-5)continue;let minArea=Math.min(area0,area1),crosses=false;const vertex=Math.abs(q2)>1e-10?-q1/(2*q2):-1;if(vertex>0&&vertex<1)minArea=Math.min(minArea,Math.abs(at(vertex)));for(const root of polynomialRoots(q0,q1,q2))if(root>.001&&root<.999){const epsilon=1e-5,left=at(Math.max(0,root-epsilon)),right=at(Math.min(1,root+epsilon));if(left*right<0)crosses=true;minArea=0}const collapse=!crosses&&minArea/Math.max(area0,area1,1e-8)<.025,{stretch,condition}=triangleStretch(a,b),severe=stretch>8||condition>12;valid++;totalWeight+=weight;if(crosses)flipWeight+=weight;if(collapse)collapseWeight+=weight;if(severe)severeWeight+=weight;if(crosses||collapse||severe)largestUnstable=Math.max(largestUnstable,weight);stretchValues.push({value:stretch,weight})
+ }
+ const divisor=Math.max(1e-8,totalWeight),metrics={name,triangles:valid,flipArea:flipWeight/divisor,collapseArea:collapseWeight/divisor,severeStretchArea:severeWeight/divisor,largestUnstable:largestUnstable/divisor,p95Stretch:weightedQuantile(stretchValues,.95),p99Stretch:weightedQuantile(stretchValues,.99)};metrics.risk=metrics.flipArea*1200+metrics.collapseArea*450+metrics.severeStretchArea*120+metrics.largestUnstable*300+Math.max(0,metrics.p95Stretch-2.5)*2;return metrics
+}
+function topologyGeometryPenalty(metrics,outsideArea=0,maxOverflow=0){return metrics.flipArea*900+metrics.collapseArea*350+metrics.severeStretchArea*100+metrics.largestUnstable*250+Math.max(0,metrics.p95Stretch-2.5)*2+outsideArea*500+Math.max(0,maxOverflow-3)}
+function topologyCombinedRisk(metrics,outsideArea=0){return metrics.flipArea/.04+metrics.collapseArea/.08+metrics.severeStretchArea/.2+metrics.largestUnstable/.02+outsideArea/.04}
+function topologyTechnicallyUnusable(metrics,outsideArea=0,maxOverflow=0){return outsideArea>.04||maxOverflow>30||metrics.flipArea>.04||metrics.collapseArea>.08||metrics.largestUnstable>.02||metrics.severeStretchArea>.2||metrics.p99Stretch>15||topologyCombinedRisk(metrics,outsideArea)>3||topologyGeometryPenalty(metrics,outsideArea,maxOverflow)>50}
+function faceOvalCrop(points){const oval=state.faceOval.map(id=>points[id]).filter(Boolean),area=polygonArea(oval),inside=polygonArea(clippedToCanvas(oval));return{outsideArea:area?clamp(1-inside/area,0,1):1,maxOverflow:oval.reduce((maximum,point)=>Math.max(maximum,-point.x,point.x-SIZE,-point.y,point.y-SIZE,0),0)}}
+function chooseMorphTopology(first,second){
+ if(!first||!second||first.length<468||second.length<468)return null;
+ const alignment=faceAlignment(second,first),matrix={a:alignment.scale*Math.cos(alignment.rot),b:alignment.scale*Math.sin(alignment.rot),c:-alignment.scale*Math.sin(alignment.rot),d:alignment.scale*Math.cos(alignment.rot),e:alignment.tx,f:alignment.ty},pointsA=first.slice(0,468).map(point=>({x:point.x*SIZE,y:point.y*SIZE})),rawB=second.slice(0,468).map(point=>({x:point.x*SIZE,y:point.y*SIZE})),pointsB=rawB.map(point=>mapPoint(matrix,point));
+ if(!pointsA.concat(pointsB).every(point=>Number.isFinite(point.x)&&Number.isFinite(point.y)))return null;
+ const middle=pointsA.map((point,index)=>({x:(point.x+pointsB[index].x)/2,y:(point.y+pointsB[index].y)/2})),ids=Array.from({length:468},(_,id)=>id),candidates=[],cropA=faceOvalCrop(pointsA),cropB=faceOvalCrop(pointsB),outsideArea=Math.max(cropA.outsideArea,cropB.outsideArea),maxOverflow=Math.max(cropA.maxOverflow,cropB.maxOverflow),addCandidate=(name,triangles)=>{if(triangles?.length>800)candidates.push({name,triangles:triangles.slice(),metrics:assessMorphTopology(pointsA,pointsB,triangles,name)})};
+ addCandidate('MediaPipe',state.meshTriangles);
+ addCandidate('forme moyenne',delaunayTriangles(middle,ids));
+ addCandidate('photo 1',delaunayTriangles(pointsA,ids));
+ addCandidate('photo 2 alignée',delaunayTriangles(pointsB,ids));
+ if(!candidates.length)return null;
+ const safe=candidates.filter(candidate=>!topologyTechnicallyUnusable(candidate.metrics,outsideArea,maxOverflow)),semantic=safe.find(candidate=>candidate.name==='MediaPipe'),mean=safe.find(candidate=>candidate.name==='forme moyenne');safe.sort((a,b)=>a.metrics.risk-b.metrics.risk);candidates.sort((a,b)=>a.metrics.risk-b.metrics.risk);const best=semantic||mean||safe[0]||candidates[0];
+ return{alignment,triangles:best.triangles,metrics:{...best.metrics,outsideArea,maxOverflow,cropA,cropB,candidates:candidates.map(candidate=>({name:candidate.name,risk:candidate.metrics.risk,flipArea:candidate.metrics.flipArea,collapseArea:candidate.metrics.collapseArea,severeStretchArea:candidate.metrics.severeStretchArea,p95Stretch:candidate.metrics.p95Stretch,p99Stretch:candidate.metrics.p99Stretch}))}}
+}
+function evaluateMorphCompatibility(first,second){
+ const a=faceCaptureMetrics(first),b=faceCaptureMetrics(second),chosen=chooseMorphTopology(first,second);if(!a||!b||!chosen)return{status:'unusable',compatible:false,score:0,reasons:['repères géométriques incomplets'],advice:['Éclaire le visage, regarde l’objectif et reprends uniquement la photo 2.'],metrics:null,triangles:null};
+ const scale=a.frame.distance/b.frame.distance,roll=Math.abs(Math.atan2(Math.sin(b.frame.angle-a.frame.angle),Math.cos(b.frame.angle-a.frame.angle)))*180/Math.PI,dxNose=b.nose.x-a.nose.x,dyNose=b.nose.y-a.nose.y,dxMouth=b.mouth.x-a.mouth.x,dyMouth=b.mouth.y-a.mouth.y,noseX=Math.abs(dxNose),cheek=Math.abs(a.cheekAsym-b.cheekAsym),noseY=Math.abs(dyNose),mouthCenter=Math.hypot(dxMouth,dyMouth),mouthOpen=Math.abs(a.mouthOpen-b.mouthOpen),mouthCurve=Math.abs(a.mouthCurve-b.mouthCurve),eyeLeft=Math.abs(a.leftEye-b.leftEye),eyeRight=Math.abs(a.rightEye-b.rightEye),eye=Math.max(eyeLeft,eyeRight),pitchConcordant=Math.sign(dyNose)===Math.sign(dyMouth)&&noseY>.16&&Math.abs(dyMouth)>.18,warp=chosen.metrics,reasons=[],advice=[];
+ const add=(reason,hint)=>{if(!reasons.includes(reason))reasons.push(reason);if(hint&&!advice.includes(hint))advice.push(hint)};if(scale<.72||scale>1.4)add('forte différence de distance corrigée par homothétie',scale>1?'Rapproche un peu le visage 2 pour améliorer encore la précision.':'Éloigne un peu le visage 2 pour améliorer encore la précision.');if(roll>14)add('forte inclinaison corrigée automatiquement','Une inclinaison proche de la photo 1 donnera un contour encore plus naturel.');if((noseX>.14&&cheek>.12)||noseX>.22||cheek>.28)add('angle de vue différent, compensé par le maillage','Regarde davantage l’objectif pour limiter les zones cachées du visage.');if(mouthOpen>.12||mouthCurve>.1)add('expression de bouche différente, déformée localement','Une ouverture de bouche similaire améliore les lèvres et le menton.');if(eye>.085)add('ouverture des yeux différente, déformée localement','Garde un regard et une ouverture des yeux proches pour un résultat encore plus net.');if(pitchConcordant)add('hauteur de prise de vue différente, compensée localement','Place l’iPhone à une hauteur plus proche de la photo 1.');
+ const geometryPenalty=topologyGeometryPenalty(warp,warp.outsideArea,warp.maxOverflow),combinedRisk=topologyCombinedRisk(warp,warp.outsideArea),unusable=topologyTechnicallyUnusable(warp,warp.outsideArea,warp.maxOverflow),excellent=warp.outsideArea<=.003&&warp.maxOverflow<=3&&warp.flipArea<=.002&&warp.collapseArea<=.008&&warp.largestUnstable<=.0025&&warp.severeStretchArea<=.035&&warp.p95Stretch<=3.5;if(unusable){const cropped=warp.outsideArea>.04||warp.maxOverflow>30,reason=cropped?'une partie du visage sortirait du cadre après adaptation':warp.flipArea>.001?'le maillage se replie sur une zone visible':'la déformation locale resterait trop forte',hint=cropped?'Garde tout le front, le menton et les deux joues visibles.':'Reprends le visage 2 avec un angle un peu plus proche de la photo 1.',reasonIndex=reasons.indexOf(reason),hintIndex=advice.indexOf(hint);if(reasonIndex>=0)reasons.splice(reasonIndex,1);if(hintIndex>=0)advice.splice(hintIndex,1);reasons.unshift(reason);advice.unshift(hint)}else if(!excellent&&!reasons.length)add('adaptation locale renforcée du contour et des traits','Le morphing reste disponible ; une pose plus proche peut encore l’améliorer.');const score=Math.round(clamp(100-geometryPenalty,0,100)),status=unusable?'unusable':excellent?'good':'adapted';return{status,compatible:status!=='unusable',score:unusable?Math.min(49,score):score,reasons,advice,triangles:chosen.triangles,alignment:chosen.alignment,metrics:{scale,roll,noseX,cheek,noseY,mouthCenter,mouthOpen,mouthCurve,eyeLeft,eyeRight,warp,combinedRisk}}
+}
+function pairUsable(){return state.pair.status==='good'||state.pair.status==='adapted'}
+function pairSummary(){const pair=state.pair;if(pair.status==='good')return`Maillage stable ${pair.score}/100.`;if(pair.status==='adapted')return`Maillage adapté ${pair.score}/100 : ${pair.reasons.slice(0,2).join(' · ')}.`;if(pair.status==='unusable')return`Maillage inutilisable ${pair.score}/100 : ${pair.reasons.slice(0,2).join(' · ')}.`;return''}
+function syncPairUI(){
+ const pair=state.pair,panel=$('compatibilityPanel'),good=pair.status==='good',adapted=pair.status==='adapted',unusable=pair.status==='unusable',checking=pair.status==='checking',usable=good||adapted,blocked=state.photos.length>=2&&!usable,unavailable=state.photos.length<2||blocked;panel.hidden=!(good||adapted||unusable||checking);panel.classList.toggle('is-good',good);panel.classList.toggle('is-adapted',adapted);panel.classList.toggle('is-bad',unusable);$('compatibilityTitle').textContent=good?`Maillage stable · ${pair.score}/100`:adapted?`Stabilité du maillage ${pair.score}/100 · adaptation renforcée`:unusable?`Photo 2 à reprendre · stabilité ${pair.score}/100`:'Essai de plusieurs maillages…';$('compatibilityText').textContent=good?`La trajectoire du maillage reste stable. Taille, inclinaison, traits et contour sont adaptés automatiquement${pair.reasons.length?` : ${pair.reasons.slice(0,2).join(' · ')}`:''}.`:adapted?`${pair.reasons.slice(0,3).join(' · ')}. La stabilité du maillage permet quand même l’animation ; la reprise de la photo 2 est facultative.`:unusable?`${pair.reasons.slice(0,3).join(' · ')}. ${pair.advice.slice(0,2).join(' ')}`:'L’application compare les maillages construits depuis les deux photos et leur forme moyenne.';const retake=$('retakePhoto2');retake.hidden=!(adapted||unusable);retake.textContent=adapted?'Améliorer le visage 2 (facultatif)':'Reprendre uniquement le visage 2';retake.classList.toggle('danger',unusable);retake.classList.toggle('secondary',adapted);$('makePuzzle').disabled=!usable;$('autoAlign').disabled=unavailable;
+ for(const id of ['offsetX','offsetY','scale','rotation','blend','regionHarmony','animationAmplitude','animationSpeed'])$(id).disabled=unavailable;document.querySelectorAll('#regionControls button,#regionControls input,#regionAnimationStyles button').forEach(control=>control.disabled=unavailable)
+}
+function autoAlign({activate=true,focusRejected=false,render=true}={}){
+ stopAnimation({render:false});
+ if(state.marks[0]&&state.marks[1]){
+  const result=evaluateMorphCompatibility(state.marks[0],state.marks[1]);state.auto=result.alignment||faceAlignment(state.marks[1],state.marks[0]);
+  ['offsetX','offsetY','rotation'].forEach(id=>$(id).value=0);$('scale').value=100;state.validatedControls={x:0,y:0,s:1,r:0};
+  state.pair={status:result.status,score:result.score,reasons:result.reasons,advice:result.advice,metrics:result.metrics,hint:''};if(result.triangles?.length){state.morphTriangles=result.triangles;state.morphTrianglesVersion=state.photoVersion;state.morphTopologyVersion++;if(state.webgl)state.webgl.indexVersion=''}const scalePercent=Math.round(state.auto.scale*100),scaleText=scalePercent>101?`visage 2 agrandi à ${scalePercent} %`:scalePercent<99?`visage 2 réduit à ${scalePercent} %`:'taille globale conservée',topologyText=result.metrics?.warp?.name==='MediaPipe'?'maillage facial MediaPipe':'maillage moyen sécurisé';$('alignStatus').textContent=result.status==='good'?`Alignement yeux et arête du nez · ${scaleText} · ${topologyText}.`:result.status==='adapted'?`Adaptation renforcée réussie · ${scaleText} · ${topologyText}, sans bloquer l’animation.`:`Adaptation maximale essayée · ${scaleText} · ${result.reasons[0]||'déformation locale trop forte'}.`;$('modeStatus').textContent=result.status==='unusable'?`Morphing bloqué · ${result.reasons[0]||'maillage inutilisable'}.`:'Préparation du morphing inter-identités…'
+ }else{
+  state.auto={scale:1,rot:0,tx:0,ty:0};state.pair={status:'unusable',score:0,reasons:['visage non détecté'],advice:['Reprends uniquement la photo 2 en regardant l’objectif.'],metrics:null,hint:''};$('alignStatus').textContent='Contrôle impossible : les deux visages doivent être détectés.'
+ }
+ syncPairUI();
+ if(render){updateModeAvailability();scheduleRender();if(activate&&pairUsable())maybeAutoStartAnimation();if(focusRejected)requestAnimationFrame(()=>(state.pair.status==='unusable'?$('retakePhoto2'):$('alignStatus')).focus())}
+}
+async function takePhoto(){
+ const c=captureSquare();if(!c){status.textContent='Image caméra pas encore prête. Réessaie dans un instant.';return}
+ const request=state.cameraRequest,target=state.step;captureBtn.disabled=true;status.textContent='Analyse du visage…';await landmarkerReady;if(request!==state.cameraRequest||target!==state.step)return;
+ const lm=detect(c);
+ if(!lm){captureBtn.disabled=state.detectorState!=='ready';status.textContent=state.detectorState==='ready'?'Visage non détecté. Éclaire le visage, regarde l’objectif et reprends la photo.':'Contrôle automatique indisponible : recharge la page pour rétablir le détecteur.';return}
+ const quality=referenceCaptureQuality(lm);if(!quality.ok){captureBtn.disabled=false;status.textContent=`Photo à reprendre : ${quality.reasons.join(' · ')}.`;return}
+ status.textContent='Analyse de la tête et des cheveux…';await new Promise(resolve=>requestAnimationFrame(resolve));const headRing=await extractHeadRing(c,lm);if(request!==state.cameraRequest||target!==state.step)return;
+ state.photos[state.step]=c;state.marks[state.step]=lm;state.headRings[state.step]=headRing;state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;invalidateFaceLighting();
+ const photoNumber=state.step+1,thumbURL=`url(${c.toDataURL('image/jpeg',.85)})`;$('thumb'+photoNumber).style.backgroundImage=thumbURL;$('sourceThumb'+photoNumber).style.backgroundImage=thumbURL;
+ if(state.step===0){
+  state.step=1;state.pair={status:'capturing2',score:null,reasons:[],advice:[],metrics:null,hint:'Photo 1 conservée. Reproduis sa distance, son angle, l’ouverture des yeux et de la bouche.'};captureBtn.textContent='Prendre le visage 2';captureBtn.disabled=false;
+  status.textContent=state.pair.hint
+ }else{
+  state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};stopCamera();closeSegmenter();state.step=0;captureBtn.textContent='Prendre le visage 1';showStage('alignStage');updatePreviewSize();state.animation.userFrozen=false;syncPairUI();const version=state.photoVersion;requestAnimationFrame(()=>requestAnimationFrame(()=>{if(version!==state.photoVersion||state.photos.length<2||!$('alignStage').classList.contains('active'))return;autoAlign({activate:false,render:false});(state.pair.status==='unusable'?$('retakePhoto2'):$('alignStatus')).focus();requestAnimationFrame(()=>{if(version!==state.photoVersion||state.photos.length<2||!$('alignStage').classList.contains('active'))return;updateModeAvailability();if(canMeshMorph()){setMode(state.mode==='regions'?'regions':'webgl');maybeAutoStartAnimation()}else scheduleRender()})}))
+ }
+}
+
+function readControls(){return{x:+$('offsetX').value,y:+$('offsetY').value,s:+$('scale').value/100,r:+$('rotation').value*Math.PI/180,a:+$('blend').value/100}}
+function updateControlLabels(v){
+ $('offsetXVal').textContent=Math.round(v.x*10)/10;$('offsetYVal').textContent=Math.round(v.y*10)/10;$('scaleVal').textContent=Math.round(v.s*100)+'%';
+ $('rotationVal').textContent=(v.r*180/Math.PI).toFixed(1)+'°';$('blendVal').textContent=Math.round(v.a*100)+'%'
+}
+function photo2Matrix(v,strength=1){
+ const A=state.auto,cx=SIZE/2,cy=SIZE/2,ca=Math.cos(A.rot),sa=Math.sin(A.rot);
+ const centerX=A.scale*(ca*cx-sa*cy)+A.tx+v.x,centerY=A.scale*(sa*cx+ca*cy)+A.ty+v.y;
+ const amount=clamp(strength,0,1),fullScale=Math.max(.001,A.scale*v.s),k=Math.exp(Math.log(fullScale)*amount),r=(A.rot+v.r)*amount,co=Math.cos(r),si=Math.sin(r),a=k*co,b=k*si,c=-k*si,d=k*co,partialCenterX=cx+(centerX-cx)*amount,partialCenterY=cy+(centerY-cy)*amount;
+ return{a,b,c,d,e:partialCenterX-a*cx-c*cy,f:partialCenterY-b*cx-d*cy}
+}
+function mapPoint(m,p){return{x:m.a*p.x+m.c*p.y+m.e,y:m.b*p.x+m.d*p.y+m.f}}
+function landmarkPoints(index){return state.marks[index]?.map(p=>({x:p.x*SIZE,y:p.y*SIZE}))||null}
+function hasLandmarkPair(){return state.meshTriangles.length>800&&state.faceOval.length>=30&&state.marks[0]?.length>=468&&state.marks[1]?.length>=468}
+function canMeshMorph(){return hasLandmarkPair()&&pairUsable()}
+function rawFaceLightingMask(index,size,scale=1,blur=0){
+ const marks=state.marks[index];if(!marks||marks.length<468)return null;const points=state.faceOval.map(id=>marks[id]).filter(Boolean);if(points.length<30)return null;const center=points.reduce((sum,p)=>({x:sum.x+p.x,y:sum.y+p.y}),{x:0,y:0});center.x/=points.length;center.y/=points.length;const mask=makeCanvas(size),ctx=mask.getContext('2d');ctx.save();if(blur>0&&'filter' in ctx)ctx.filter=`blur(${blur}px)`;ctx.fillStyle='#fff';ctx.beginPath();points.forEach((p,i)=>{const x=(center.x+(p.x-center.x)*scale)*size,y=(center.y+(p.y-center.y)*scale)*size;if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y)});ctx.closePath();ctx.fill();ctx.restore();return mask
+}
+function removeLightingFeature(ctx,marks,ids,size,scale){const hull=convexHull(ids.map(id=>marks[id]).filter(Boolean).map(p=>({x:p.x*size,y:p.y*size})));if(hull.length<3)return;const center=hull.reduce((sum,p)=>({x:sum.x+p.x,y:sum.y+p.y}),{x:0,y:0});center.x/=hull.length;center.y/=hull.length;ctx.beginPath();hull.forEach((p,i)=>{const x=center.x+(p.x-center.x)*scale,y=center.y+(p.y-center.y)*scale;if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y)});ctx.closePath();ctx.fill()}
+function boxBlurFloat(source,width,height,radius){
+ const horizontal=new Float32Array(source.length),output=new Float32Array(source.length),diameter=radius*2+1;
+ for(let y=0;y<height;y++){let sum=0,offset=y*width;for(let x=-radius;x<=radius;x++)sum+=source[offset+clamp(x,0,width-1)];for(let x=0;x<width;x++){horizontal[offset+x]=sum/diameter;sum+=source[offset+clamp(x+radius+1,0,width-1)]-source[offset+clamp(x-radius,0,width-1)]}}
+ for(let x=0;x<width;x++){let sum=0;for(let y=-radius;y<=radius;y++)sum+=horizontal[clamp(y,0,height-1)*width+x];for(let y=0;y<height;y++){output[y*width+x]=sum/diameter;sum+=horizontal[clamp(y+radius+1,0,height-1)*width+x]-horizontal[clamp(y-radius,0,height-1)*width+x]}}return output
+}
+function smoothFloat(source,width,height,radii=[11,12,11]){let result=source;for(const radius of radii)result=boxBlurFloat(result,width,height,radius);return result}
+function lightingAnalysisMask(index,size){
+ const mask=rawFaceLightingMask(index,size,.93);if(!mask)return null;const marks=state.marks[index],ctx=mask.getContext('2d');ctx.save();ctx.globalCompositeOperation='destination-out';ctx.fillStyle='#fff';for(let i=0;i<2;i++)removeLightingFeature(ctx,marks,[...REGION_IDS.eyes[i],...REGION_IDS.brows[i]],size,1.3);removeLightingFeature(ctx,marks,REGION_IDS.mouth[0],size,1.35);ctx.restore();return mask
+}
+function faceOvalWidth(index,size){const marks=state.marks[index],xs=state.faceOval.map(id=>marks?.[id]?.x).filter(Number.isFinite);return xs.length?(Math.max(...xs)-Math.min(...xs))*size:size*.6}
+function linearizePixels(data){
+ const lut=new Float32Array(256);for(let i=0;i<256;i++){const value=i/255;lut[i]=value<=.04045?value/12.92:Math.pow((value+.055)/1.055,2.4)}const luminance=new Float32Array(data.length/4),logY=new Float32Array(data.length/4);for(let i=0,p=0;i<data.length;i+=4,p++){const y=.2126*lut[data[i]]+.7152*lut[data[i+1]]+.0722*lut[data[i+2]];luminance[p]=y;logY[p]=Math.log(Math.max(1e-4,y))}return{lut,luminance,logY}
+}
+function normalizedIllumination(logY,weights,width,height,radii){
+ const numerator=new Float32Array(logY.length);for(let i=0;i<logY.length;i++)numerator[i]=logY[i]*weights[i];const smoothNumerator=smoothFloat(numerator,width,height,radii),confidence=smoothFloat(weights,width,height,radii),field=new Float32Array(logY.length);for(let i=0;i<field.length;i++)field[i]=confidence[i]>.001?smoothNumerator[i]/confidence[i]:logY[i];return{field,confidence}
+}
+function bilinearSample(values,width,height,x,y){const px=clamp(x,0,width-1),py=clamp(y,0,height-1),x0=Math.floor(px),y0=Math.floor(py),x1=Math.min(width-1,x0+1),y1=Math.min(height-1,y0+1),fx=px-x0,fy=py-y0;return(values[y0*width+x0]*(1-fx)+values[y0*width+x1]*fx)*(1-fy)+(values[y1*width+x0]*(1-fx)+values[y1*width+x1]*fx)*fy}
+function robustDetailSpread(detail,weights){const values=[];for(let i=0;i<detail.length;i++)if(weights[i]>.5)values.push(Math.abs(detail[i]));if(values.length<1000)return null;values.sort((a,b)=>a-b);return values[Math.floor(values.length*.65)]||null}
+function lightingGeometryReliable(reference,source,triangles){
+ const ovalInFrame=index=>state.faceOval.filter(id=>{const p=state.marks[index]?.[id];return p&&p.x>=0&&p.x<=1&&p.y>=0&&p.y<=1}).length/Math.max(1,state.faceOval.length);if(ovalInFrame(0)<.9||ovalInFrame(1)<.9)return false;const ratios=[];let inverted=0;
+ for(const ids of triangles){const a=ids.map(id=>reference[id]),b=ids.map(id=>source[id]);if(!a.every(Boolean)||!b.every(Boolean))continue;const areaA=(a[1].x-a[0].x)*(a[2].y-a[0].y)-(a[1].y-a[0].y)*(a[2].x-a[0].x),areaB=(b[1].x-b[0].x)*(b[2].y-b[0].y)-(b[1].y-b[0].y)*(b[2].x-b[0].x);if(Math.abs(areaA)<1e-4||Math.abs(areaB)<1e-4)continue;if(areaA*areaB<0)inverted++;ratios.push(Math.abs(areaB/areaA))}
+ if(ratios.length<25||inverted>0)return false;const sorted=ratios.slice().sort((a,b)=>a-b),median=sorted[Math.floor(sorted.length/2)]||1,bad=ratios.filter(value=>value/median<.25||value/median>4).length;return bad/ratios.length<=.05
+}
+function lightingLuts(){const size=8192,encode=new Uint8ClampedArray(size),exp=new Float32Array(size);for(let i=0;i<size;i++){const c=i/(size-1);encode[i]=Math.round(255*(c<=.0031308?12.92*c:1.055*Math.pow(c,1/2.4)-.055));exp[i]=Math.exp(-.64+1.28*c)}return{encode,exp,size}}
+function ensureFaceLighting(){
+ if(state.lighting.version===state.photoVersion)return state.lighting;const lighting={version:state.photoVersion,corrected:null,blended:null,blendKey:'',stats:null};
+ if(state.photos.length<2||!state.marks[0]||!state.marks[1]||state.marks[0].length<468||state.marks[1].length<468){state.lighting=lighting;return lighting}
+ try{
+  const sampleSize=192,referenceMask=lightingAnalysisMask(0,sampleSize),sourceMask=lightingAnalysisMask(1,sampleSize);if(!referenceMask||!sourceMask){state.lighting=lighting;return lighting}const referenceCanvas=makeCanvas(sampleSize),referenceCtx=referenceCanvas.getContext('2d'),sourceCanvas=makeCanvas(sampleSize),sourceCtx=sourceCanvas.getContext('2d'),referenceMarks=state.marks[0].map(point=>({x:point.x*sampleSize,y:point.y*sampleSize})),sourceMarks=state.marks[1].map(point=>({x:point.x*sampleSize,y:point.y*sampleSize}));referenceCtx.drawImage(state.photos[0],0,0,sampleSize,sampleSize);sourceCtx.drawImage(state.photos[1],0,0,sampleSize,sampleSize);const referenceWarp=makeCanvas(sampleSize),warpCtx=referenceWarp.getContext('2d'),referenceMaskWarp=makeCanvas(sampleSize),maskWarpCtx=referenceMaskWarp.getContext('2d'),lightingIds=new Set([...state.faceOval,...REGION_MOTION_IDS]);for(let i=0;i<468;i+=24)lightingIds.add(i);const warpTriangles=delaunayTriangles(referenceMarks,[...lightingIds]);if(!lightingGeometryReliable(referenceMarks,sourceMarks,warpTriangles)){lighting.stats={fallback:'géométrie incompatible'};state.lighting=lighting;return lighting}for(const ids of warpTriangles){const sourceSample=ids.map(i=>referenceMarks[i]),destination=ids.map(i=>sourceMarks[i]);if(sourceSample.every(Boolean)&&destination.every(Boolean)){warpTriangle(warpCtx,referenceCanvas,sourceSample,destination,.6);warpTriangle(maskWarpCtx,referenceMask,sourceSample,destination,.6)}}
+  const referenceData=referenceWarp.getContext('2d').getImageData(0,0,sampleSize,sampleSize).data,nativeReferenceData=referenceCtx.getImageData(0,0,sampleSize,sampleSize).data,sourceData=sourceCtx.getImageData(0,0,sampleSize,sampleSize).data,referenceWeights=new Float32Array(sampleSize*sampleSize),nativeReferenceWeights=new Float32Array(sampleSize*sampleSize),sourceWeights=new Float32Array(sampleSize*sampleSize),referenceAlpha=referenceMaskWarp.getContext('2d').getImageData(0,0,sampleSize,sampleSize).data,nativeReferenceAlpha=referenceMask.getContext('2d').getImageData(0,0,sampleSize,sampleSize).data,sourceAlpha=sourceMask.getContext('2d').getImageData(0,0,sampleSize,sampleSize).data,referenceLinear=linearizePixels(referenceData),nativeReferenceLinear=linearizePixels(nativeReferenceData),sourceLinear=linearizePixels(sourceData);let commonCount=0,sourceCount=0,clippedCount=0;for(let i=0,p=0;i<referenceData.length;i+=4,p++){const sourceWeight=sourceAlpha[i+3]/255,validA=smoother((referenceLinear.luminance[p]-.002)/.008)*smoother((.99-referenceLinear.luminance[p])/.09),validNativeA=smoother((nativeReferenceLinear.luminance[p]-.002)/.008)*smoother((.99-nativeReferenceLinear.luminance[p])/.09),validB=smoother((sourceLinear.luminance[p]-.002)/.008)*smoother((.99-sourceLinear.luminance[p])/.09);sourceWeights[p]=sourceWeight*validB;nativeReferenceWeights[p]=nativeReferenceAlpha[i+3]/255*validNativeA;referenceWeights[p]=Math.min(referenceData[i+3],referenceAlpha[i+3],sourceAlpha[i+3])/255*validA*validB;if(sourceWeight>.5){sourceCount++;if(validB<.5)clippedCount++}if(referenceWeights[p]>.5)commonCount++}if(commonCount<1000||commonCount/Math.max(1,sourceCount)<.6||clippedCount/Math.max(1,sourceCount)>.2){lighting.stats={fallback:'confiance insuffisante'};state.lighting=lighting;return lighting}const sigma=clamp(faceOvalWidth(1,sampleSize)*.18,8,18),radius=Math.round(sigma-.5),radii=[radius,radius+1,radius],sigmaA=clamp(faceOvalWidth(0,sampleSize)*.18,8,18),radiusA=Math.round(sigmaA-.5),illuminationA=normalizedIllumination(referenceLinear.logY,referenceWeights,sampleSize,sampleSize,radii),illuminationNativeA=normalizedIllumination(nativeReferenceLinear.logY,nativeReferenceWeights,sampleSize,sampleSize,[radiusA,radiusA+1,radiusA]),illuminationB=normalizedIllumination(sourceLinear.logY,sourceWeights,sampleSize,sampleSize,radii),detailA=new Float32Array(referenceWeights.length),detailB=new Float32Array(referenceWeights.length),adjustment=new Float32Array(referenceWeights.length);for(let i=0;i<adjustment.length;i++){detailA[i]=nativeReferenceLinear.logY[i]-illuminationNativeA.field[i];detailB[i]=sourceLinear.logY[i]-illuminationB.field[i]}const spreadA=robustDetailSpread(detailA,nativeReferenceWeights),spreadB=robustDetailSpread(detailB,sourceWeights),detailGain=spreadA&&spreadB?clamp(spreadA/spreadB,.9,1.1):1;for(let i=0;i<adjustment.length;i++){const confidence=smoother((Math.min(illuminationA.confidence[i],illuminationB.confidence[i])-.02)/.1),localDelta=clamp(illuminationA.field[i]-illuminationB.field[i],-.46,.46),detail=clamp((detailGain-1)*detailB[i],-.15,.15);adjustment[i]=confidence*(localDelta+detail)}
+  const corrected=makeCanvas(SIZE),ctx=corrected.getContext('2d'),maskBlur=clamp(faceOvalWidth(1,SIZE)*.045,8,18),applicationMask=rawFaceLightingMask(1,SIZE,1.08,maskBlur);ctx.drawImage(state.photos[1],0,0);const image=ctx.getImageData(0,0,SIZE,SIZE),data=image.data,mask=applicationMask?.getContext('2d').getImageData(0,0,SIZE,SIZE).data;if(!mask){state.lighting=lighting;return lighting}const {encode,exp,size}=lightingLuts(),encodeMax=size-1,expScale=encodeMax/1.28;
+  for(let y=0,p=0;y<SIZE;y++)for(let x=0;x<SIZE;x++,p++){const i=p*4,weight=mask[i+3]/255;if(weight<=.001)continue;const sx=x*(sampleSize-1)/(SIZE-1),sy=y*(sampleSize-1)/(SIZE-1),logFactor=clamp(weight*bilinearSample(adjustment,sampleSize,sampleSize,sx,sy),-.64,.64),rawFactor=exp[Math.round((logFactor+.64)*expScale)],r=sourceLinear.lut[data[i]],g=sourceLinear.lut[data[i+1]],b=sourceLinear.lut[data[i+2]],maxChannel=Math.max(r,g,b),factor=rawFactor>1&&maxChannel>0?Math.min(rawFactor,.995/maxChannel):rawFactor;data[i]=encode[Math.round(clamp(r*factor,0,1)*encodeMax)];data[i+1]=encode[Math.round(clamp(g*factor,0,1)*encodeMax)];data[i+2]=encode[Math.round(clamp(b*factor,0,1)*encodeMax)]}ctx.putImageData(image,0,0);lighting.corrected=corrected;lighting.stats={sigma,detailGain,commonCoverage:commonCount/Math.max(1,sourceCount)};state.lighting=lighting;return lighting
+ }catch(error){console.warn('Harmonisation locale indisponible',error);lighting.stats={error:String(error?.message||error)};state.lighting=lighting;return lighting}
+}
+function morphPhoto2Key(){if(!pairUsable()||state.regionHarmony<=.001)return`${state.photoVersion}|raw`;const lighting=ensureFaceLighting();return`${state.photoVersion}|${lighting.corrected?'normalized':'raw'}|${state.regionHarmony.toFixed(3)}`}
+function lightingStatus(){if(state.regionHarmony<=.001)return'lumière brute';const lighting=ensureFaceLighting();return lighting.corrected?`lumière locale ${Math.round(state.regionHarmony*100)} %`:'harmonisation indisponible'}
+function morphPhoto(index){
+ if(index!==1)return state.photos[index];const amount=clamp(state.regionHarmony,0,1);if(!pairUsable()||amount<=.001)return state.photos[1];const lighting=ensureFaceLighting();if(!lighting.corrected)return state.photos[1];if(amount>=.999)return lighting.corrected;const key=amount.toFixed(3);if(lighting.blendKey!==key){if(!lighting.blended)lighting.blended=makeCanvas(SIZE);const ctx=lighting.blended.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,SIZE,SIZE);ctx.drawImage(state.photos[1],0,0);ctx.globalAlpha=amount;ctx.drawImage(lighting.corrected,0,0);ctx.globalAlpha=1;lighting.blendKey=key}return lighting.blended
+}
+function invalidateFaceLighting(){state.lighting={version:-1,corrected:null,blended:null,blendKey:'',stats:null};state.regionCache=null;if(state.webgl)state.webgl.textureVersion=-1}
+function circumcircle(a,b,c){
+ const d=2*(a.x*(b.y-c.y)+b.x*(c.y-a.y)+c.x*(a.y-b.y));if(Math.abs(d)<1e-7)return null;
+ const aa=a.x*a.x+a.y*a.y,bb=b.x*b.x+b.y*b.y,cc=c.x*c.x+c.y*c.y;
+ const x=(aa*(b.y-c.y)+bb*(c.y-a.y)+cc*(a.y-b.y))/d,y=(aa*(c.x-b.x)+bb*(a.x-c.x)+cc*(b.x-a.x))/d;
+ return{x,y,r2:(x-a.x)*(x-a.x)+(y-a.y)*(y-a.y)}
+}
+function delaunayTriangles(points,indices){
+ const vertices=[...new Set(indices)].map(id=>{const point=points[id];return point&&Number.isFinite(point.x)&&Number.isFinite(point.y)?{x:point.x,y:point.y,id}:null}).filter(Boolean);if(vertices.length<3)return[];
+ const xs=vertices.map(p=>p.x),ys=vertices.map(p=>p.y),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),span=Math.max(maxX-minX,maxY-minY)||1,cx=(minX+maxX)/2,cy=(minY+maxY)/2,n=vertices.length;
+ vertices.push({x:cx-24*span,y:cy-span,id:-1},{x:cx,y:cy+24*span,id:-2},{x:cx+24*span,y:cy-span,id:-3});let triangles=[[n,n+1,n+2]];
+ for(let p=0;p<n;p++){
+  const bad=[];
+  for(let i=0;i<triangles.length;i++){const triangle=triangles[i],circle=circumcircle(vertices[triangle[0]],vertices[triangle[1]],vertices[triangle[2]]);if(circle){const dx=vertices[p].x-circle.x,dy=vertices[p].y-circle.y;if(dx*dx+dy*dy<=circle.r2+1e-4)bad.push(i)}}
+  const edges=new Map();
+  for(const index of bad)for(const [a,b] of [[triangles[index][0],triangles[index][1]],[triangles[index][1],triangles[index][2]],[triangles[index][2],triangles[index][0]]]){const key=a<b?`${a}-${b}`:`${b}-${a}`,entry=edges.get(key);if(entry)entry.count++;else edges.set(key,{a,b,count:1})}
+  const removed=new Set(bad);triangles=triangles.filter((_,index)=>!removed.has(index));for(const edge of edges.values())if(edge.count===1)triangles.push([edge.a,edge.b,p])
+ }
+ return triangles.filter(triangle=>triangle.every(index=>index<n)).map(triangle=>triangle.map(index=>vertices[index].id))
+}
+function commonLandmarkCount(){return Math.min(state.marks[0]?.length||0,state.marks[1]?.length||0,478)}
+function topologyGeometry(){const count=commonLandmarkCount(),first=landmarkPoints(0)?.slice(0,count);return count>=468&&first?{count,first}:null}
+function buildPreviewTriangles(){
+ const geometry=topologyGeometry();if(!geometry)return[];const ids=new Set(state.faceOval);
+ for(let i=0;i<468;i+=12)ids.add(i);for(const groups of Object.values(REGION_IDS))for(const group of groups)for(const id of group)if(id<geometry.count)ids.add(id);
+ return delaunayTriangles(geometry.first,[...ids])
+}
+function buildRegionMotionTriangles(geometry){
+ const targetAt=t=>geometry.raw1.map((point,index)=>({x:point.x+(geometry.aligned2[index].x-point.x)*t,y:point.y+(geometry.aligned2[index].y-point.y)*t})),low=targetAt(clamp(geometry.t-.25,0,1)),high=targetAt(clamp(geometry.t+.25,0,1)),ids=new Set([...REGION_MOTION_IDS,...state.faceOval]);for(const groups of Object.values(REGION_IDS))for(const group of groups)for(const id of group)if(id<468)ids.add(id);const candidates=[geometry.target,low,high].map((points,index)=>{const triangles=delaunayTriangles(points,[...ids]);return{triangles,metrics:triangles.length>=25?assessMorphTopology(low,high,triangles,`mouvement ${index}`):null}}).filter(candidate=>candidate.metrics);if(!candidates.length)return state.morphTriangles;candidates.sort((a,b)=>Number(topologyTechnicallyUnusable(a.metrics))-Number(topologyTechnicallyUnusable(b.metrics))||a.metrics.risk-b.metrics.risk);return topologyTechnicallyUnusable(candidates[0].metrics)?state.morphTriangles:candidates[0].triangles
+}
+function buildMorphTriangles(){
+ const geometry=topologyGeometry();if(!geometry)return state.meshTriangles.slice();const triangles=delaunayTriangles(geometry.first,Array.from({length:468},(_,i)=>i));return triangles.length>850?triangles:state.meshTriangles.slice()
+}
+function trianglesForSize(){return state.morphTriangles.length?state.morphTriangles:state.previewTriangles}
+function lerpPoint(a,b,t){return{x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t}}
+function frameBoundaryRing(count){
+ const specs=[[0,{x:SIZE/2,y:0}],[Math.round(count/8),{x:SIZE,y:0}],[Math.round(count/4),{x:SIZE,y:SIZE/2}],[Math.round(3*count/8),{x:SIZE,y:SIZE}],[Math.round(count/2),{x:SIZE/2,y:SIZE}],[Math.round(5*count/8),{x:0,y:SIZE}],[Math.round(3*count/4),{x:0,y:SIZE/2}],[Math.round(7*count/8),{x:0,y:0}],[count,{x:SIZE/2,y:0}]],ring=new Array(count);for(let segment=0;segment<specs.length-1;segment++){const [start,a]=specs[segment],[end,b]=specs[segment+1];for(let index=start;index<end;index++)ring[index]=lerpPoint(a,b,(index-start)/Math.max(1,end-start))}return ring
+}
+function connectRings(inner,outer){const triangles=[];for(let index=0;index<inner.length;index++){const next=(index+1)%inner.length;triangles.push([inner[index],inner[next],outer[index]],[outer[index],inner[next],outer[next]])}return triangles}
+function extendToFullFrame(points,detectedHeadRing){
+ const ovalIds=state.faceOval.slice();if(ovalIds.length<30||!ovalIds.every(id=>points[id]))return null;const edge=frameBoundaryRing(ovalIds.length),fallback=fallbackHeadRing(points),inner=detectedHeadRing?.length===ovalIds.length?detectedHeadRing:fallback;if(!inner)return null;const outer=inner.map((point,index)=>lerpPoint(point,edge[index],.55)),offset=points.length,innerIds=ovalIds.map((_,index)=>offset+index),outerIds=ovalIds.map((_,index)=>offset+ovalIds.length+index),edgeIds=ovalIds.map((_,index)=>offset+ovalIds.length*2+index),triangles=[...connectRings(ovalIds,innerIds),...connectRings(innerIds,outerIds),...connectRings(outerIds,edgeIds)];return{points:points.concat(inner,outer,edge),triangles}
+}
+function fullFrameGeometry(geometry){
+ const fallback1=fallbackHeadRing(geometry.raw1),fallback2=fallbackHeadRing(geometry.raw2);if(!fallback1||!fallback2)return null;const desired1=geometry.head1?.length===fallback1.length?geometry.head1:fallback1,desired2=geometry.head2?.length===fallback2.length?geometry.head2:fallback2,mixRing=(fallback,detected,amount)=>fallback.map((point,index)=>lerpPoint(point,detected[index],amount));let selection=state.headTopology.version===state.photoVersion?state.headTopology:null;
+ if(!selection){for(const amount of [1,.75,.5,.25,0]){const head1=mixRing(fallback1,desired1,amount),head2=mixRing(fallback2,desired2,amount),first=extendToFullFrame(geometry.raw1,head1),second=extendToFullFrame(geometry.raw2,head2);if(!first||!second)continue;const metrics=assessMorphTopology(first.points,second.points,first.triangles,amount?`silhouette détectée ${Math.round(amount*100)} %`:'silhouette géométrique de secours'),stable=metrics.flipArea<=1e-10&&metrics.collapseArea<=1e-10&&metrics.p99Stretch<=12;if(stable){selection={version:state.photoVersion,amount,metrics};break}}if(!selection)return null;state.headTopology=selection}
+ const head1=mixRing(fallback1,desired1,selection.amount),head2=mixRing(fallback2,desired2,selection.amount),headTarget=head1.map((point,index)=>lerpPoint(point,head2[index],geometry.t)),first=extendToFullFrame(geometry.raw1,head1),second=extendToFullFrame(geometry.raw2,head2),target=extendToFullFrame(geometry.target,headTarget);if(!first||!second||!target)return null;return{raw1:first.points,raw2:second.points,target:target.points,triangles:first.triangles.concat(morphTrianglesForGeometry(geometry)),t:geometry.t,contextTriangles:first.triangles,contextMetrics:selection.metrics,headDetectionStrength:selection.amount}
+}
+function updateModeAvailability(){
+ const available=canMeshMorph();document.querySelectorAll('[data-mode]').forEach(button=>{button.disabled=!available});
+ if(available&&state.previewTrianglesVersion!==state.photoVersion){if(state.morphTrianglesVersion!==state.photoVersion){state.morphTriangles=buildMorphTriangles();state.morphTrianglesVersion=state.photoVersion;state.morphTopologyVersion++;if(state.webgl)state.webgl.indexVersion=''}state.previewTriangles=buildPreviewTriangles();state.previewTrianglesVersion=state.photoVersion}
+ if(!available){stopAnimation({render:false});state.mode='fallback';document.querySelectorAll('[data-mode]').forEach(button=>{button.classList.remove('is-active');button.setAttribute('aria-pressed','false')});$('regionControls').hidden=true;$('blendLabelText').textContent='Mélange'}
+ else if(state.mode==='fallback')setMode('canvas')
+ syncAnimationControls();syncPairUI()
+}
+function meshGeometry(v){
+ if(!canMeshMorph())return null;
+ const count=commonLandmarkCount(),raw1=landmarkPoints(0).slice(0,count),raw2=landmarkPoints(1).slice(0,count),aligned2=raw2.map(point=>mapPoint(photo2Matrix(v),point)),fullPortrait=state.mode!=='regions',alignmentStrength=1-smoother(clamp(v.a,0,1)),frame2=fullPortrait?raw2:raw2.map(point=>mapPoint(photo2Matrix(v,alignmentStrength),point)),topologyShape=raw1.map((point,index)=>({x:(point.x+(fullPortrait?raw2[index]:aligned2[index]).x)/2,y:(point.y+(fullPortrait?raw2[index]:aligned2[index]).y)/2}));
+ const target=raw1.map((point,index)=>({x:point.x+(frame2[index].x-point.x)*v.a,y:point.y+(frame2[index].y-point.y)*v.a})),eyeTriangles=count>=478?REFINED_EYE_MESH_IDS.flatMap(ids=>delaunayTriangles(topologyShape,ids)):[],mouthIds=MOUTH_HOLE_IDS.filter(id=>id<count),mouthTriangles=mouthIds.length===MOUTH_HOLE_IDS.length?delaunayTriangles(topologyShape,mouthIds):[],head1=fullPortrait?(state.headRings[0]||fallbackHeadRing(raw1)):null,head2=fullPortrait?(state.headRings[1]||fallbackHeadRing(raw2)):null,headTarget=fullPortrait&&head1&&head2?head1.map((point,index)=>lerpPoint(point,head2[index],v.a)):null;
+ return{raw1,raw2,aligned2,frame2,target,head1,head2,headTarget,eyeTriangles,mouthTriangles,faceCount:count,t:v.a}
+}
+function morphTrianglesForGeometry(geometry){const semantic=state.morphTriangles.length?state.morphTriangles:state.meshTriangles;return semantic.concat(geometry.eyeTriangles||[],geometry.mouthTriangles||[])}
+function manualGeometryIsSafe(v){if(!hasLandmarkPair()||!state.morphTriangles.length)return false;const first=landmarkPoints(0).slice(0,468),second=landmarkPoints(1).slice(0,468).map(point=>mapPoint(photo2Matrix(v),point)),metrics=assessMorphTopology(first,second,state.morphTriangles,'réglage manuel'),cropA=faceOvalCrop(first),cropB=faceOvalCrop(second),outsideArea=Math.max(cropA.outsideArea,cropB.outsideArea),maxOverflow=Math.max(cropA.maxOverflow,cropB.maxOverflow);return!topologyTechnicallyUnusable(metrics,outsideArea,maxOverflow)}
+function drawPhoto2(ctx,v,alpha,outSize){
+ const m=photo2Matrix(v),q=outSize/SIZE;ctx.save();ctx.globalAlpha=alpha;ctx.setTransform(m.a*q,m.b*q,m.c*q,m.d*q,m.e*q,m.f*q);ctx.drawImage(morphPhoto(1),0,0);ctx.restore()
+}
+function renderAlphaFallback(canvas,v){
+ const ctx=canvas.getContext('2d'),size=canvas.width;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,size,size);ctx.globalAlpha=1;
+ ctx.drawImage(state.photos[0],0,0,size,size);drawPhoto2(ctx,v,v.a,size);ctx.globalAlpha=1;
+ return{fallback:true,message:state.pair.status==='checking'?'Vérification du maillage en cours…':state.pair.status==='unusable'?`Morphing bloqué · ${pairSummary()} Reprends uniquement la photo 2.`:'Contrôle géométrique incomplet : animation indisponible.'}
+}
+function affine(src,dst){
+ const [s0,s1,s2]=src,[d0,d1,d2]=dst,sx1=s1.x-s0.x,sy1=s1.y-s0.y,sx2=s2.x-s0.x,sy2=s2.y-s0.y;
+ const dx1=d1.x-d0.x,dy1=d1.y-d0.y,dx2=d2.x-d0.x,dy2=d2.y-d0.y,det=sx1*sy2-sx2*sy1;if(Math.abs(det)<1e-5)return null;
+ const a=(dx1*sy2-dx2*sy1)/det,c=(-dx1*sx2+dx2*sx1)/det,b=(dy1*sy2-dy2*sy1)/det,d=(-dy1*sx2+dy2*sx1)/det;
+ return{a,b,c,d,e:d0.x-a*s0.x-c*s0.y,f:d0.y-b*s0.x-d*s0.y}
+}
+function expandedTriangle(points,pad=.7){
+ const cx=(points[0].x+points[1].x+points[2].x)/3,cy=(points[0].y+points[1].y+points[2].y)/3;
+ return points.map(p=>{const dx=p.x-cx,dy=p.y-cy,len=Math.hypot(dx,dy)||1,scale=(len+pad)/len;return{x:cx+dx*scale,y:cy+dy*scale}})
+}
+function warpTriangle(ctx,image,src,dst,pad=.7){
+ const m=affine(src,dst);if(!m)return false;const clip=expandedTriangle(dst,pad);
+ ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.beginPath();ctx.moveTo(clip[0].x,clip[0].y);ctx.lineTo(clip[1].x,clip[1].y);ctx.lineTo(clip[2].x,clip[2].y);ctx.closePath();ctx.clip();
+ ctx.setTransform(m.a,m.b,m.c,m.d,m.e,m.f);ctx.drawImage(image,0,0);ctx.restore();return true
+}
+function warpImage(name,size,image,sourcePoints,targetPoints,triangles=trianglesForSize(size)){
+ const canvas=getBuffer(name,size),ctx=canvas.getContext('2d'),q=size/SIZE;
+ for(const ids of triangles){
+  const src=ids.map(i=>sourcePoints[i]),dst=ids.map(i=>({x:targetPoints[i].x*q,y:targetPoints[i].y*q}));
+  if(src.every(Boolean)&&dst.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)))warpTriangle(ctx,image,src,dst)
+ }
+ return canvas
+}
+function warpCanvasLayer(name,size,image,sourcePoints,targetPoints,triangles){
+ const canvas=getBuffer(name,size),ctx=canvas.getContext('2d'),q=size/SIZE;
+ for(const ids of triangles){
+  const src=ids.map(i=>sourcePoints[i]).map(p=>p&&({x:p.x*q,y:p.y*q})),dst=ids.map(i=>targetPoints[i]).map(p=>p&&({x:p.x*q,y:p.y*q}));
+  if(src.every(Boolean)&&dst.every(p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y)))warpTriangle(ctx,image,src,dst,1.75)
+ }
+ return canvas
+}
+function traceOval(ctx,points,q=1){
+ const valid=state.faceOval.map(i=>points[i]).filter(Boolean);if(valid.length<3)return false;
+ ctx.beginPath();ctx.moveTo(valid[0].x*q,valid[0].y*q);for(let i=1;i<valid.length;i++)ctx.lineTo(valid[i].x*q,valid[i].y*q);ctx.closePath();return true
+}
+function faceMask(size,points){
+ const mask=getBuffer('faceMask',size),ctx=mask.getContext('2d'),q=size/SIZE,oval=state.faceOval.map(id=>points[id]).filter(Boolean);if(oval.length<20)return mask;const xs=oval.map(point=>point.x*q),ys=oval.map(point=>point.y*q),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),cx=(minX+maxX)/2,cy=(minY+maxY)/2,rx=(maxX-minX)*.56,ry=(maxY-minY)*.54;ctx.save();ctx.translate(cx,cy);ctx.scale(rx,ry);const gradient=ctx.createRadialGradient(0,0,.84,0,0,1);gradient.addColorStop(0,'rgba(255,255,255,1)');gradient.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=gradient;ctx.beginPath();ctx.arc(0,0,1,0,Math.PI*2);ctx.fill();ctx.restore();return mask
+}
+function maskedFaceLayer(size,source,points,name='faceLayer'){
+ const layer=getBuffer(name,size),ctx=layer.getContext('2d');ctx.drawImage(source,0,0);ctx.globalCompositeOperation='destination-in';ctx.drawImage(faceMask(size,points),0,0);ctx.globalCompositeOperation='source-over';return layer
+}
+function drawBackground(canvas){const ctx=canvas.getContext('2d'),size=canvas.width;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,size,size);ctx.drawImage(state.photos[0],0,0,size,size);return ctx}
+function drawMorphBackground(canvas,v,geometry){
+ const ctx=drawBackground(canvas),size=canvas.width,amount=smoother(clamp(geometry.t,0,1));if(amount>.001){ctx.globalAlpha=amount;ctx.drawImage(state.photos[1],0,0,size,size);ctx.globalAlpha=1}return ctx
+}
+function renderPortraitEndpoint(canvas,index){const ctx=canvas.getContext('2d'),size=canvas.width;ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(state.photos[index],0,0,size,size);return{fallback:false,message:`Photo ${index+1} exacte · extrémité du morphing.`}}
+function renderCanvasMorph(canvas,v,providedGeometry=null){
+ if(v.a<=.0001)return renderPortraitEndpoint(canvas,0);if(v.a>=.9999)return renderPortraitEndpoint(canvas,1);const faceGeometry=providedGeometry||meshGeometry(v),geometry=providedGeometry?.contextTriangles?providedGeometry:faceGeometry&&fullFrameGeometry(faceGeometry);if(!geometry)return renderAlphaFallback(canvas,v);const size=canvas.width;
+ const triangles=geometry.triangles,warpA=warpImage('warpA',size,state.photos[0],geometry.raw1,geometry.target,triangles),warpB=warpImage('warpB',size,morphPhoto(1),geometry.raw2,geometry.target,triangles);
+ const mixed=getBuffer('mixedFace',size),mctx=mixed.getContext('2d');mctx.drawImage(warpA,0,0);mctx.globalAlpha=geometry.t;mctx.drawImage(warpB,0,0);mctx.globalAlpha=1;
+ const ctx=canvas.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(mixed,0,0);
+ return{fallback:false,message:`Morphing du portrait complet Canvas 2D · ${lightingStatus()} · ${triangles.length} triangles.`}
+}
+
+function compileShader(gl,type,source){
+ const shader=gl.createShader(type);if(!shader)throw new Error('Création du shader impossible');gl.shaderSource(shader,source);gl.compileShader(shader);
+ if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS)){const message=gl.getShaderInfoLog(shader)||'Erreur shader';gl.deleteShader(shader);throw new Error(message)}return shader
+}
+function assertWebGL(gl,label){
+ if(gl.isContextLost())throw new Error('Contexte WebGL perdu');const error=gl.getError();if(error!==gl.NO_ERROR)throw new Error(`${label} · erreur WebGL 0x${error.toString(16)}`)
+}
+function createWebGLResources(renderer){
+ const {gl}=renderer;while(gl.getError()!==gl.NO_ERROR){}
+ const vertex=compileShader(gl,gl.VERTEX_SHADER,'attribute vec2 aPosition;attribute vec2 aUv1;attribute vec2 aUv2;uniform vec2 uResolution;varying vec2 vUv1;varying vec2 vUv2;void main(){vec2 clip=aPosition/uResolution*2.0-1.0;gl_Position=vec4(clip.x,-clip.y,0.0,1.0);vUv1=aUv1;vUv2=aUv2;}');
+ const fragment=compileShader(gl,gl.FRAGMENT_SHADER,'precision mediump float;uniform sampler2D uTexture1;uniform sampler2D uTexture2;uniform float uMix;varying vec2 vUv1;varying vec2 vUv2;vec3 toLinear(vec3 c){vec3 low=c/12.92;vec3 high=pow((c+0.055)/1.055,vec3(2.4));return mix(low,high,step(vec3(0.04045),c));}vec3 toSrgb(vec3 c){c=max(c,vec3(0.0));vec3 low=c*12.92;vec3 high=1.055*pow(c,vec3(1.0/2.4))-0.055;return mix(low,high,step(vec3(0.0031308),c));}void main(){vec4 a=texture2D(uTexture1,vUv1);vec4 b=texture2D(uTexture2,vUv2);vec3 color=toSrgb(mix(toLinear(a.rgb),toLinear(b.rgb),uMix));gl_FragColor=vec4(color,mix(a.a,b.a,uMix));}');
+ const program=gl.createProgram();if(!program)throw new Error('Création du programme WebGL impossible');gl.attachShader(program,vertex);gl.attachShader(program,fragment);gl.linkProgram(program);
+ if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program)||'Erreur programme WebGL');gl.deleteShader(vertex);gl.deleteShader(fragment);
+ Object.assign(renderer,{program,position:gl.createBuffer(),uv1:gl.createBuffer(),uv2:gl.createBuffer(),index:gl.createBuffer(),tex1:gl.createTexture(),tex2:gl.createTexture(),textureVersion:-1});
+ if(!renderer.position||!renderer.uv1||!renderer.uv2||!renderer.index||!renderer.tex1||!renderer.tex2)throw new Error('Ressource WebGL indisponible');
+ renderer.locations={position:gl.getAttribLocation(program,'aPosition'),uv1:gl.getAttribLocation(program,'aUv1'),uv2:gl.getAttribLocation(program,'aUv2'),resolution:gl.getUniformLocation(program,'uResolution'),mix:gl.getUniformLocation(program,'uMix'),texture1:gl.getUniformLocation(program,'uTexture1'),texture2:gl.getUniformLocation(program,'uTexture2')};
+ if(renderer.locations.position<0||renderer.locations.uv1<0||renderer.locations.uv2<0||!renderer.locations.resolution||!renderer.locations.mix||!renderer.locations.texture1||!renderer.locations.texture2)throw new Error('Attribut ou uniforme WebGL introuvable');
+ Object.assign(renderer,{indexVersion:'',indexCount:0});assertWebGL(gl,'Initialisation');renderer.failed=false;renderer.lost=false
+}
+function disposeWebGL(renderer){
+ if(!renderer?.gl||renderer.gl.isContextLost())return;const gl=renderer.gl;
+ for(const buffer of [renderer.position,renderer.uv1,renderer.uv2,renderer.index])if(buffer)gl.deleteBuffer(buffer);
+ for(const texture of [renderer.tex1,renderer.tex2])if(texture)gl.deleteTexture(texture);if(renderer.program)gl.deleteProgram(renderer.program)
+}
+function initWebGLRenderer(){
+ if(state.webgl&&!state.webgl.failed)return state.webgl;
+ if(state.webgl?.failed&&performance.now()-(state.webgl.failedAt||0)<3000)return state.webgl;
+ if(state.webgl){disposeWebGL(state.webgl);state.webgl=null}
+ const canvas=makeCanvas(PREVIEW_SIZE),attributes={alpha:true,depth:false,stencil:false,antialias:true,premultipliedAlpha:true,preserveDrawingBuffer:true};
+ let gl=null;try{gl=canvas.getContext('webgl',attributes)||canvas.getContext('experimental-webgl',attributes)}catch(e){state.webgl={failed:true,error:e.message||String(e),failedAt:performance.now()};return state.webgl}
+ if(!gl){state.webgl={failed:true,error:'WebGL indisponible',failedAt:performance.now()};return state.webgl}
+ const renderer={canvas,gl,textureVersion:-1,lost:false,failed:false,failedAt:0};
+ try{
+  createWebGLResources(renderer);
+  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();if(renderer.abandoned)return;renderer.lost=true;renderer.textureVersion=-1;scheduleRender()});
+  canvas.addEventListener('webglcontextrestored',()=>{if(renderer.abandoned)return;try{createWebGLResources(renderer)}catch(e){console.error(e);renderer.failed=true;renderer.failedAt=performance.now();renderer.error=e.message||String(e)}scheduleRender();if(!renderer.failed&&!state.animation.running&&!state.animation.userFrozen&&state.mode==='webgl'&&state.animation.frozenFrame){if(automaticMotionReduced())state.animation.resumeAfterMotion=true;else resumeAutomaticAnimation()}});
+  state.webgl=renderer;return renderer
+ }catch(e){console.error(e);renderer.failed=true;renderer.failedAt=performance.now();renderer.error=e.message||String(e);state.webgl=renderer;return renderer}
+}
+function uploadTexture(gl,texture,image,unit){
+ gl.activeTexture(unit);gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image)
+}
+function uploadAttribute(gl,buffer,location,data){gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,data,gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(location);gl.vertexAttribPointer(location,2,gl.FLOAT,false,0,0)}
+function renderWebGLFace(size,geometry){
+ const r=initWebGLRenderer();if(r.failed||r.lost)return null;const {gl}=r;if(gl.isContextLost()){r.lost=true;return null}while(gl.getError()!==gl.NO_ERROR){}if(r.canvas.width!==size||r.canvas.height!==size){r.canvas.width=r.canvas.height=size}
+ gl.viewport(0,0,size,size);gl.useProgram(r.program);
+ const activeTriangles=geometry.triangles||morphTrianglesForGeometry(geometry),indexVersion=`${state.morphTopologyVersion}|full-frame-v2|${activeTriangles.length}`;if(r.indexVersion!==indexVersion){const indices=new Uint16Array(activeTriangles.flat());gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,r.index);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);r.indexCount=indices.length;r.indexVersion=indexVersion;assertWebGL(gl,'Chargement de la topologie')}
+ const textureVersion=morphPhoto2Key();if(r.textureVersion!==textureVersion){uploadTexture(gl,r.tex1,state.photos[0],gl.TEXTURE0);uploadTexture(gl,r.tex2,morphPhoto(1),gl.TEXTURE1);assertWebGL(gl,'Chargement des textures');r.textureVersion=textureVersion}
+ const count=geometry.raw1.length,positions=new Float32Array(count*2),uv1=new Float32Array(count*2),uv2=new Float32Array(count*2),q=size/SIZE;
+ for(let i=0;i<count;i++){positions[i*2]=geometry.target[i].x*q;positions[i*2+1]=geometry.target[i].y*q;uv1[i*2]=geometry.raw1[i].x/SIZE;uv1[i*2+1]=geometry.raw1[i].y/SIZE;uv2[i*2]=geometry.raw2[i].x/SIZE;uv2[i*2+1]=geometry.raw2[i].y/SIZE}
+ uploadAttribute(gl,r.position,r.locations.position,positions);uploadAttribute(gl,r.uv1,r.locations.uv1,uv1);uploadAttribute(gl,r.uv2,r.locations.uv2,uv2);assertWebGL(gl,'Chargement du maillage');
+ gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,r.index);gl.uniform2f(r.locations.resolution,size,size);gl.uniform1f(r.locations.mix,geometry.t);gl.uniform1i(r.locations.texture1,0);gl.uniform1i(r.locations.texture2,1);
+ gl.disable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.drawElements(gl.TRIANGLES,r.indexCount,gl.UNSIGNED_SHORT,0);gl.flush();assertWebGL(gl,'Rendu du maillage');return r.canvas
+}
+function renderWebGLMorph(canvas,v){
+ if(v.a<=.0001)return renderPortraitEndpoint(canvas,0);if(v.a>=.9999)return renderPortraitEndpoint(canvas,1);const faceGeometry=meshGeometry(v),geometry=faceGeometry&&fullFrameGeometry(faceGeometry);if(!geometry)return renderAlphaFallback(canvas,v);
+ try{
+  const webglFace=renderWebGLFace(canvas.width,geometry);if(!webglFace){const result=renderCanvasMorph(canvas,v,geometry);result.message='WebGL indisponible : morphing Canvas 2D utilisé.';return result}
+  const ctx=canvas.getContext('2d'),size=canvas.width;ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(webglFace,0,0);
+  return{fallback:false,message:`Morphing du portrait complet WebGL · ${lightingStatus()} · ${geometry.triangles.length} triangles.`}
+ }catch(e){console.error(e);if(state.webgl){state.webgl.failed=true;state.webgl.failedAt=performance.now();state.webgl.error=e.message||String(e)}const result=renderCanvasMorph(canvas,v,geometry);result.message='Erreur WebGL : morphing Canvas 2D utilisé.';return result}
+}
+
+function clamp(value,min,max){return Math.max(min,Math.min(max,value))}
+function convexHull(points){
+ const sorted=points.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)).slice().sort((a,b)=>a.x-b.x||a.y-b.y);if(sorted.length<3)return sorted;
+ const cross=(o,a,b)=>(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x),lower=[],upper=[];
+ for(const point of sorted){while(lower.length>=2&&cross(lower.at(-2),lower.at(-1),point)<=0)lower.pop();lower.push(point)}
+ for(let i=sorted.length-1;i>=0;i--){const point=sorted[i];while(upper.length>=2&&cross(upper.at(-2),upper.at(-1),point)<=0)upper.pop();upper.push(point)}
+ lower.pop();upper.pop();return lower.concat(upper)
+}
+function drawExpandedHull(ctx,points,padding){
+ const hull=convexHull(points);if(hull.length<3)return false;ctx.beginPath();ctx.moveTo(hull[0].x,hull[0].y);for(let i=1;i<hull.length;i++)ctx.lineTo(hull[i].x,hull[i].y);ctx.closePath();ctx.fill();
+ if(padding>0){ctx.lineJoin='round';ctx.lineCap='round';ctx.lineWidth=padding*2;ctx.stroke()}return true
+}
+function regionOuterMask(size,points,name='advanced-region-outer-mask'){
+ const mask=getBuffer(name,size),ctx=mask.getContext('2d'),q=size/SIZE,feather=Math.max(4,size/64);ctx.fillStyle=ctx.strokeStyle='#fff';
+ ctx.save();if('filter' in ctx)ctx.filter=`blur(${feather}px)`;if(traceOval(ctx,points,q))ctx.fill();ctx.restore();return mask
+}
+function meanPointX(points,ids){let sum=0,count=0;for(const id of ids){const point=points[id];if(point){sum+=point.x;count++}}return count?sum/count:Infinity}
+function meanPoint(points,ids){let x=0,y=0,count=0;for(const id of ids){const point=points[id];if(point){x+=point.x;y+=point.y;count++}}return count?{x:x/count,y:y/count}:null}
+function screenEyeGroups(points){
+ return REGION_IDS.eyes.map((eye,index)=>({ids:[...eye,...(REGION_IDS.brows[index]||[])],x:meanPointX(points,eye)})).sort((a,b)=>a.x-b.x)
+}
+function featureRegionMask(name,size,points,ids,outer,feather,padding){
+ const mask=getBuffer(`advanced-region-mask-${name}`,size),ctx=mask.getContext('2d'),q=size/SIZE,selected=ids.map(id=>points[id]).filter(Boolean).map(point=>({x:point.x*q,y:point.y*q}));
+ ctx.fillStyle=ctx.strokeStyle='#fff';ctx.save();if(feather>0&&'filter' in ctx)ctx.filter=`blur(${feather}px)`;drawExpandedHull(ctx,selected,padding);ctx.restore();ctx.globalCompositeOperation='destination-in';ctx.drawImage(outer,0,0);ctx.globalCompositeOperation='source-over';return mask
+}
+function rightHalfRegionMask(size,points,outer,feather){
+ const mask=getBuffer('advanced-region-mask-right',size),ctx=mask.getContext('2d'),q=size/SIZE,axis=[10,168,6,1,2,13,14,17,152].map(id=>points[id]).filter(Boolean);
+ if(axis.length<2)return mask;const top=axis[0],bottom=axis.at(-1),center=axis.reduce((sum,p)=>({x:sum.x+p.x/axis.length,y:sum.y+p.y/axis.length}),{x:0,y:0});
+ let dx=bottom.x-top.x,dy=bottom.y-top.y,length=Math.hypot(dx,dy)||1,nx=dy/length,ny=-dx/length;if(nx<0){nx=-nx;ny=-ny}
+ const cx=center.x*q,cy=center.y*q,width=Math.max(.6,feather),gradient=ctx.createLinearGradient(cx-nx*width,cy-ny*width,cx+nx*width,cy+ny*width);gradient.addColorStop(0,'rgba(255,255,255,0)');gradient.addColorStop(1,'rgba(255,255,255,1)');ctx.fillStyle=gradient;ctx.fillRect(0,0,size,size);
+ ctx.globalCompositeOperation='destination-in';ctx.drawImage(outer,0,0);ctx.globalCompositeOperation='source-over';return mask
+}
+function regionContourMask(size,points,outer,feather){
+ const mask=getBuffer('advanced-region-effect-contour-mask',size),ctx=mask.getContext('2d'),q=size/SIZE;ctx.save();ctx.strokeStyle='#fff';ctx.lineWidth=Math.max(5,size*.03);ctx.lineJoin='round';if('filter' in ctx)ctx.filter=`blur(${Math.max(1,feather*.3)}px)`;if(traceOval(ctx,points,q))ctx.stroke();ctx.restore();ctx.globalCompositeOperation='destination-in';ctx.drawImage(outer,0,0);ctx.globalCompositeOperation='source-over';return mask
+}
+function regionFeatherPixels(size){return state.regionFeather*size/32}
+function regionGeometryKey(size,v){const A=state.auto;return[morphPhoto2Key(),state.morphTopologyVersion,size,A.scale.toFixed(5),A.rot.toFixed(5),A.tx.toFixed(2),A.ty.toFixed(2),v.x,v.y,v.s.toFixed(4),v.r.toFixed(5),v.a.toFixed(4)].join('|')}
+function regionAssets(size,v){
+ const key=regionGeometryKey(size,v);if(state.regionCache?.key===key)return state.regionCache;const geometry=meshGeometry(v);if(!geometry)return null;
+ const warpA=warpImage('advanced-region-warp-a',size,state.photos[0],geometry.raw1,geometry.target),warpB=warpImage('advanced-region-warp-b',size,morphPhoto(1),geometry.raw2,geometry.target);
+ state.regionCache={key,size,geometry,warpA,warpB,maskKey:''};return state.regionCache
+}
+function regionMasks(assets){
+ const {size,geometry}=assets,feather=regionFeatherPixels(size),key=`${assets.key}|${feather.toFixed(3)}`;if(assets.maskKey===key)return assets.masks;
+ const outer=regionOuterMask(size,geometry.target),eyeGroups=screenEyeGroups(geometry.target),padding=Math.max(3,size/96),mouthOpen=Math.hypot(geometry.target[13].x-geometry.target[14].x,geometry.target[13].y-geometry.target[14].y)*size/SIZE,mouthPadding=padding+mouthOpen*.45;
+ const masks={outer,contour:regionContourMask(size,geometry.target,outer,feather),right:rightHalfRegionMask(size,geometry.target,outer,feather),leftEye:featureRegionMask('left-eye',size,geometry.target,eyeGroups[0]?.ids||[],outer,feather,padding),rightEye:featureRegionMask('right-eye',size,geometry.target,eyeGroups[1]?.ids||[],outer,feather,padding),nose:featureRegionMask('nose',size,geometry.target,REGION_IDS.nose[0],outer,feather,padding*1.15),mouth:featureRegionMask('mouth',size,geometry.target,REGION_IDS.mouth[0],outer,feather,mouthPadding)};
+ assets.maskKey=key;assets.masks=masks;return masks
+}
+function mixedRegionTexture(slot,size,a,b,mix){
+ if(mix<=.001)return a;if(mix>=.999)return b;const canvas=getBuffer(`advanced-region-mix-${slot}`,size),ctx=canvas.getContext('2d');ctx.drawImage(a,0,0);ctx.globalAlpha=mix;ctx.drawImage(b,0,0);ctx.globalAlpha=1;return canvas
+}
+function drawMaskedRegion(ctx,source,mask,name,size){
+ const layer=getBuffer(`advanced-region-layer-${name}`,size),lctx=layer.getContext('2d');lctx.drawImage(source,0,0);lctx.globalCompositeOperation='destination-in';lctx.drawImage(mask,0,0);lctx.globalCompositeOperation='source-over';ctx.drawImage(layer,0,0)
+}
+function applyRegionAnimationEffect(face,assets,masks,effect,size){
+ const visualStyle=effect?.renderStyle||effect?.style;if(visualStyle!=='explosive'||effect.strength<=.001)return face;const output=getBuffer('advanced-region-effect-composition',size),ctx=output.getContext('2d'),points=assets.geometry.target,eyeGroups=screenEyeGroups(points),faceCenter=points[168]||points[1]||{x:SIZE/2,y:SIZE/2},q=size/SIZE;ctx.drawImage(face,0,0);const definitions=[['leftEye',masks.leftEye,eyeGroups[0]?.ids||[]],['rightEye',masks.rightEye,eyeGroups[1]?.ids||[]],['nose',masks.nose,REGION_IDS.nose[0]],['mouth',masks.mouth,REGION_IDS.mouth[0]]];
+ for(const [name,mask,ids] of definitions){const weight=clamp(effect.weights[name]||0,0,1),opacity=Math.sin(Math.PI*weight)*effect.strength*.42;if(opacity<=.004)continue;const layer=getBuffer('advanced-region-effect-layer',size),layerCtx=layer.getContext('2d'),center=meanPoint(points,ids)||faceCenter;layerCtx.drawImage(face,0,0);layerCtx.globalCompositeOperation='destination-in';layerCtx.drawImage(mask,0,0);layerCtx.globalCompositeOperation='source-over';const targetX=(faceCenter.x+(center.x-faceCenter.x)*weight)*q,targetY=(faceCenter.y+(center.y-faceCenter.y)*weight)*q,scale=.58+.42*weight;ctx.save();ctx.globalCompositeOperation='source-over';ctx.globalAlpha=opacity;ctx.translate(targetX,targetY);ctx.scale(scale,scale);ctx.translate(-center.x*q,-center.y*q);ctx.drawImage(layer,0,0);ctx.restore()}return output
+}
+function renderRegions(canvas,v,regionMix=state.regionMix,regionBaseValues=null,regionEffect=null){
+ const size=canvas.width,animatedMorph=!!regionBaseValues,compositionValues=animatedMorph?regionBaseValues:v,assets=regionAssets(size,compositionValues);if(!assets)return renderAlphaFallback(canvas,v);const masks=regionMasks(assets),sourceB=assets.warpB,textures=new Map([['0.000',assets.warpA],['1.000',sourceB]]);let textureSlot=0;
+ const texture=mix=>{const value=clamp(mix,0,1),key=value.toFixed(3);if(!textures.has(key))textures.set(key,mixedRegionTexture(textureSlot++,size,assets.warpA,sourceB,value));return textures.get(key)};
+ const face=getBuffer('advanced-region-composition',size),fctx=face.getContext('2d'),mix=regionMix;fctx.drawImage(texture(mix.left),0,0);
+ if(Math.abs(mix.right-mix.left)>.001)drawMaskedRegion(fctx,texture(mix.right),masks.right,'right-half',size);
+ for(const name of ['leftEye','rightEye'])if(Math.abs(mix[name]-mix[name==='leftEye'?'left':'right'])>.001)drawMaskedRegion(fctx,texture(mix[name]),masks[name],name,size);
+ for(const name of ['nose','mouth'])if(Math.abs(mix[name]-mix.left)>.001||Math.abs(mix[name]-mix.right)>.001)drawMaskedRegion(fctx,texture(mix[name]),masks[name],name,size);
+ const effectFace=applyRegionAnimationEffect(face,assets,masks,regionEffect,size),finalFace=getBuffer('advanced-region-final-face',size),finalCtx=finalFace.getContext('2d');finalCtx.drawImage(effectFace,0,0);finalCtx.globalCompositeOperation='destination-in';finalCtx.drawImage(masks.outer,0,0);finalCtx.globalCompositeOperation='source-over';let displayedFace=finalFace;
+ if(animatedMorph){const animatedGeometry=meshGeometry(v);if(animatedGeometry){if(!assets.motionTriangles)assets.motionTriangles=buildRegionMotionTriangles(assets.geometry);const warpedFace=warpCanvasLayer('advanced-region-motion-face',size,effectFace,assets.geometry.target,animatedGeometry.target,assets.motionTriangles),motionMask=regionOuterMask(size,animatedGeometry.target,'advanced-region-motion-mask'),motionFace=getBuffer('advanced-region-motion-final-face',size),motionCtx=motionFace.getContext('2d');motionCtx.drawImage(warpedFace,0,0);motionCtx.globalCompositeOperation='destination-in';motionCtx.drawImage(motionMask,0,0);motionCtx.globalCompositeOperation='source-over';displayedFace=motionFace}}
+ const ctx=drawBackground(canvas);ctx.drawImage(displayedFace,0,0);
+ return{fallback:false,message:`Régions avancées · forme ${Math.round(v.a*100)} % · gauche ${Math.round(mix.left*100)} %, droite ${Math.round(mix.right*100)} % · ${lightingStatus()}.`}
+}
+function renderSelected(canvas,{updateUI=true,values=null,regionMix=null,regionBaseValues=null,regionEffect=null,mode=state.mode}={}){
+ if(state.photos.length<2)return null;const v=values||readControls();let info;
+ if(mode==='webgl')info=renderWebGLMorph(canvas,v);else if(mode==='regions')info=renderRegions(canvas,v,regionMix||state.regionMix,regionBaseValues,regionEffect);else if(mode==='fallback')info=renderAlphaFallback(canvas,v);else info=renderCanvasMorph(canvas,v);
+ if(updateUI){updateControlLabels(v);$('modeStatus').textContent=info?.message||''}return info
+}
+function animationModeAvailable(){return canMeshMorph()&&(state.mode==='webgl'||state.mode==='regions')}
+function animationSettings(){return{amplitude:+$('animationAmplitude').value/100,speed:+$('animationSpeed').value/100}}
+function syncAnimationControls(){
+ const meshReady=canMeshMorph(),modeReady=state.mode==='webgl'||state.mode==='regions',available=meshReady&&modeReady,animation=state.animation,running=animation.running,frozen=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode,{amplitude,speed}=animationSettings(),controls=$('animationControls'),badge=$('animationBadge'),reduced=automaticMotionReduced(),styleLabel=REGION_ANIMATION_LABELS[state.regionAnimationStyle]||REGION_ANIMATION_LABELS.progressive,styles=$('regionAnimationStyles');controls.hidden=state.photos.length<2;styles.hidden=state.mode!=='regions';document.querySelectorAll('[data-region-animation-style]').forEach(button=>{const active=button.dataset.regionAnimationStyle===state.regionAnimationStyle;button.classList.toggle('is-active',active);button.setAttribute('aria-pressed',String(active))});controls.classList.toggle('is-animating',running);badge.hidden=!running;badge.textContent=running?`MORPHING ACTIF · ${state.mode==='webgl'?'WEBGL':`RÉGIONS · ${styleLabel.toUpperCase()}`} · ${Math.round(amplitude*100)} %`:'MORPHING ACTIF';$('toggleAnimation').disabled=!available||amplitude<=0;$('toggleAnimation').classList.toggle('is-running',running);$('toggleAnimation').setAttribute('aria-pressed',String(running));$('toggleAnimation').textContent=running?'Arrêter et figer':frozen?'Reprendre doucement':'Démarrer l’animation';
+ $('regionHarmony').disabled=state.photos.length<2||!meshReady;
+ $('animationAmplitudeVal').textContent=Math.round(amplitude*100)+'%';$('animationAmplitude').setAttribute('aria-valuetext',`${Math.round(amplitude*100)} %`);$('animationSpeedVal').textContent=speed.toFixed(2)+'×';$('animationSpeed').setAttribute('aria-valuetext',`${speed.toFixed(2)} fois`);
+ let description;if(state.pair.status==='unusable')description='Animation bloquée : conserve la photo 1 et reprends la photo 2 selon les indications ci-dessus.';else if(!meshReady)description='Animation indisponible : les deux visages doivent être détectés et le maillage doit rester stable.';else if(!modeReady)description='Choisis Triangles WebGL ou Régions pour lancer automatiquement le morphing animé.';else description=state.mode==='webgl'?'La forme et le mélange oscillent sans déplacer, tourner ni redimensionner le recalage global.':REGION_ANIMATION_HINTS[state.regionAnimationStyle];if(state.pair.status==='adapted'&&meshReady)description+=' Le maillage renforcé compense automatiquement la différence de pose.';if(reduced&&available&&!running)description+=' Le réglage iPhone « Réduire les animations » bloque seulement le démarrage automatique : le bouton reste utilisable.';$('animationState').textContent=running?'Animation active':frozen?'Image figée':state.pair.status==='unusable'?'Photo 2 à reprendre':!meshReady?'Paire non validée':!modeReady?'Mode statique':reduced?'Prête · démarrage manuel':'Prête à démarrer';$('animationHint').textContent=description+(amplitude<=0?' Amplitude 0 % : animation suspendue.':frozen?' Les curseurs conservent les valeurs centrales.':'')
+}
+function smoothstep(value){return value*value*(3-2*value)}
+function smoother(value){const x=clamp(value,0,1);return x*x*x*(x*(x*6-15)+10)}
+function fract(value){return value-Math.floor(value)}
+function seededUnit(index,seed){const value=Math.sin((index+1)*12.9898+(seed+1)*78.233)*43758.5453;return fract(value)}
+function smoothSeeded(t,seed){const index=Math.floor(t),part=smoother(fract(t)),a=seededUnit(index,seed),b=seededUnit(index+1,seed);return a+(b-a)*part}
+function emergingRegionMix(base,amount,activation){return clamp(base+(base>.5?-1:1)*amount*clamp(activation,0,1),0,1)}
+function explosivePulse(position,onset){const distance=fract(position-onset);return smoother(distance/.07)*(1-smoother((distance-.28)/.11))}
+function oscillatedBounded(base,amount,wave,min,max){const low=Math.max(min,base-amount),high=Math.min(max,base+amount);return low+(high-low)*(wave+1)/2}
+function oscillatedRegionMix(base,amount,wave){return oscillatedBounded(base,amount,wave,0,1)}
+function cloneRegionEffect(effect){return effect?{...effect,weights:{...effect.weights}}:null}
+function emptyRegionEffect(){return{style:state.regionAnimationStyle,weights:Object.fromEntries(REGION_KEYS.map(key=>[key,0])),strength:0}}
+function animationSnapshot(mode,values,regionMix,regionBaseValues=null,regionEffect=null){return{mode,values,regionMix,regionBaseValues:regionBaseValues?{...regionBaseValues}:null,regionEffect:cloneRegionEffect(regionEffect),regionAnimationStyle:state.regionAnimationStyle,regionRandomSeed:state.animation.randomSeed,auto:{...state.auto},regionFeather:state.regionFeather,regionHarmony:state.regionHarmony}}
+function applyStyleTransition(frame){
+ const transition=state.animation.styleTransition;if(!transition?.from)return frame;const z=smoother(transition.progress);if(z>=1){state.animation.styleTransition=null;return frame}const from=transition.from,values={...frame.values,a:from.values.a+(frame.values.a-from.values.a)*z},mix={};for(const key of REGION_KEYS)mix[key]=from.regionMix[key]+(frame.regionMix[key]-from.regionMix[key])*z;let effect;if(z<.5){effect=cloneRegionEffect(from.regionEffect);if(effect){effect.renderStyle=effect.renderStyle||effect.style;effect.style=frame.regionEffect?.style||state.regionAnimationStyle;effect.strength*=1-z*2}}else{effect=cloneRegionEffect(frame.regionEffect);if(effect)effect.strength*=z*2-1}return{...frame,values,regionMix:mix,regionEffect:effect}
+}
+function animationFrame(){
+ const animation=state.animation,base=animation.baseControls,p=animation.phase,{amplitude}=animationSettings(),amount=amplitude*smoothstep(animation.ramp);if(!base)return null;
+ if(state.mode==='webgl')return animationSnapshot('webgl',{...base,a:oscillatedBounded(base.a,amount,Math.sin(p*.67+3.4),0,1)},null);
+ const style=state.regionAnimationStyle,weights={},shapeAmount=Math.min(.25,amount*.8),strength=clamp(amount/.45,0,1);let shapeWave=0,explosiveDirection=0;
+ if(style==='progressive'){const u=fract(p*.9/(Math.PI*2)),fade=1-smoother((u-.84)/.16),onsets={leftEye:.02,rightEye:.06,nose:.24,mouth:.4,left:.58,right:.62};for(const key of REGION_KEYS)weights[key]=smoother((u-onsets[key])/.14)*fade;shapeWave=2*smoother((u-.64)/.14)*fade-1}
+ else if(style==='random'){REGION_KEYS.forEach((key,index)=>weights[key]=smoothSeeded(p*.9+index*.137,animation.randomSeed+index*31));shapeWave=2*smoothSeeded(p*.48,animation.randomSeed+311)-1}
+ else if(style==='pulse'){const pulse=(Math.sin(p*.72-.4)+1)/2;REGION_KEYS.forEach(key=>weights[key]=pulse);shapeWave=2*pulse-1}
+ else{const cycle=p*1.35/(Math.PI*2),u=fract(cycle),onsets={nose:0,mouth:.12,leftEye:.28,rightEye:.32,left:.5,right:.54};for(const key of REGION_KEYS)weights[key]=explosivePulse(u,onsets[key]);const cycleIndex=Math.floor(cycle);explosiveDirection=cycleIndex%2?-1:1;shapeWave=explosivePulse(u,.55)}
+ const mix={};for(const key of REGION_KEYS)mix[key]=emergingRegionMix(animation.baseRegionMix[key],amount,weights[key]);const values={...base,a:style==='explosive'?clamp(base.a+shapeAmount*explosiveDirection*shapeWave,0,1):oscillatedBounded(base.a,shapeAmount,shapeWave,0,1)},effect={style,weights,strength};return applyStyleTransition(animationSnapshot('regions',values,mix,base,effect))
+}
+function automaticMotionReduced(){return reducedMotionQuery?.matches===true}
+function cancelPendingAutoStart(){const animation=state.animation;if(animation.autoStartRaf)cancelAnimationFrame(animation.autoStartRaf);animation.autoStartRaf=0}
+function queueAutomaticAnimationStart(allowFrozen=false){
+ const animation=state.animation,{amplitude}=animationSettings(),blockedFrame=animation.frozenFrame&&!allowFrozen;if(animation.exporting||animation.autoStartRaf||animation.userFrozen||animation.running||blockedFrame||!animationModeAvailable()||amplitude<=0||document.hidden||!$('alignStage').classList.contains('active')||automaticMotionReduced()||(state.mode==='webgl'&&(state.webgl?.failed||state.webgl?.lost)))return;
+ animation.autoStartRaf=requestAnimationFrame(()=>{if(!animation.autoStartRaf)return;animation.autoStartRaf=0;const frameStillBlocked=animation.frozenFrame&&!allowFrozen;if(!animation.exporting&&!animation.userFrozen&&!animation.running&&!frameStillBlocked&&animationModeAvailable()&&animationSettings().amplitude>0&&!document.hidden&&$('alignStage').classList.contains('active')&&!automaticMotionReduced()&&!(state.mode==='webgl'&&(state.webgl?.failed||state.webgl?.lost)))startAnimation(true)})
+}
+function maybeAutoStartAnimation(){queueAutomaticAnimationStart(false)}
+function resumeAutomaticAnimation(){queueAutomaticAnimationStart(true)}
+function queueAnimationLoop(){if(state.animation.running&&!state.animation.raf&&!document.hidden&&$('alignStage').classList.contains('active'))state.animation.raf=requestAnimationFrame(animationTick)}
+function animationTick(now){
+ const animation=state.animation;animation.raf=0;if(!animation.running)return;if(!animationModeAvailable()){stopAnimation({render:false});return}
+ const elapsed=Math.min(.1,Math.max(0,(now-animation.lastTick)/1000)),settings=animationSettings();animation.lastTick=now;animation.phase+=elapsed*.65*settings.speed;animation.ramp=Math.min(1,animation.ramp+elapsed/1.2);if(animation.styleTransition)animation.styleTransition.progress=Math.min(1,animation.styleTransition.progress+elapsed/animation.styleTransition.duration);const interval=state.mode==='webgl'?1000/20:1000/8;
+ if(now-animation.lastRender>=interval-1){const frame=animationFrame();if(frame){const info=renderSelected(alignCanvas,{updateUI:false,values:frame.values,regionMix:frame.regionMix,regionBaseValues:frame.regionBaseValues,regionEffect:frame.regionEffect,mode:frame.mode});animation.lastFrame=frame;animation.lastRender=now;
+   if(state.mode==='webgl'&&(!info||info.message.includes('Canvas 2D'))){stopAnimation({freeze:true,render:false});$('modeStatus').textContent='Animation WebGL figée : WebGL indisponible, cette image Canvas est conservée.';return}
+  }}queueAnimationLoop()
+}
+function startAnimation(automatic=false){
+ cancelPendingAutoStart();if(state.animation.exporting||automatic&&(automaticMotionReduced()||(state.mode==='webgl'&&(state.webgl?.failed||state.webgl?.lost))))return;if(!animationModeAvailable()||state.animation.running||animationSettings().amplitude<=0||!$('alignStage').classList.contains('active'))return;const animation=state.animation;animation.userFrozen=false;animation.resumeAfterGame=false;animation.resumeAfterMotion=false;animation.resumeOnPageShow=false;if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}const resuming=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode&&animation.baseControls;if(!resuming){animation.phase=0;animation.ramp=0;animation.baseControls=readControls();animation.baseRegionMix={...state.regionMix};if(state.mode==='regions'&&state.regionAnimationStyle==='random')animation.randomSeed=(animation.randomSeed*1664525+1013904223)>>>0;animation.lastFrame=animationSnapshot(state.mode,{...animation.baseControls},state.mode==='regions'?{...animation.baseRegionMix}:null,state.mode==='regions'?animation.baseControls:null,state.mode==='regions'?emptyRegionEffect():null)}animation.frozenFrame=null;animation.running=true;animation.lastTick=performance.now();animation.lastRender=animation.lastTick-(state.mode==='webgl'?1000/20:1000/8);syncAnimationControls();const {amplitude,speed}=animationSettings(),styleLabel=REGION_ANIMATION_LABELS[state.regionAnimationStyle];$('modeStatus').textContent=resuming?'Animation reprise doucement.':state.mode==='webgl'?`Animation WebGL active · amplitude ${Math.round(amplitude*100)} % · vitesse ${speed.toFixed(2)}×.`:`Animation Régions ${styleLabel.toLowerCase()} active · amplitude ${Math.round(amplitude*100)} % · jusqu’à 8 images/s.`;queueAnimationLoop()
+}
+function stopAnimation({freeze=false,render=true}={}){
+ cancelPendingAutoStart();const animation=state.animation;animation.styleTransition=null;if(!animation.running){if(!freeze&&animation.frozenFrame){animation.frozenFrame=null;animation.baseControls=null;animation.baseRegionMix=null;animation.lastFrame=null;syncAnimationControls();if(render&&state.photos.length>=2&&$('alignStage').classList.contains('active'))scheduleRender()}return}if(animation.raf)cancelAnimationFrame(animation.raf);if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}animation.raf=0;animation.running=false;if(freeze&&animation.lastFrame)animation.frozenFrame=animation.lastFrame;else{animation.frozenFrame=null;animation.baseControls=null;animation.baseRegionMix=null;animation.lastFrame=null;animation.phase=0;animation.ramp=0}syncAnimationControls();if(freeze&&render)$('modeStatus').textContent='Animation figée · Reprendre doucement pour continuer.';if(render&&state.photos.length>=2&&$('alignStage').classList.contains('active'))scheduleRender()
+}
+function frozenRenderOptions(){const frame=state.animation.frozenFrame;return frame&&frame.mode===state.mode?{updateUI:false,values:frame.values,regionMix:frame.regionMix,regionBaseValues:frame.regionBaseValues,regionEffect:frame.regionEffect,mode:frame.mode}:null}
+function scheduleRender(){
+ if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}
+ if(state.animation.running||state.renderQueued)return;state.renderQueued=true;requestAnimationFrame(()=>{state.renderQueued=false;if(!state.animation.running)renderSelected(alignCanvas,frozenRenderOptions()||{})})
+}
+function scheduleInteractiveRender(){
+ if(state.mode==='webgl'||state.mode==='fallback'){scheduleRender();return}
+ if(state.mode==='regions'){
+  if(!state.quickRenderQueued){state.quickRenderQueued=true;requestAnimationFrame(()=>{state.quickRenderQueued=false;if(state.animation.running)return;updateControlLabels(readControls());$('modeStatus').textContent='Ajustement en cours · composition par régions après relâchement.'})}
+  if(state.accurateRenderTimer)clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=setTimeout(()=>{state.accurateRenderTimer=null;scheduleRender()},120);return
+ }
+ if(!state.quickRenderQueued){state.quickRenderQueued=true;requestAnimationFrame(()=>{state.quickRenderQueued=false;if(state.photos.length<2||state.animation.running)return;const v=readControls();renderAlphaFallback(alignCanvas,v);updateControlLabels(v);$('modeStatus').textContent='Aperçu rapide · composition triangulaire après relâchement.'})}
+ if(state.accurateRenderTimer)clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=setTimeout(()=>{state.accurateRenderTimer=null;scheduleRender()},120)
+}
+function updatePreviewSize(){
+ const cssWidth=alignCanvas.clientWidth||PREVIEW_SIZE,dpr=Math.min(window.devicePixelRatio||1,1.25),next=Math.min(PREVIEW_SIZE,Math.max(320,Math.round(cssWidth*dpr)));
+ if(alignCanvas.width!==next||alignCanvas.height!==next){alignCanvas.width=alignCanvas.height=next}if(!state.animation.running)scheduleRender()
+}
+function setMode(mode){
+ if(mode!=='fallback'&&!canMeshMorph())return;
+ const changed=mode!==state.mode,retryWebGL=mode==='webgl'&&(state.webgl?.failed||state.webgl?.lost);if(changed||retryWebGL){stopAnimation({render:false});state.animation.userFrozen=false}
+ if(retryWebGL){state.webgl.abandoned=true;disposeWebGL(state.webgl);state.webgl=null}
+ state.mode=mode;document.querySelectorAll('[data-mode]').forEach(button=>{const active=button.dataset.mode===mode;button.classList.toggle('is-active',active);button.setAttribute('aria-pressed',String(active))});
+ $('regionControls').hidden=mode!=='regions';$('blendLabelText').textContent=mode==='regions'?'Forme':'Mélange';if(mode==='regions'){syncRegionControls();$('modeStatus').textContent='Préparation de la composition par régions…'}syncAnimationControls();scheduleRender();if(changed||retryWebGL)maybeAutoStartAnimation()
+}
+document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>setMode(button.dataset.mode)));
+function setRegionAnimationStyle(style){
+ if(!REGION_ANIMATION_LABELS[style]||style===state.regionAnimationStyle)return;const animation=state.animation,from=animation.lastFrame||animation.frozenFrame||animation.styleTransition?.from||null;stopAnimation({render:false});state.regionAnimationStyle=style;animation.phase=0;animation.ramp=0;animation.userFrozen=false;animation.styleTransition=from?{from,progress:0,duration:.3}:null;syncAnimationControls();if(animationModeAvailable()&&animationSettings().amplitude>0){if(automaticMotionReduced())startAnimation(false);else maybeAutoStartAnimation()}else{animation.styleTransition=null;scheduleRender()}
+}
+document.querySelectorAll('[data-region-animation-style]').forEach(button=>button.addEventListener('click',()=>setRegionAnimationStyle(button.dataset.regionAnimationStyle)));
+function updateRegionControlLabels(){
+ for(const [key,id] of Object.entries(REGION_CONTROL_IDS)){const exact=clamp(state.regionMix[key]*100,0,100),value=Math.round(exact),input=$(id);input.value=String(exact);$(id+'Val').textContent=value+'%';input.setAttribute('aria-valuetext',`${value} % photo 2`)}
+ const feather=Math.round(regionFeatherPixels(SIZE)),harmony=Math.round(state.regionHarmony*100);$('regionFeather').value=Math.round(state.regionFeather*100);$('regionFeatherVal').textContent=feather+' px';$('regionFeather').setAttribute('aria-valuetext',`${feather} pixels`);$('regionHarmony').value=harmony;$('regionHarmonyVal').textContent=harmony+'%';$('regionHarmony').setAttribute('aria-valuetext',`${harmony} %`)
+}
+function syncRegionControls(){updateRegionControlLabels()}
+function applyRegionPreset(name){
+ stopAnimation({render:false});
+ const presets={all1:[0,0,0,0,0,0],all2:[1,1,1,1,1,1],halves:[0,1,0,1,.5,.5],alternate:[0,1,1,0,.25,.75]};
+ if(name==='invert')for(const key of REGION_KEYS)state.regionMix[key]=1-state.regionMix[key];else{const values=presets[name];if(!values)return;REGION_KEYS.forEach((key,index)=>state.regionMix[key]=values[index])}syncRegionControls();scheduleRender();maybeAutoStartAnimation()
+}
+document.querySelectorAll('[data-region-preset]').forEach(button=>button.addEventListener('click',()=>applyRegionPreset(button.dataset.regionPreset)));
+const finishManualAdjustment=()=>{scheduleRender();maybeAutoStartAnimation()};
+function finishGeometryAdjustment(){const values=readControls();if(manualGeometryIsSafe(values)){state.validatedControls={x:values.x,y:values.y,s:values.s,r:values.r};$('modeStatus').textContent='Réglage conservé : contour et maillage restent stables.'}else{const valid=state.validatedControls;$('offsetX').value=valid.x;$('offsetY').value=valid.y;$('scale').value=valid.s*100;$('rotation').value=valid.r*180/Math.PI;updateControlLabels({...readControls(),a:values.a});$('modeStatus').textContent='Réglage annulé : il faisait sortir ou replier une partie du visage.'}scheduleRender();maybeAutoStartAnimation()}
+document.querySelectorAll('[data-region-mix]').forEach(input=>{input.addEventListener('input',()=>{stopAnimation({render:false});state.regionMix[input.dataset.regionMix]=+input.value/100;updateRegionControlLabels();scheduleInteractiveRender()});input.addEventListener('change',finishManualAdjustment)});
+$('regionFeather').addEventListener('input',event=>{stopAnimation({render:false});state.regionFeather=+event.target.value/100;updateRegionControlLabels();scheduleInteractiveRender()});$('regionFeather').addEventListener('change',finishManualAdjustment);
+$('regionHarmony').addEventListener('input',event=>{stopAnimation({render:false});state.regionHarmony=+event.target.value/100;updateRegionControlLabels();if(state.mode==='regions')scheduleInteractiveRender();else scheduleRender()});$('regionHarmony').addEventListener('change',finishManualAdjustment);
+['offsetX','offsetY','scale','rotation'].forEach(id=>{$(id).addEventListener('input',()=>{stopAnimation({render:false});scheduleInteractiveRender()});$(id).addEventListener('change',finishGeometryAdjustment)});$('blend').addEventListener('input',()=>{stopAnimation({render:false});scheduleInteractiveRender()});$('blend').addEventListener('change',finishManualAdjustment);
+$('toggleAnimation').addEventListener('click',()=>{if(state.animation.running){state.animation.userFrozen=true;stopAnimation({freeze:true})}else{state.animation.userFrozen=false;startAnimation()}});
+function animationSettingChanged(event){if(state.animation.running&&animationSettings().amplitude<=0){stopAnimation({freeze:true});$('modeStatus').textContent='Animation figée : amplitude 0 %.'}else if(event.target.id==='animationAmplitude'&&state.animation.frozenFrame){stopAnimation();$('modeStatus').textContent='Amplitude modifiée · nouveau départ depuis les valeurs centrales.'}else syncAnimationControls()}
+for(const id of ['animationAmplitude','animationSpeed']){$(id).addEventListener('input',animationSettingChanged);$(id).addEventListener('change',()=>{syncAnimationControls();maybeAutoStartAnimation()})}
+
+function finalImage(snapshot=state.animation.frozenFrame){
+ const c=makeCanvas(SIZE),previous={auto:state.auto,regionFeather:state.regionFeather,regionHarmony:state.regionHarmony};
+ try{if(snapshot?.auto)state.auto={...snapshot.auto};if(Number.isFinite(snapshot?.regionFeather))state.regionFeather=snapshot.regionFeather;if(Number.isFinite(snapshot?.regionHarmony))state.regionHarmony=snapshot.regionHarmony;renderSelected(c,{updateUI:false,values:snapshot?.values||null,regionMix:snapshot?.regionMix||null,regionBaseValues:snapshot?.regionBaseValues||null,regionEffect:snapshot?.regionEffect||null,mode:snapshot?.mode||state.mode});return c}
+ finally{state.auto=previous.auto;state.regionFeather=previous.regionFeather;state.regionHarmony=previous.regionHarmony}
+}
+async function buildPuzzle(){
+ if(state.animation.exporting)return;if(!canMeshMorph()){$('modeStatus').textContent=state.pair.status==='unusable'?'Création bloquée : conserve la photo 1 et reprends uniquement le visage 2.':'Création indisponible : capture d’abord deux visages détectés.';(state.pair.status==='unusable'?$('retakePhoto2'):$('alignStatus')).focus();return}const animation=state.animation,pendingStart=!!animation.autoStartRaf;cancelPendingAutoStart();const snapshot=animation.running?animation.lastFrame:animation.frozenFrame||animation.styleTransition?.from||animation.lastFrame;animation.resumeAfterGame=animation.running||pendingStart;if(animation.running)stopAnimation({freeze:true,render:false});animation.exporting=true;const controls=[...document.querySelectorAll('#alignStage button,#alignStage input')],disabled=controls.map(control=>control.disabled);controls.forEach(control=>control.disabled=true);$('modeStatus').textContent='Création du visage 768 × 768…';await new Promise(resolve=>requestAnimationFrame(resolve));let created=false;
+ try{state.solutionURL=finalImage(snapshot).toDataURL('image/jpeg',.92);state.tiles=Array.from({length:16},(_,i)=>i);state.blank=15;showStage('gameStage');createTiles();shuffle(180);created=true}
+ catch(e){console.error(e);$('modeStatus').textContent='Création impossible : '+(e.message||e)}finally{state.animation.exporting=false;controls.forEach((control,index)=>control.disabled=disabled[index]);if(!created&&state.animation.resumeAfterGame)resumeAutomaticAnimation()}
+}
+function createTiles(){const root=$('puzzle');root.innerHTML='';for(let i=0;i<15;i++){const el=document.createElement('div');el.className='tile';el.dataset.tile=i;el.onclick=()=>moveTile(i);root.appendChild(el)}layout()}
+function layout(){const root=$('puzzle'),w=root.clientWidth||480,ts=w/GRID;root.querySelectorAll('.tile').forEach(el=>{const tile=+el.dataset.tile,pos=state.tiles.indexOf(tile),r=Math.floor(pos/GRID),c=pos%GRID,sr=Math.floor(tile/GRID),sc=tile%GRID;Object.assign(el.style,{width:ts+'px',height:ts+'px',backgroundImage:`url(${state.solutionURL})`,backgroundSize:`${w}px ${w}px`,backgroundPosition:`${-sc*ts}px ${-sr*ts}px`,transform:`translate(${c*ts}px,${r*ts}px)`,visibility:state.showing?'hidden':'visible'})});$('win').classList.toggle('show',isSolved()&&!state.showing)}
+function adjacent(a,b){return Math.abs(Math.floor(a/GRID)-Math.floor(b/GRID))+Math.abs(a%GRID-b%GRID)===1}
+function moveTile(tile){if(state.showing)return;const p=state.tiles.indexOf(tile),b=state.tiles.indexOf(state.blank);if(!adjacent(p,b))return;[state.tiles[p],state.tiles[b]]=[state.tiles[b],state.tiles[p]];layout()}
+function shuffle(n=150){state.showing=false;$('showSolution').textContent='Voir la solution';let prev=-1;for(let k=0;k<n;k++){const b=state.tiles.indexOf(state.blank),opts=[];for(let i=0;i<16;i++)if(adjacent(i,b)&&i!==prev)opts.push(i);const p=opts[Math.floor(Math.random()*opts.length)];prev=b;[state.tiles[p],state.tiles[b]]=[state.tiles[b],state.tiles[p]]}$('puzzle').style.background='#070707';layout()}
+function isSolved(){return state.tiles.every((v,i)=>v===i)}
+function showSolution(){state.showing=!state.showing;$('puzzle').style.background=state.showing?`#000 url(${state.solutionURL}) center/cover no-repeat`:'#070707';$('showSolution').textContent=state.showing?'Revenir au jeu':'Voir la solution';layout()}
+function resetAll(preserveAnimationSettings=false){
+ stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,autoStartRaf:0,exporting:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();closeSegmenter();state.photos=[];state.marks=[];state.headRings=[];state.step=0;state.pair={status:'empty',score:null,reasons:[],advice:[],metrics:null,hint:''};state.photoVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.morphTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTrianglesVersion=-1;state.auto={scale:1,rot:0,tx:0,ty:0};state.validatedControls={x:0,y:0,s:1,r:0};state.buffers.clear();invalidateFaceLighting();
+ if(!preserveAnimationSettings){state.regionAnimationStyle='progressive';state.regionHarmony=0;state.animation.randomSeed=137;$('animationAmplitude').value=45;$('animationSpeed').value=110}
+ ['offsetX','offsetY','rotation'].forEach(id=>$(id).value=0);$('scale').value=100;$('blend').value=50;
+ captureBtn.textContent='Prendre le visage 1';for(const id of ['thumb1','thumb2','sourceThumb1','sourceThumb2'])$(id).style.backgroundImage='none';showStage('captureStage');
+ status.textContent=state.detectorState==='ready'?'Détecteur prêt. Active la caméra.':state.detectorState==='failed'?'Détecteur indisponible : recharge la page pour activer le contrôle de compatibilité.':'Chargement du détecteur de visage…';syncRegionControls();syncAnimationControls();syncPairUI()
+}
+function retakePhoto2(){
+ const guidance=state.pair.advice?.slice(0,2).join(' ')||'Reproduis le cadrage, l’angle et l’expression de la photo 1.';stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();closeSegmenter();state.photos.length=Math.min(1,state.photos.length);state.marks.length=Math.min(1,state.marks.length);state.headRings.length=Math.min(1,state.headRings.length);state.step=1;state.pair={status:'capturing2',score:null,reasons:[],advice:[],metrics:null,hint:`Photo 1 conservée. ${guidance}`};state.photoVersion++;state.auto={scale:1,rot:0,tx:0,ty:0};state.validatedControls={x:0,y:0,s:1,r:0};state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.morphTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTrianglesVersion=-1;state.regionCache=null;state.solutionURL='';state.buffers.clear();invalidateFaceLighting();if(state.webgl)state.webgl.indexVersion='';for(const id of ['thumb2','sourceThumb2'])$(id).style.backgroundImage='none';captureBtn.textContent='Prendre le visage 2';showStage('captureStage');syncPairUI();updateModeAvailability();status.textContent=state.pair.hint;status.focus();ensureSegmenter();startCamera()
+}
+async function loadDemoPortrait(src){
+ const image=await new Promise((resolve,reject)=>{const element=new Image();element.decoding='async';element.onload=()=>resolve(element);element.onerror=()=>reject(new Error(`Image de démonstration introuvable : ${src}`));element.src=src}),canvas=makeCanvas(SIZE),ctx=canvas.getContext('2d'),side=Math.min(image.naturalWidth,image.naturalHeight),sx=(image.naturalWidth-side)/2,sy=(image.naturalHeight-side)/2;ctx.drawImage(image,sx,sy,side,side,0,0,SIZE,SIZE);return canvas
+}
+async function loadDemoLandmarks(src){const response=await fetch(src,{cache:'no-store'});if(!response.ok)throw new Error(`Repères de démonstration indisponibles (${response.status})`);return response.json()}
+async function loadDemoPair(){
+ await landmarkerReady;stopCamera();const base='../Make%20puzzle%20-%20from%20Iphone/',[photos,fixture]=await Promise.all([Promise.all([loadDemoPortrait(base+'visage_homme.png'),loadDemoPortrait(base+'visage_femme.png')]),loadDemoLandmarks('./qa/portrait-landmarks.json?v=20260817')]),marks=[fixture['visage_homme.png'],fixture['visage_femme.png']];if(state.meshTriangles.length<800||marks.some(mark=>!mark||mark.length<478))throw new Error('Maillage de démonstration incomplet');status.textContent='Analyse des têtes et des cheveux de démonstration…';const headRings=[];for(let index=0;index<photos.length;index++)headRings[index]=await extractHeadRing(photos[index],marks[index]);closeSegmenter();state.photos=photos;state.marks=marks;state.headRings=headRings;state.step=0;state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;invalidateFaceLighting();photos.forEach((photo,index)=>{const url=`url(${photo.toDataURL('image/jpeg',.9)})`;$('thumb'+(index+1)).style.backgroundImage=url;$('sourceThumb'+(index+1)).style.backgroundImage=url});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();syncPairUI();autoAlign({activate:false,render:false});updateModeAvailability();if(canMeshMorph()){setMode('webgl');maybeAutoStartAnimation()}else scheduleRender()
+}
+$('startCamera').onclick=startCamera;$('capture').onclick=takePhoto;$('switchCamera').onclick=()=>{state.facing=state.facing==='user'?'environment':'user';startCamera()};$('resetAll').onclick=()=>resetAll(false);
+$('backCapture').onclick=()=>resetAll(true);$('retakePhoto2').onclick=retakePhoto2;$('autoAlign').onclick=()=>autoAlign();$('makePuzzle').onclick=buildPuzzle;$('shuffle').onclick=()=>shuffle(180);$('showSolution').onclick=showSolution;
+$('backAlign').onclick=()=>{state.showing=false;showStage('alignStage');updatePreviewSize();scheduleRender();if(state.animation.resumeAfterGame){state.animation.userFrozen=false;resumeAutomaticAnimation()}};
+window.addEventListener('resize',()=>requestAnimationFrame(()=>{if($('alignStage').classList.contains('active'))updatePreviewSize();layout()}));
+document.addEventListener('visibilitychange',()=>{const animation=state.animation;if(document.hidden){if(animation.raf)cancelAnimationFrame(animation.raf);animation.raf=0;animation.lastTick=0;if($('captureStage').classList.contains('active'))stopCamera()}else if($('captureStage').classList.contains('active')&&!state.stream){captureBtn.disabled=true;status.textContent=state.detectorState==='failed'?'Détecteur indisponible : recharge la page avant de reprendre les photos.':`Caméra arrêtée. Appuie sur « Activer la caméra » pour continuer ${state.step?'le visage 2':'le visage 1'}.`}else if(animation.resumeOnPageShow&&$('alignStage').classList.contains('active')){animation.resumeOnPageShow=false;if(animation.running){animation.lastTick=performance.now();queueAnimationLoop()}else if(animation.frozenFrame)resumeAutomaticAnimation();else maybeAutoStartAnimation()}else if(animation.running&&$('alignStage').classList.contains('active')){animation.lastTick=performance.now();queueAnimationLoop()}});
+window.addEventListener('pagehide',()=>{const animation=state.animation;animation.resumeOnPageShow=animation.running||!!animation.autoStartRaf;cancelPendingAutoStart();if(animation.raf)cancelAnimationFrame(animation.raf);animation.raf=0;animation.lastTick=0;stopCamera()});
+window.addEventListener('pageshow',event=>{const animation=state.animation;if(event.persisted&&$('captureStage').classList.contains('active')&&!state.stream){captureBtn.disabled=true;status.textContent=state.detectorState==='failed'?'Détecteur indisponible : recharge la page avant de reprendre les photos.':`Caméra arrêtée. Appuie sur « Activer la caméra » pour continuer ${state.step?'le visage 2':'le visage 1'}.`}if(animation.resumeOnPageShow&&!document.hidden&&$('alignStage').classList.contains('active')){animation.resumeOnPageShow=false;if(animation.running){animation.lastTick=performance.now();queueAnimationLoop()}else if(animation.frozenFrame)resumeAutomaticAnimation();else maybeAutoStartAnimation()}});
+function reducedMotionChanged(event){const animation=state.animation;if(event.matches){const shouldResume=animation.running||!!animation.autoStartRaf;cancelPendingAutoStart();if(animation.running)stopAnimation({freeze:true});animation.resumeAfterMotion=shouldResume&&!animation.userFrozen;if(animation.resumeAfterMotion)$('modeStatus').textContent='Animation suspendue par le réglage iPhone « Réduire les animations ».';syncAnimationControls()}else{syncAnimationControls();if(animation.resumeAfterMotion||animation.resumeAfterGame)resumeAutomaticAnimation();else maybeAutoStartAnimation()}}
+if(reducedMotionQuery){if(reducedMotionQuery.addEventListener)reducedMotionQuery.addEventListener('change',reducedMotionChanged);else reducedMotionQuery.addListener?.(reducedMotionChanged)}
+syncRegionControls();syncAnimationControls();syncPairUI();
+if(new URLSearchParams(location.search).get('demo')==='1')loadDemoPair().catch(error=>{console.error(error);status.textContent='Démonstration indisponible : '+(error.message||error)});
+</script>
+</body>
+</html>
