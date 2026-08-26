@@ -1,9 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 
 const pagePath = new URL('../Taquin deux visages interpolés/v15-multiview.html', import.meta.url);
+const alphaPath = new URL('../Taquin deux visages interpolés/V15_alpha.html', import.meta.url);
 const page = await readFile(pagePath, 'utf8');
+const alphaBytes = await readFile(alphaPath);
+const alphaPage = alphaBytes.toString('utf8');
 
 function moduleSource(html) {
   const match = html.match(/<script type="module">([\s\S]*?)<\/script>/);
@@ -14,6 +18,16 @@ function moduleSource(html) {
 test('v15 inline module has valid JavaScript syntax', () => {
   const source = moduleSource(page).replace(/^import\s+.*?;\s*$/m, '');
   assert.doesNotThrow(() => new Function(source));
+});
+
+test('V15_alpha is the byte-exact v15 from commit 77e715e', () => {
+  assert.equal(
+    createHash('sha256').update(alphaBytes).digest('hex'),
+    '6c37a36791e0a55f36f04fc2f544747f12ad51d5d1531065e05eb9da82a65086',
+  );
+  const source = moduleSource(alphaPage).replace(/^import\s+.*?;\s*$/m, '');
+  assert.doesNotThrow(() => new Function(source));
+  assert.match(alphaPage, /const desiredMode=\['canvas','webgl','regions'\]\.includes\(previousMode\)\?previousMode:'canvas'/);
 });
 
 test('v15 contains unique element identifiers and all static lookups resolve', () => {
