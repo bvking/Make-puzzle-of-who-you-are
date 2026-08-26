@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#050505">
 <title>Taquin — deux visages</title>
 <style>
@@ -14,7 +14,7 @@ main{width:min(100%,520px);margin:auto;padding:12px 0 28px}
 h1{font-size:21px;margin:4px 0}.lead{margin:0 0 14px;color:#b8b8b8;font-size:13px;line-height:1.35}
 .stage{display:none}.stage.active{display:block}.card{background:#111;border:1px solid #2b2b2b;border-radius:18px;padding:12px;box-shadow:0 10px 30px #0008}
 .viewport{position:relative;aspect-ratio:1;overflow:hidden;border-radius:14px;background:#000;touch-action:none}
-video,.viewport canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}video{transform:scaleX(-1)}
+video,.viewport canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}video.is-mirrored{transform:scaleX(-1)}
 .guide{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 31% 42% at 50% 46%,transparent 68%,rgba(0,0,0,.68) 69%);border:1px solid #ffffff20}
 .guide:before,.guide:after{content:"";position:absolute;left:33%;right:33%;height:1px;background:#68d8ffcc}.guide:before{top:39%}.guide:after{top:52%}
 .controls{display:grid;gap:9px;margin-top:12px}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
@@ -30,22 +30,44 @@ label{display:grid;grid-template-columns:92px 1fr 46px;gap:8px;align-items:cente
 input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-numeric:tabular-nums}
 .thumbrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.thumb{aspect-ratio:1;border-radius:10px;background:#000 center/cover no-repeat;border:1px solid #333}
 .puzzle{position:relative;aspect-ratio:1;background:#070707;border-radius:14px;overflow:hidden;touch-action:none}
-.tile{position:absolute;background-repeat:no-repeat;border:1px solid rgba(255,255,255,.28);transition:transform .16s ease;border-radius:4px}
+.tile{position:absolute;padding:0;min-height:0;background-repeat:no-repeat;border:1px solid rgba(255,255,255,.28);transition:transform .16s ease;border-radius:4px}
 .win{padding:10px 4px 2px;text-align:center;font-weight:800;color:#9fffc0;display:none}.win.show{display:block}
-.note{font-size:12px;color:#aaa;line-height:1.4;margin:10px 2px 0}.badge{display:inline-block;border:1px solid #3b3b3b;border-radius:999px;padding:4px 8px;font-size:11px;color:#bbb;margin-bottom:8px}
+.note{font-size:12px;color:#aaa;line-height:1.4;margin:10px 2px 0}.note a{color:#9fe7ff}.badge{display:inline-block;border:1px solid #3b3b3b;border-radius:999px;padding:4px 8px;font-size:11px;color:#bbb;margin-bottom:8px}
+.limitation{margin:0 0 12px;padding:11px 12px;border:1px solid #8b7337;border-radius:12px;background:#181306;color:#f3e7c3;font-size:12px;line-height:1.45}.limitation strong{display:block;margin-bottom:4px;color:#ffe29a;font-size:13px}.limitation p{margin:0}.limitation p+p{margin-top:6px}
+.scan-guide{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);max-width:92%;padding:8px 11px;border-radius:999px;background:#050505d9;border:1px solid #9fe7ff80;color:#e9fbff;font-size:12px;font-weight:750;text-align:center;pointer-events:none}.scan-guide[data-level="warn"]{border-color:#ffd37a;color:#ffe8b6}.scan-guide[data-level="good"]{border-color:#83f5ae;color:#dfffea}
+.scan-session{display:grid;gap:8px;padding:10px;border:1px solid #303d43;border-radius:12px;background:#071015}.scan-session strong{font-size:13px}.scan-coverage{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.scan-cell{height:8px;border-radius:999px;background:#252b2e}.scan-cell.is-filled{background:#7cddff;box-shadow:0 0 8px #7cddff66}.scan-cell.is-selected{outline:2px solid #fff;outline-offset:1px}.scan-summary{font-size:12px;color:#b9c9d0}.scan-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.scan-actions .wide{grid-column:1/-1}.file-button{display:grid;place-items:center;min-height:46px;padding:10px 12px;border:1px solid #454545;border-radius:10px;background:#171717;color:#fff;font:inherit;font-weight:700;text-align:center;cursor:pointer}.file-button.is-disabled{opacity:.45;cursor:default}.file-button input{position:absolute;inline-size:1px;block-size:1px;opacity:0;pointer-events:none}.capture-options{display:grid;gap:8px;padding:9px;border:1px solid #272727;border-radius:10px}.capture-options label{display:flex;grid-template-columns:none;gap:8px;align-items:flex-start;color:#cfd8dc}.capture-options input{margin-top:3px}.viewpoint-controls{display:grid;gap:8px;padding:10px;border:1px solid #315465;border-radius:12px;background:#08141a}.viewpoint-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.viewpoint-controls label{grid-template-columns:105px 1fr 48px}.viewpoint-status{font-size:12px;color:#b8c8ce}.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+@media (max-width:420px){.scan-actions{grid-template-columns:1fr}.scan-actions .wide{grid-column:auto}.viewpoint-presets{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <main>
-<span class="badge">Morphing de portrait · version 14</span>
+<span class="badge">Morphing multivue · version 15 candidate</span>
 <h1>Taquin — deux visages</h1>
-<p class="lead">L’application transforme ensemble les traits, le contour de la tête et les cheveux, puis raccorde le portrait entier jusqu’aux bords de l’image.</p>
+<p class="lead">Enregistre plusieurs angles de chaque visage. L’application retient les vues les plus nettes et recherche une perspective commune.</p>
+<aside class="limitation" role="note" aria-label="Objectif demandé et limite actuelle">
+<strong>Objectif demandé — pas encore atteint pour des perspectives différentes</strong>
+<p>Réaliser un morphing entre deux captations du même visage ou de deux visages différents, même si la perspective, l’expression, l’échelle ou la lumière changent.</p>
+<p><b>Limite actuelle :</b> cette candidate ne reconstruit pas un visage sous un nouvel angle. Elle fonctionne seulement si les deux captations contiennent au moins une perspective suffisamment proche. Elle associe alors ces deux vues et corrige l’échelle, la rotation et une partie des différences de lumière.</p>
+</aside>
 <section id="captureStage" class="stage active"><div class="card">
-<div class="viewport"><video id="video" playsinline muted></video><div class="guide"></div></div>
-<div class="controls"><div class="row"><button id="startCamera" type="button">Activer la caméra</button><button id="capture" type="button" disabled>Prendre le visage 1</button></div>
-<div class="row"><button id="switchCamera" type="button" class="secondary">Changer caméra</button><button id="resetAll" type="button" class="danger">Recommencer</button></div></div>
+<div class="viewport"><video id="video" playsinline muted></video><div class="guide"></div><div id="scanGuide" class="scan-guide"><span id="scanGuideVisual" aria-hidden="true">Cadrez tout le visage</span><span id="scanAnnouncement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></span></div></div>
+<div class="controls">
+<div class="scan-session" aria-label="Progression de la captation multivue">
+<strong id="scanTitle" tabindex="-1">Visage A · première captation</strong>
+<div id="scanCoverage" class="scan-coverage" aria-hidden="true"></div>
+<span id="scanSummary" class="scan-summary" role="progressbar" aria-valuemin="0" aria-valuemax="7" aria-valuenow="0">Aucune vue enregistrée.</span>
+</div>
+<div class="scan-actions">
+<button id="startCamera" type="button">Activer la caméra</button><button id="capture" type="button" disabled>Démarrer le scan A</button>
+<button id="stopScan" type="button" class="secondary" disabled>Terminer ce scan</button><button id="quickPhoto" type="button" class="secondary" disabled>Photo unique</button>
+<label class="file-button wide">Importer plusieurs photos<input id="importPhotos" type="file" accept="image/*" multiple></label>
+<button id="switchCamera" type="button" class="secondary">Changer caméra</button><button id="resetAll" type="button" class="danger">Recommencer</button>
+</div>
+<div class="capture-options"><label><input id="preserveExpression" type="checkbox" checked>Conserver les différences d’expression entre les deux visages.</label></div>
+</div>
 <div id="captureStatus" class="status" role="status" aria-live="polite" tabindex="-1">Chargement du détecteur de visage…</div>
 <div class="thumbrow"><div id="thumb1" class="thumb" role="img" aria-label="Aperçu de la photo 1"></div><div id="thumb2" class="thumb" role="img" aria-label="Aperçu de la photo 2"></div></div>
+<p class="note">Les images sont analysées uniquement dans ce navigateur : aucune vidéo n’est enregistrée ni envoyée. En cas d’incompatibilité, la <a href="./index.html">version 13 stable à photo unique</a> reste disponible.</p>
 </div></section>
 <section id="alignStage" class="stage"><div class="card">
 <div class="viewport"><canvas id="alignCanvas" role="img" aria-label="Aperçu de la composition des deux visages">Aperçu de la composition des deux visages.</canvas><span id="animationBadge" class="animation-badge" aria-hidden="true" hidden>MORPHING ACTIF</span></div>
@@ -56,6 +78,13 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 </div>
 <div class="controls">
 <div class="source-key" role="group" aria-label="Photos sources"><div class="source-card"><div id="sourceThumb1" class="source-thumb" role="img" aria-label="Photo source 1"></div><span>Photo 1</span></div><div class="source-card"><div id="sourceThumb2" class="source-thumb" role="img" aria-label="Photo source 2"></div><span>Photo 2</span></div></div>
+<div id="viewpointControls" class="viewpoint-controls" hidden>
+<span class="region-title">Choisir une perspective commune parmi les vues enregistrées</span>
+<label>Perspective <input id="viewpoint" type="range" min="-100" max="100" value="0"><span id="viewpointVal" class="value">Face</span></label>
+<div class="viewpoint-presets"><button type="button" class="secondary" data-viewpoint="-60">Vue gauche</button><button type="button" class="secondary" data-viewpoint="0">Vue de face</button><button type="button" class="secondary" data-viewpoint="60">Vue droite</button></div>
+<button id="applyViewpoint" type="button" class="secondary">Appliquer cette perspective</button>
+<span id="viewpointStatus" class="viewpoint-status"></span>
+</div>
 <div id="modePicker" class="mode-picker" role="group" aria-label="Mode de composition">
 <button type="button" class="secondary is-active" data-mode="canvas" aria-pressed="true">Triangles 2D</button>
 <button type="button" class="secondary" data-mode="webgl" aria-pressed="false">Triangles WebGL</button>
@@ -113,11 +142,12 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 </div></section>
 </main>
 <script type="module">
+import {analyzePhotometry,automaticHarmony,captureQuality,chooseMatchedPair,commonYawRange,derivePose,laplacianVariance,pairCost,POSE_BINS,retainBestByPose,sessionCoverage} from './multiview-core.mjs';
 const MEDIAPIPE_MODULE="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs";
 const MEDIAPIPE_WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm";
 const FACE_MODEL="https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
-const PORTRAIT_MODEL="https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/latest/selfie_multiclass_256x256.tflite";
-const SIZE=768,PREVIEW_SIZE=384,GRID=4,$=id=>document.getElementById(id),stages=['captureStage','alignStage','gameStage'];
+const PORTRAIT_MODEL="https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/1/selfie_segmenter.tflite";
+const SIZE=768,ANALYSIS_SIZE=512,PREVIEW_SIZE=384,GRID=4,$=id=>document.getElementById(id),stages=['captureStage','alignStage','gameStage'];
 const FALLBACK_FACE_OVAL=[10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
 const REGION_IDS={
  eyes:[[33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246],[362,382,381,380,374,373,390,249,263,466,388,387,386,385,384,398]],
@@ -136,9 +166,10 @@ const REGION_ANIMATION_LABELS={progressive:'Progressif',random:'Aléatoire',puls
 const REGION_ANIMATION_HINTS={progressive:'Les yeux apparaissent, puis le nez, la bouche et enfin le contour.',random:'Chaque trait apparaît indépendamment avec des transitions aléatoires lissées.',pulse:'Tous les traits respirent ensemble dans une pulsation lente.',explosive:'Les traits émergent rapidement du centre vers la bouche, les yeux puis le contour.'};
 const REGION_MOTION_IDS=[10,168,6,1,2,13,14,17,152,33,133,159,145,362,263,386,374,61,291,98,327];
 const state={
- stream:null,facing:'user',photos:[],marks:[],step:0,tiles:[],blank:15,solutionURL:'',showing:false,
- landmarker:null,detectorState:'loading',cameraRequest:0,auto:{scale:1,rot:0,tx:0,ty:0},
+ stream:null,facing:'user',activeFacing:'user',photos:[],marks:[],step:0,tiles:[],blank:15,solutionURL:'',showing:false,candidateId:0,
+ landmarker:null,landmarkerCtor:null,imageLandmarker:null,imageLandmarkerPromise:null,imageLandmarkerGeneration:0,videoDetectorNeedsReset:false,detectorState:'loading',cameraRequest:0,operationGeneration:0,detectTimestamp:0,detectorDelegate:'',auto:{scale:1,rot:0,tx:0,ty:0},
  segmenter:null,segmenterCtor:null,visionFileset:null,segmenterPromise:null,segmenterGeneration:0,segmentationState:'loading',headRings:[],headTopology:{version:-1,amount:0,metrics:null},
+ sessions:[[],[]],selectedPair:null,commonViewRange:null,scan:{running:false,raf:0,generation:0,startedAt:0,lastSampleAt:0,sampling:false,duration:12500,lastAnnouncementAt:0},applyingPair:false,
  pair:{status:'empty',score:null,reasons:[],advice:[],metrics:null,hint:''},
  mode:'canvas',regionMix:{left:0,right:0,leftEye:1,rightEye:1,nose:0,mouth:1},regionFeather:.5,regionHarmony:0,regionAnimationStyle:'progressive',regionCache:null,
  meshTriangles:[],morphTriangles:[],morphTrianglesVersion:-1,morphTopologyVersion:0,previewTriangles:[],previewTrianglesVersion:-1,validatedControls:{x:0,y:0,s:1,r:0},faceOval:FALLBACK_FACE_OVAL.slice(),
@@ -186,13 +217,21 @@ function orderedLoop(connections){
  }
  return path.length>=20?path:FALLBACK_FACE_OVAL.slice()
 }
-function landmarkerOptions(delegate){
+function landmarkerOptions(delegate,runningMode='VIDEO'){
  const baseOptions={modelAssetPath:FACE_MODEL};if(delegate)baseOptions.delegate=delegate;
- return{baseOptions,runningMode:'IMAGE',numFaces:1,minFaceDetectionConfidence:.55,minFacePresenceConfidence:.55,minTrackingConfidence:.5}
+ return{baseOptions,runningMode,numFaces:2,minFaceDetectionConfidence:.55,minFacePresenceConfidence:.55,minTrackingConfidence:.5,outputFaceBlendshapes:true,outputFacialTransformationMatrixes:true}
+}
+async function ensureImageLandmarker(){
+ if(state.imageLandmarker)return state.imageLandmarker;if(state.imageLandmarkerPromise)return state.imageLandmarkerPromise;if(!state.landmarkerCtor||!state.visionFileset)return null;const generation=state.imageLandmarkerGeneration;let promise=null;promise=state.landmarkerCtor.createFromOptions(state.visionFileset,landmarkerOptions('CPU','IMAGE')).then(detector=>{if(generation!==state.imageLandmarkerGeneration){detector.close();return null}return state.imageLandmarker=detector}).finally(()=>{if(state.imageLandmarkerPromise===promise)state.imageLandmarkerPromise=null});state.imageLandmarkerPromise=promise;return promise
+}
+function closeImageLandmarker(){state.imageLandmarkerGeneration++;try{state.imageLandmarker?.close()}catch(error){console.warn(error)}state.imageLandmarker=null;state.imageLandmarkerPromise=null}
+function cancelPendingOperations(){state.operationGeneration++;state.applyingPair=false;closeImageLandmarker();const align=$('alignStage');align.inert=false;align.removeAttribute('aria-busy');disableViewpointControls(false)}
+async function resetVideoLandmarkerIfNeeded(){
+ if(!state.videoDetectorNeedsReset)return state.landmarker;const generation=state.operationGeneration,previous=state.landmarker;state.videoDetectorNeedsReset=false;captureBtn.disabled=true;$('quickPhoto').disabled=true;status.textContent='Réinitialisation du suivi pour le visage B…';try{let detector=null;try{detector=await state.landmarkerCtor.createFromOptions(state.visionFileset,landmarkerOptions(state.detectorDelegate||'GPU'))}catch(error){detector=await state.landmarkerCtor.createFromOptions(state.visionFileset,landmarkerOptions('CPU'));if(generation===state.operationGeneration)state.detectorDelegate='CPU'}if(generation!==state.operationGeneration){detector.close();state.videoDetectorNeedsReset=true;return previous}state.landmarker=detector;previous?.close();state.detectTimestamp=0;state.detectorState='ready';updateScanUI();return detector}catch(error){console.error(error);state.videoDetectorNeedsReset=true;state.landmarker=previous;state.detectorState=previous?'ready':'failed';updateScanUI();return previous}
 }
 function ensureSegmenter(){
  if(state.segmenter)return Promise.resolve(state.segmenter);if(state.segmenterPromise)return state.segmenterPromise;if(state.segmentationState==='failed')return Promise.resolve(null);if(!state.segmenterCtor||!state.visionFileset){state.segmentationState='failed';return Promise.resolve(null)}
- const generation=state.segmenterGeneration;state.segmentationState='loading';let promise=null;promise=state.segmenterCtor.createFromOptions(state.visionFileset,{baseOptions:{modelAssetPath:PORTRAIT_MODEL,delegate:'CPU'},runningMode:'IMAGE',outputCategoryMask:true,outputConfidenceMasks:false}).then(segmenter=>{if(generation!==state.segmenterGeneration){segmenter.close();return null}state.segmenter=segmenter;state.segmentationState='ready';return segmenter}).catch(error=>{console.warn('Segmentation de silhouette indisponible, contour géométrique utilisé.',error);if(generation===state.segmenterGeneration)state.segmentationState='failed';return null}).finally(()=>{if(state.segmenterPromise===promise)state.segmenterPromise=null});state.segmenterPromise=promise;return promise
+ const generation=state.segmenterGeneration;state.segmentationState='loading';let promise=null;promise=state.segmenterCtor.createFromOptions(state.visionFileset,{baseOptions:{modelAssetPath:PORTRAIT_MODEL,delegate:'CPU'},runningMode:'IMAGE',outputCategoryMask:true,outputConfidenceMasks:true}).then(segmenter=>{if(generation!==state.segmenterGeneration){segmenter.close();return null}state.segmenter=segmenter;state.segmentationState='ready';return segmenter}).catch(error=>{console.warn('Segmentation de silhouette indisponible, contour géométrique utilisé.',error);if(generation===state.segmenterGeneration){state.segmentationState='failed';document.documentElement.dataset.portraitSegmentation='model-error';document.documentElement.dataset.portraitSegmentationError=String(error?.message||error).slice(0,240)}return null}).finally(()=>{if(state.segmenterPromise===promise)state.segmenterPromise=null});state.segmenterPromise=promise;return promise
 }
 function closeSegmenter(){state.segmenterGeneration++;try{state.segmenter?.close()}catch(error){console.warn(error)}state.segmenter=null;state.segmenterPromise=null;if(state.segmenterCtor&&state.visionFileset)state.segmentationState='idle'}
 async function initLandmarker(){
@@ -205,10 +244,11 @@ async function initLandmarker(){
   const brows=[idsFromConnections(FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW),idsFromConnections(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW)],mouth=idsFromConnections(FaceLandmarker.FACE_LANDMARKS_LIPS);
   if(eyes.every(ids=>ids.length>=12)&&brows.every(ids=>ids.length>=8)){REGION_IDS.eyes=eyes;REGION_IDS.brows=brows}if(mouth.length>=30)REGION_IDS.mouth=[mouth];
   const vision=await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM);
-  state.segmenterCtor=ImageSegmenter;state.visionFileset=vision;
-  state.landmarker=await FaceLandmarker.createFromOptions(vision,landmarkerOptions());
+  state.segmenterCtor=ImageSegmenter;state.landmarkerCtor=FaceLandmarker;state.visionFileset=vision;
+  try{state.landmarker=await FaceLandmarker.createFromOptions(vision,landmarkerOptions('GPU'));state.detectorDelegate='GPU'}
+  catch(gpuError){console.warn('Accélération GPU indisponible, reprise sur CPU.',gpuError);state.landmarker=await FaceLandmarker.createFromOptions(vision,landmarkerOptions('CPU'));state.detectorDelegate='CPU'}
   state.detectorState='ready';
-  if(state.stream)captureBtn.disabled=false;
+  updateScanUI();
   status.textContent=state.stream?'Détecteur prêt. Place le visage de face, yeux ouverts.':'Détecteur prêt. Active la caméra et cadre le visage de face.';ensureSegmenter()
  }catch(e){
   state.landmarker=null;state.detectorState='failed';captureBtn.disabled=true;status.textContent='Détecteur indisponible : le contrôle de compatibilité exige MediaPipe. Recharge la page puis réessaie.';console.error(e)
@@ -216,33 +256,46 @@ async function initLandmarker(){
 }
 const landmarkerReady=initLandmarker();
 function stopCamera(){
- state.cameraRequest++;captureBtn.disabled=true;
+ stopMultiviewScan({keepCamera:true});state.cameraRequest++;captureBtn.disabled=true;$('quickPhoto').disabled=true;
  if(state.stream){state.stream.getTracks().forEach(t=>t.stop());state.stream=null}
- video.srcObject=null
+ video.srcObject=null;video.classList.remove('is-mirrored')
+}
+function cameraErrorMessage(error){
+ const name=error?.name||'';
+ if(name==='NotAllowedError'||name==='SecurityError')return'Autorisation refusée. Autorise la caméra dans les réglages du navigateur, puis réessaie.';
+ if(name==='NotFoundError'||name==='OverconstrainedError')return'Aucune caméra compatible n’a été trouvée. Essaie l’autre caméra ou importe des photos.';
+ if(name==='NotReadableError'||name==='AbortError')return'La caméra est occupée ou a été interrompue. Ferme l’autre application puis réessaie.';
+ return error?.message||String(error||'erreur inconnue')
 }
 async function startCamera(){
- stopCamera();const request=state.cameraRequest,facing=state.facing;let stream=null;status.textContent='Ouverture de la caméra…';
+ cancelPendingOperations();stopCamera();const request=state.cameraRequest,facing=state.facing;let stream=null,timeoutId=0,timedOut=false;status.textContent='Ouverture de la caméra…';
  try{
   if(!navigator.mediaDevices?.getUserMedia)throw new Error('accès caméra indisponible — ouvre cette page HTTPS dans Safari');
-  stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:1280}}});
+  const cameraPromise=navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:1280}}});
+  cameraPromise.then(lateStream=>{if(timedOut||request!==state.cameraRequest)lateStream.getTracks().forEach(track=>track.stop())}).catch(()=>{});
+  stream=await Promise.race([cameraPromise,new Promise((_,reject)=>{timeoutId=setTimeout(()=>{timedOut=true;reject(new Error('la demande de caméra n’a pas abouti — vérifie l’autorisation Safari'))},12000)})]);clearTimeout(timeoutId);
   if(request!==state.cameraRequest){stream.getTracks().forEach(t=>t.stop());return}
-  state.stream=stream;video.srcObject=stream;await video.play();if(request!==state.cameraRequest)return;
-  captureBtn.disabled=state.detectorState!=='ready';status.textContent=state.detectorState==='failed'?'Détecteur indisponible : recharge la page avant de reprendre les photos.':state.detectorState==='loading'?'Caméra prête · attente du détecteur de visage…':state.step?(state.pair.hint||'Reproduis le cadrage, l’angle et l’expression du premier visage.'):'Place le visage de face, yeux ouverts.'
+  state.stream=stream;state.activeFacing=stream.getVideoTracks()[0]?.getSettings?.().facingMode||facing;video.srcObject=stream;video.classList.toggle('is-mirrored',state.activeFacing==='user');stream.getTracks().forEach(track=>track.addEventListener('ended',()=>{if(state.stream!==stream)return;stopMultiviewScan();state.stream=null;video.srcObject=null;captureBtn.disabled=true;$('quickPhoto').disabled=true;status.textContent='Caméra interrompue. Réactive-la pour continuer, ou importe des photos.'},{once:true}));await video.play();if(request!==state.cameraRequest){stream.getTracks().forEach(track=>track.stop());return}
+  captureBtn.disabled=state.detectorState!=='ready';$('quickPhoto').disabled=state.detectorState!=='ready';status.textContent=state.detectorState==='failed'?'Détecteur indisponible : recharge la page avant de reprendre les photos.':state.detectorState==='loading'?'Caméra prête · attente du détecteur de visage…':`Caméra prête. Visage ${state.step?'B':'A'} : regarde de face puis tourne lentement la tête des deux côtés.`
  }catch(e){
-  if(stream)stream.getTracks().forEach(t=>t.stop());if(request!==state.cameraRequest)return;
-  state.stream=null;video.srcObject=null;captureBtn.disabled=true;status.textContent='Caméra indisponible : '+(e.message||e)
+  clearTimeout(timeoutId);if(stream)stream.getTracks().forEach(t=>t.stop());if(request!==state.cameraRequest)return;
+  state.stream=null;video.srcObject=null;captureBtn.disabled=true;$('quickPhoto').disabled=true;status.textContent='Caméra indisponible : '+cameraErrorMessage(e)
  }
 }
-function captureSquare(){
- const c=makeCanvas(SIZE),ctx=c.getContext('2d'),vw=video.videoWidth,vh=video.videoHeight;if(!vw||!vh)return null;
- const side=Math.min(vw,vh),sx=(vw-side)/2,sy=(vh-side)/2;ctx.save();ctx.translate(SIZE,0);ctx.scale(-1,1);ctx.drawImage(video,sx,sy,side,side,0,0,SIZE,SIZE);ctx.restore();return c
+function captureSquare(size=SIZE){
+ const c=makeCanvas(size),ctx=c.getContext('2d'),vw=video.videoWidth,vh=video.videoHeight;if(!vw||!vh)return null;
+ const side=Math.min(vw,vh),sx=(vw-side)/2,sy=(vh-side)/2;ctx.drawImage(video,sx,sy,side,side,0,0,size,size);return c
 }
 function average(lm,ids){let x=0,y=0;ids.forEach(i=>{x+=lm[i].x*SIZE;y+=lm[i].y*SIZE});return{x:x/ids.length,y:y/ids.length}}
 function eyeAnchors(lm){return[average(lm,[33,133]),average(lm,[362,263])].sort((a,b)=>a.x-b.x)}
-function detect(c){
+function detectDetailed(c){
  if(!state.landmarker)return null;
- try{return state.landmarker.detect(c).faceLandmarks?.[0]||null}
+ try{state.detectTimestamp=Math.max(state.detectTimestamp+1,Math.round(performance.now()));return state.landmarker.detectForVideo(c,state.detectTimestamp)}
  catch(e){console.error(e);state.landmarker=null;state.detectorState='failed';return null}
+}
+function detectImageDetailed(image){try{return state.imageLandmarker?.detect(image)||null}catch(error){console.error(error);closeImageLandmarker();return null}}
+function detect(c){
+ const result=detectDetailed(c);return result?.faceLandmarks?.length===1?result.faceLandmarks[0]:null
 }
 function headRingBasis(points){
  const oval=state.faceOval.map(id=>points[id]).filter(Boolean);if(oval.length!==state.faceOval.length)return null;const center=oval.reduce((sum,point)=>({x:sum.x+point.x/oval.length,y:sum.y+point.y/oval.length}),{x:0,y:0}),mean=ids=>ids.reduce((sum,id)=>({x:sum.x+points[id].x/ids.length,y:sum.y+points[id].y/ids.length}),{x:0,y:0}),eyes=[mean([33,133]),mean([362,263])].sort((a,b)=>a.x-b.x),length=Math.max(1,pointDistance(eyes[0],eyes[1])),horizontal={x:(eyes[1].x-eyes[0].x)/length,y:(eyes[1].y-eyes[0].y)/length};let down={x:-horizontal.y,y:horizontal.x};const chin=points[152];if((chin.x-(eyes[0].x+eyes[1].x)/2)*down.x+(chin.y-(eyes[0].y+eyes[1].y)/2)*down.y<0)down={x:-down.x,y:-down.y};return{oval,center,horizontal,down}
@@ -259,16 +312,25 @@ function headRingFromScales(points,scales,caps){
 function fallbackHeadRing(points){
  const basis=headRingBasis(points);if(!basis)return null;const edge=frameBoundaryRing(basis.oval.length);return basis.oval.map((point,index)=>lerpPoint(point,edge[index],.38))
 }
-function headRingFromCategoryMask(points,width,height,data){
- const basis=headRingBasis(points);if(!basis||!width||!height||data.length<width*height)return fallbackHeadRing(points);const sx=width/SIZE,sy=height/SIZE,gapLimit=Math.max(3,Math.round(Math.min(width,height)*.012)),isHead=value=>value===1||value===2||value===3||value===5,sample=(x,y)=>{const cx=Math.round(x),cy=Math.round(y);let inside=0,total=0;for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){const ix=clamp(cx+ox,0,width-1),iy=clamp(cy+oy,0,height-1);inside+=Number(isHead(data[iy*width+ix]));total++}return inside>=Math.ceil(total/3)},scales=[],caps=[];let valid=0;
- for(const point of basis.oval){const radial={x:point.x-basis.center.x,y:point.y-basis.center.y},faceRadius=Math.max(1,Math.hypot(radial.x,radial.y)),direction={x:radial.x/faceRadius,y:radial.y/faceRadius},{fallback,maximum:profileCap}=headScaleProfile(direction,basis),margin=2.5;let frameCap=Infinity;if(radial.x>1e-8)frameCap=Math.min(frameCap,(SIZE-margin-basis.center.x)/radial.x);else if(radial.x<-1e-8)frameCap=Math.min(frameCap,(margin-basis.center.x)/radial.x);if(radial.y>1e-8)frameCap=Math.min(frameCap,(SIZE-margin-basis.center.y)/radial.y);else if(radial.y<-1e-8)frameCap=Math.min(frameCap,(margin-basis.center.y)/radial.y);const maximum=Math.min(profileCap,Math.max(1.002,frameCap)),ox=basis.center.x*sx,oy=basis.center.y*sy,dx=radial.x*sx,dy=radial.y*sy,base=Math.max(1,Math.hypot(dx,dy)),ux=dx/base,uy=dy/base;let last=base,seen=false,gap=0;for(let distance=base*.86;distance<=base*maximum;distance+=.6){if(sample(ox+ux*distance,oy+uy*distance)){seen=true;last=distance;gap=0}else if(seen&&distance>base*.98&&++gap>=gapLimit)break}if(seen&&last>=base*.96)valid++;const detected=seen?(last+1.1)/base:Math.min(fallback,maximum);scales.push(clamp(detected,Math.min(1.012,maximum),maximum));caps.push(maximum)}
+function headRingFromMaskSampler(points,width,height,sample){
+ const basis=headRingBasis(points);if(!basis||!width||!height)return fallbackHeadRing(points);const sx=width/SIZE,sy=height/SIZE,gapLimit=4,step=Math.max(.6,Math.min(width,height)/512),edgePad=Math.max(1,Math.min(width,height)/430),scales=[],caps=[];let valid=0;
+ for(const point of basis.oval){const radial={x:point.x-basis.center.x,y:point.y-basis.center.y},faceRadius=Math.max(1,Math.hypot(radial.x,radial.y)),direction={x:radial.x/faceRadius,y:radial.y/faceRadius},{fallback,maximum:profileCap}=headScaleProfile(direction,basis),margin=2.5;let frameCap=Infinity;if(radial.x>1e-8)frameCap=Math.min(frameCap,(SIZE-margin-basis.center.x)/radial.x);else if(radial.x<-1e-8)frameCap=Math.min(frameCap,(margin-basis.center.x)/radial.x);if(radial.y>1e-8)frameCap=Math.min(frameCap,(SIZE-margin-basis.center.y)/radial.y);else if(radial.y<-1e-8)frameCap=Math.min(frameCap,(margin-basis.center.y)/radial.y);const maximum=Math.min(profileCap,Math.max(1.002,frameCap)),ox=basis.center.x*sx,oy=basis.center.y*sy,dx=radial.x*sx,dy=radial.y*sy,base=Math.max(1,Math.hypot(dx,dy)),ux=dx/base,uy=dy/base;let last=base,seen=false,gap=0;for(let distance=base*.86;distance<=base*maximum;distance+=step){if(sample(ox+ux*distance,oy+uy*distance)){seen=true;last=distance;gap=0}else if(seen&&distance>base*.98&&++gap>=gapLimit)break}if(seen&&last>=base*.96)valid++;const detected=seen?(last+edgePad)/base:Math.min(fallback,maximum);scales.push(clamp(detected,Math.min(1.012,maximum),maximum));caps.push(maximum)}
  return valid>=Math.ceil(basis.oval.length*2/3)?headRingFromScales(points,scales,caps)||fallbackHeadRing(points):fallbackHeadRing(points)
+}
+function headRingFromCategoryMask(points,width,height,data){
+ if(!width||!height||data.length<width*height)return fallbackHeadRing(points);const isHead=value=>value===1||value===2||value===3||value===5||value===255,sample=(x,y)=>{const cx=Math.round(x),cy=Math.round(y);let inside=0,total=0;for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){const ix=clamp(cx+ox,0,width-1),iy=clamp(cy+oy,0,height-1);inside+=Number(isHead(data[iy*width+ix]));total++}return inside>=Math.ceil(total/3)};return headRingFromMaskSampler(points,width,height,sample)
+}
+function bilinearMaskValue(data,width,height,x,y){
+ const px=clamp(x,0,width-1),py=clamp(y,0,height-1),x0=Math.floor(px),y0=Math.floor(py),x1=Math.min(width-1,x0+1),y1=Math.min(height-1,y0+1),fx=px-x0,fy=py-y0;return(1-fy)*((1-fx)*data[y0*width+x0]+fx*data[y0*width+x1])+fy*((1-fx)*data[y1*width+x0]+fx*data[y1*width+x1])
+}
+function headRingFromConfidenceMask(points,width,height,data){
+ if(!width||!height||data.length<width*height)return fallbackHeadRing(points);const radius=Math.max(1,Math.min(width,height)/360),sample=(x,y)=>{let value=0,weight=0;for(const [ox,oy,w] of [[0,0,4],[-radius,0,1],[radius,0,1],[0,-radius,1],[0,radius,1],[-radius,-radius,.5],[radius,-radius,.5],[-radius,radius,.5],[radius,radius,.5]]){value+=bilinearMaskValue(data,width,height,x+ox,y+oy)*w;weight+=w}return value/weight>=.34};return headRingFromMaskSampler(points,width,height,sample)
 }
 async function extractHeadRing(photo,landmarks){
  const points=landmarks.map(point=>({x:point.x*SIZE,y:point.y*SIZE})),fallback=fallbackHeadRing(points),segmenter=await ensureSegmenter();if(!segmenter)return fallback;let result=null;
- try{result=segmenter.segment(photo);const mask=result.categoryMask;if(!mask)return fallback;const data=mask.getAsUint8Array().slice();return headRingFromCategoryMask(points,mask.width,mask.height,data)||fallback}
- catch(error){console.warn('Contour tête/cheveux non détecté, contour géométrique utilisé.',error);return fallback}
- finally{try{if(result?.close)result.close();else result?.categoryMask?.close()}catch(error){console.warn(error)}}
+ try{result=segmenter.segment(photo);const category=result.categoryMask;if(category)try{const data=category.getAsUint8Array().slice();document.documentElement.dataset.portraitSegmentation='category-person';return headRingFromCategoryMask(points,category.width,category.height,data)||fallback}catch(error){console.warn('Masque binaire indisponible, essai du masque de confiance.',error)}const confidence=result.confidenceMasks?.[1]||((result.confidenceMasks?.length===1)?result.confidenceMasks[0]:null);if(confidence){const data=confidence.getAsFloat32Array().slice();document.documentElement.dataset.portraitSegmentation=result.confidenceMasks?.[1]?'confidence-person':'confidence-single';return headRingFromConfidenceMask(points,confidence.width,confidence.height,data)||fallback}document.documentElement.dataset.portraitSegmentation='mask-missing';return fallback}
+ catch(error){console.warn('Contour tête/cheveux non détecté, contour géométrique utilisé.',error);document.documentElement.dataset.portraitSegmentation='inference-error';return fallback}
+ finally{try{if(result?.close)result.close();else{result?.categoryMask?.close?.();result?.confidenceMasks?.forEach(mask=>mask.close?.())}}catch(error){console.warn(error)}}
 }
 function similarity(src,dst){
  const n=src.length,cs=src.reduce((a,p)=>({x:a.x+p.x/n,y:a.y+p.y/n}),{x:0,y:0}),cd=dst.reduce((a,p)=>({x:a.x+p.x/n,y:a.y+p.y/n}),{x:0,y:0});
@@ -351,21 +413,101 @@ function autoAlign({activate=true,focusRejected=false,render=true}={}){
  syncPairUI();
  if(render){updateModeAvailability();scheduleRender();if(activate&&pairUsable())maybeAutoStartAnimation();if(focusRejected)requestAnimationFrame(()=>(state.pair.status==='unusable'?$('retakePhoto2'):$('alignStatus')).focus())}
 }
-async function takePhoto(){
- const c=captureSquare();if(!c){status.textContent='Image caméra pas encore prête. Réessaie dans un instant.';return}
- const request=state.cameraRequest,target=state.step;captureBtn.disabled=true;status.textContent='Analyse du visage…';await landmarkerReady;if(request!==state.cameraRequest||target!==state.step)return;
- const lm=detect(c);
- if(!lm){captureBtn.disabled=state.detectorState!=='ready';status.textContent=state.detectorState==='ready'?'Visage non détecté. Éclaire le visage, regarde l’objectif et reprends la photo.':'Contrôle automatique indisponible : recharge la page pour rétablir le détecteur.';return}
- const quality=referenceCaptureQuality(lm);if(!quality.ok){captureBtn.disabled=false;status.textContent=`Photo à reprendre : ${quality.reasons.join(' · ')}.`;return}
- status.textContent='Analyse de la tête et des cheveux…';await new Promise(resolve=>requestAnimationFrame(resolve));const headRing=await extractHeadRing(c,lm);if(request!==state.cameraRequest||target!==state.step)return;
- state.photos[state.step]=c;state.marks[state.step]=lm;state.headRings[state.step]=headRing;state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;invalidateFaceLighting();
- const photoNumber=state.step+1,thumbURL=`url(${c.toDataURL('image/jpeg',.85)})`;$('thumb'+photoNumber).style.backgroundImage=thumbURL;$('sourceThumb'+photoNumber).style.backgroundImage=thumbURL;
- if(state.step===0){
-  state.step=1;state.pair={status:'capturing2',score:null,reasons:[],advice:[],metrics:null,hint:'Photo 1 conservée. Reproduis sa distance, son angle, l’ouverture des yeux et de la bouche.'};captureBtn.textContent='Prendre le visage 2';captureBtn.disabled=false;
-  status.textContent=state.pair.hint
- }else{
-  state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};stopCamera();closeSegmenter();state.step=0;captureBtn.textContent='Prendre le visage 1';showStage('alignStage');updatePreviewSize();state.animation.userFrozen=false;syncPairUI();const version=state.photoVersion;requestAnimationFrame(()=>requestAnimationFrame(()=>{if(version!==state.photoVersion||state.photos.length<2||!$('alignStage').classList.contains('active'))return;autoAlign({activate:false,render:false});(state.pair.status==='unusable'?$('retakePhoto2'):$('alignStatus')).focus();requestAnimationFrame(()=>{if(version!==state.photoVersion||state.photos.length<2||!$('alignStage').classList.contains('active'))return;updateModeAvailability();if(canMeshMorph()){setMode(state.mode==='regions'?'regions':'webgl');maybeAutoStartAnimation()}else scheduleRender()})}))
- }
+function dataURLBlob(dataURL){const [header,payload]=dataURL.split(','),mime=header.match(/data:([^;]+)/)?.[1]||'image/jpeg',bytes=atob(payload),array=new Uint8Array(bytes.length);for(let index=0;index<bytes.length;index++)array[index]=bytes.charCodeAt(index);return new Blob([array],{type:mime})}
+function canvasToBlob(canvas,quality=.91){return new Promise((resolve,reject)=>{if(!canvas.toBlob){try{return resolve(dataURLBlob(canvas.toDataURL('image/jpeg',quality)))}catch(error){return reject(error)}}canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Encodage de la photo impossible')),'image/jpeg',quality)})}
+async function blobToCanvas(blob,size=SIZE){
+ let source=null,url='';try{
+  if('createImageBitmap' in window)try{source=await createImageBitmap(blob,{imageOrientation:'from-image'})}catch(error){console.warn('Décodage ImageBitmap indisponible, repli HTMLImageElement.',error)}
+  if(!source){url=URL.createObjectURL(blob);source=await new Promise((resolve,reject)=>{const image=new Image();image.decoding='async';image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('Format d’image non reconnu par ce navigateur'));image.src=url})}
+  const width=source.width||source.naturalWidth,height=source.height||source.naturalHeight;if(!width||!height)throw new Error('Dimensions de photo invalides');const canvas=makeCanvas(size),ctx=canvas.getContext('2d'),side=Math.min(width,height),sx=(width-side)/2,sy=(height-side)/2;ctx.drawImage(source,sx,sy,side,side,0,0,size,size);return canvas
+ }finally{source?.close?.();if(url)URL.revokeObjectURL(url)}
+}
+async function blobToSourceCanvas(blob,maximum=1400){
+ let source=null,url='';try{
+  if('createImageBitmap' in window)try{source=await createImageBitmap(blob,{imageOrientation:'from-image',resizeWidth:maximum,resizeQuality:'high'})}catch(error){console.warn('Décodage ImageBitmap redimensionné indisponible, repli HTMLImageElement.',error)}
+  if(!source){url=URL.createObjectURL(blob);source=await new Promise((resolve,reject)=>{const image=new Image();image.decoding='async';image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('Format d’image non reconnu par ce navigateur'));image.src=url})}
+  const width=source.width||source.naturalWidth,height=source.height||source.naturalHeight;if(!width||!height)throw new Error('Dimensions de photo invalides');if(width*height>36e6)throw new Error('photo trop grande pour la mémoire de ce navigateur');const scale=Math.min(1,maximum/Math.max(width,height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(width*scale));canvas.height=Math.max(1,Math.round(height*scale));canvas.getContext('2d').drawImage(source,0,0,canvas.width,canvas.height);return canvas
+ }finally{source?.close?.();if(url)URL.revokeObjectURL(url)}
+}
+function cropImportedFace(source){
+ const result=detectImageDetailed(source),faces=result?.faceLandmarks||[];if(faces.length!==1)throw new Error(faces.length>1?'plusieurs visages détectés':'aucun visage détecté');const landmarks=faces[0],points=state.faceOval.map(id=>landmarks[id]).filter(Boolean);if(points.length<20)throw new Error('contour du visage incomplet');const xs=points.map(point=>point.x*source.width),ys=points.map(point=>point.y*source.height),faceWidth=Math.max(...xs)-Math.min(...xs),faceHeight=Math.max(...ys)-Math.min(...ys),side=Math.min(source.width,source.height,Math.max(faceWidth*1.72,faceHeight*1.42)),centerX=(Math.min(...xs)+Math.max(...xs))/2,centerY=(Math.min(...ys)+Math.max(...ys))/2-faceHeight*.055,sx=clamp(centerX-side/2,0,Math.max(0,source.width-side)),sy=clamp(centerY-side/2,0,Math.max(0,source.height-side)),canvas=makeCanvas(SIZE);canvas.getContext('2d').drawImage(source,sx,sy,side,side,0,0,SIZE,SIZE);return canvas
+}
+function faceAnalysisPixels(canvas,landmarks){
+ const points=state.faceOval.map(id=>landmarks[id]).filter(Boolean),xs=points.map(point=>point.x),ys=points.map(point=>point.y);if(points.length<20)return null;const minX=clamp(Math.min(...xs)-.035,0,1),maxX=clamp(Math.max(...xs)+.035,0,1),minY=clamp(Math.min(...ys)-.025,0,1),maxY=clamp(Math.max(...ys)+.025,0,1),sample=makeCanvas(128),ctx=sample.getContext('2d');ctx.drawImage(canvas,minX*canvas.width,minY*canvas.height,Math.max(1,(maxX-minX)*canvas.width),Math.max(1,(maxY-minY)*canvas.height),0,0,128,128);return ctx.getImageData(0,0,128,128)
+}
+function mediaPipeVector(value){if(!value)return null;const data=value.data||value;try{return Array.from(data)}catch(error){return null}}
+function mediaPipeBlendshapes(result){return(result?.faceBlendshapes?.[0]?.categories||[]).map(category=>({name:category.categoryName||category.displayName||'',score:Number(category.score)||0}))}
+async function analyzeCandidateCanvas(fullCanvas,source='camera'){
+ const analysis=makeCanvas(ANALYSIS_SIZE),ctx=analysis.getContext('2d');ctx.drawImage(fullCanvas,0,0,ANALYSIS_SIZE,ANALYSIS_SIZE);const result=source==='import'?detectImageDetailed(analysis):detectDetailed(analysis),faces=result?.faceLandmarks||[];
+ if(state.detectorState==='failed')return{error:'Le détecteur s’est arrêté. Recharge la page, puis réessaie.'};
+ if(faces.length!==1)return{error:faces.length>1?'Plusieurs visages sont visibles. Une seule personne doit rester dans le cadre.':'Aucun visage net détecté. Regarde l’objectif et augmente la lumière.'};
+ const landmarks=faces[0],pose=derivePose(landmarks,state.faceOval),pixels=faceAnalysisPixels(analysis,landmarks);if(!pose||!pixels)return{error:'Les repères du visage sont incomplets. Replace tout le front, les joues et le menton dans le cadre.'};
+ const photometry=analyzePhotometry(pixels.data,16),gray=new Float32Array(pixels.width*pixels.height);for(let index=0;index<gray.length;index++){const offset=index*4;gray[index]=(.2126*pixels.data[offset]+.7152*pixels.data[offset+1]+.0722*pixels.data[offset+2])/255}const sharpness=laplacianVariance(gray,pixels.width,pixels.height),quality=captureQuality({pose,photometry,sharpness}),irrecoverable=pose.inFrame<.76||pose.width<.1||pose.height<.15||pose.width>1.08||pose.height>1.12||photometry.darkClip>.58||photometry.lightClip>.48||quality.score<24;
+ return{candidate:{id:`view-${++state.candidateId}`,source,landmarks,pose,photometry,sharpness,quality,matrix:mediaPipeVector(result.facialTransformationMatrixes?.[0]),blendshapes:mediaPipeBlendshapes(result)},acceptable:!irrecoverable,warning:quality.reasons.slice(0,2).join(' · ')}
+}
+async function candidateFromCanvas(canvas,source='camera'){const analysis=await analyzeCandidateCanvas(canvas,source);if(!analysis.candidate||!analysis.acceptable)return analysis;analysis.candidate.blob=await canvasToBlob(canvas);return analysis}
+function angleLabel(yaw){const degrees=Math.round((Number(yaw)||0)*45);return Math.abs(degrees)<3?'face':`${degrees<0?'−':'+'}${Math.abs(degrees)}°`}
+function selectedCandidateIds(){return new Set([state.selectedPair?.first?.id,state.selectedPair?.second?.id].filter(Boolean))}
+function updateScanUI(message=''){
+ const session=state.sessions[state.step]||[],coverage=sessionCoverage(session),occupied=new Set(session.map(candidate=>candidate.poseBin)),selected=selectedCandidateIds(),root=$('scanCoverage');
+ root.replaceChildren(...POSE_BINS.map((yaw,index)=>{const cell=document.createElement('span');cell.className='scan-cell';cell.classList.toggle('is-filled',occupied.has(index));cell.classList.toggle('is-selected',session.some(candidate=>candidate.poseBin===index&&selected.has(candidate.id)));cell.title=`Angle ${angleLabel(yaw)}`;return cell}));
+ $('scanTitle').textContent=`Visage ${state.step?'B':'A'} · ${state.step?'seconde':'première'} captation`;$('scanSummary').textContent=message||(!session.length?'Aucune vue enregistrée.':`${coverage.occupied}/${coverage.total} angles · ${session.length} images de référence retenues${coverage.frontal?' · vue de face acquise':''}.`);$('scanSummary').setAttribute('aria-valuenow',String(coverage.occupied));
+ captureBtn.textContent=state.scan.running?`Scan ${state.step?'B':'A'} en cours…`:`Démarrer le scan ${state.step?'B':'A'}`;$('stopScan').disabled=!state.scan.running;captureBtn.disabled=state.scan.running||state.detectorState!=='ready'||!state.stream||state.applyingPair;$('quickPhoto').disabled=state.scan.running||state.detectorState!=='ready'||!state.stream||state.applyingPair;const importer=$('importPhotos'),importDisabled=state.scan.running||state.applyingPair;importer.disabled=importDisabled;const importLabel=importer.closest('.file-button');importLabel?.classList.toggle('is-disabled',importDisabled);importLabel?.setAttribute('aria-disabled',String(importDisabled))
+}
+function showScanGuide(text,level=''){const guide=$('scanGuide'),now=performance.now();$('scanGuideVisual').textContent=text;guide.dataset.level=level;if(now-state.scan.lastAnnouncementAt>1800){$('scanAnnouncement').textContent=text;state.scan.lastAnnouncementAt=now}}
+function retainCandidate(target,candidate){state.sessions[target]=retainBestByPose(state.sessions[target]||[],candidate,{perBin:2});updateScanUI()}
+async function scanSample(generation){
+ const full=captureSquare(SIZE);if(!full){showScanGuide('Caméra en cours de stabilisation','warn');return}
+ const result=await candidateFromCanvas(full,'camera');if(generation!==state.scan.generation||!state.scan.running)return;
+ if(!result.candidate){showScanGuide(result.error||'Image non exploitable','warn');return}
+ if(!result.acceptable){showScanGuide(`Reprends : ${result.warning||'cadrage ou lumière insuffisants'}`,'warn');return}
+ retainCandidate(state.step,result.candidate);const coverage=sessionCoverage(state.sessions[state.step]);showScanGuide(result.warning?`Vue ${angleLabel(result.candidate.pose.yaw)} gardée · ${result.warning}`:`Vue ${angleLabel(result.candidate.pose.yaw)} gardée`,result.warning?'warn':'good');if(coverage.occupied>=5&&coverage.frontal)status.textContent='Couverture suffisante. Tu peux terminer ce scan, ou continuer pour remplacer les vues moins nettes.'
+}
+function scanLoop(timestamp){
+ if(!state.scan.running)return;const generation=state.scan.generation;if(timestamp-state.scan.startedAt>=state.scan.duration){stopMultiviewScan();finalizeCurrentSession({automatic:true});return}
+ if(!state.scan.sampling&&timestamp-state.scan.lastSampleAt>=330){state.scan.lastSampleAt=timestamp;state.scan.sampling=true;scanSample(generation).catch(error=>{console.error(error);if(generation===state.scan.generation)showScanGuide('Analyse interrompue · réessaie','warn')}).finally(()=>{if(generation===state.scan.generation)state.scan.sampling=false})}
+ state.scan.raf=requestAnimationFrame(scanLoop)
+}
+function stopMultiviewScan(){
+ if(state.scan.raf)cancelAnimationFrame(state.scan.raf);state.scan.raf=0;state.scan.running=false;state.scan.sampling=false;state.scan.generation++;updateScanUI()
+}
+async function startMultiviewScan(){
+ if(state.scan.running)return;if(!state.stream)return startCamera();await landmarkerReady;const generation=++state.operationGeneration;await resetVideoLandmarkerIfNeeded();if(generation!==state.operationGeneration)return;if(!state.landmarker){status.textContent='Détecteur indisponible. Recharge la page ou utilise une version stable.';return}state.sessions[state.step]=state.sessions[state.step]||[];state.selectedPair=null;state.scan.running=true;state.scan.generation++;state.scan.startedAt=performance.now();state.scan.lastSampleAt=0;state.scan.sampling=false;updateScanUI();showScanGuide('Regarde de face, puis tourne lentement des deux côtés');status.textContent=`Scan du visage ${state.step?'B':'A'} pendant 12 secondes. Garde le front, les joues et le menton visibles.`;state.scan.raf=requestAnimationFrame(scanLoop)
+}
+async function candidateThumbnail(candidate){const canvas=await blobToCanvas(candidate.blob,192);return`url(${canvas.toDataURL('image/jpeg',.78)})`}
+function bestSessionView(session){return session.slice().sort((a,b)=>(Math.abs(a.pose.yaw)*18-(a.quality?.score||0))-(Math.abs(b.pose.yaw)*18-(b.quality?.score||0)))[0]||null}
+async function finalizeCurrentSession({automatic=false}={}){
+ stopMultiviewScan();const generation=state.operationGeneration,target=state.step,session=state.sessions[target]||[];if(!session.length){status.textContent='Aucune vue exploitable. Recommence en gardant un seul visage entier, sans zone complètement noire ou brûlée.';showScanGuide('Aucune vue conservée','warn');return}const representative=bestSessionView(session),coverage=sessionCoverage(session),thumbnail=await candidateThumbnail(representative);if(generation!==state.operationGeneration||target!==state.step)return;$('thumb'+(target+1)).style.backgroundImage=thumbnail;
+ if(target===0){state.step=1;state.sessions[1]=[];state.videoDetectorNeedsReset=true;state.pair={status:'capturing2',score:null,reasons:[],advice:[],metrics:null,hint:''};updateScanUI();showScanGuide('Visage B · mêmes mouvements, distance libre');status.textContent=`Visage A conservé : ${coverage.occupied} angles. Capture maintenant le visage B ; l’échelle et la lumière peuvent être différentes.`;requestAnimationFrame(()=>$('scanTitle').focus());return}
+ status.textContent=`Visage B conservé : ${coverage.occupied} angles. Recherche de la meilleure perspective commune…`;await applyMatchedView(null,{automatic})
+}
+async function singlePhoto(){
+ if(!state.stream){await startCamera();return}await landmarkerReady;const generation=++state.operationGeneration;await resetVideoLandmarkerIfNeeded();if(generation!==state.operationGeneration||!state.landmarker)return;const target=state.step,request=state.cameraRequest,canvas=captureSquare(SIZE);if(!canvas){status.textContent='Image caméra pas encore prête. Réessaie dans un instant.';return}$('quickPhoto').disabled=true;status.textContent='Analyse de la photo unique…';try{const result=await candidateFromCanvas(canvas,'single');if(generation!==state.operationGeneration||request!==state.cameraRequest||target!==state.step)return;if(!result.candidate||!result.acceptable){status.textContent=result.error||`Photo à reprendre : ${result.warning||'cadrage insuffisant'}.`;return}state.sessions[target]=[result.candidate];updateScanUI();await finalizeCurrentSession()}catch(error){console.error(error);if(generation===state.operationGeneration)status.textContent='Photo non analysée : '+(error.message||error)}finally{if(generation===state.operationGeneration)updateScanUI()}
+}
+async function importPhotoFiles(fileList){
+ const files=Array.from(fileList||[]).slice(0,20),target=state.step;if(!files.length)return;const generation=++state.operationGeneration;stopMultiviewScan();await landmarkerReady;if(generation!==state.operationGeneration)return;if(!state.landmarker){status.textContent='Détecteur indisponible : impossible de valider les photos importées.';return}state.applyingPair=true;state.sessions[target]=[];updateScanUI();let accepted=0,failures=[];
+ try{if(!await ensureImageLandmarker())throw new Error('détecteur photo indisponible');for(let index=0;index<files.length;index++){if(generation!==state.operationGeneration)return;const file=files[index];status.textContent=`Photo ${index+1}/${files.length} · recadrage du visage et analyse…`;try{if(file.size>30*1024*1024)throw new Error('fichier supérieur à 30 Mo');const source=await blobToSourceCanvas(file);if(generation!==state.operationGeneration)return;const canvas=cropImportedFace(source),result=await candidateFromCanvas(canvas,'import');if(generation!==state.operationGeneration)return;if(result.candidate&&result.acceptable){retainCandidate(target,result.candidate);accepted++}else failures.push(result.error||result.warning||'image non exploitable')}catch(error){failures.push(error.message||String(error))}await new Promise(resolve=>setTimeout(resolve,0))}}
+ catch(error){failures.push(error.message||String(error))}
+ finally{if(generation===state.operationGeneration){closeImageLandmarker();state.applyingPair=false;$('importPhotos').value='';updateScanUI()}}
+ if(generation!==state.operationGeneration)return;if(!accepted){status.textContent=`Aucune des ${files.length} photos n’est exploitable${failures[0]?` : ${failures[0]}`:''}.`;return}status.textContent=`${accepted} photo${accepted>1?'s':''} validée${accepted>1?'s':''}${failures.length?` · ${failures.length} ignorée${failures.length>1?'s':''}`:''}.`;await finalizeCurrentSession()
+}
+function viewpointTarget(){const range=state.commonViewRange;if(!range)return null;return range.minimum+(+$('viewpoint').value+100)/200*(range.maximum-range.minimum)}
+function syncViewpointUI(pair=state.selectedPair){
+ const range=commonYawRange(state.sessions[0],state.sessions[1]),usable=range&&range.maximum-range.minimum>.055&&state.sessions[0].length>1&&state.sessions[1].length>1;state.commonViewRange=usable?range:null;$('viewpointControls').hidden=!usable;if(!pair)return;const mean=(pair.first.pose.yaw+pair.second.pose.yaw)/2;if(usable){$('viewpoint').value=String(Math.round(clamp((mean-range.minimum)/Math.max(.001,range.maximum-range.minimum)*200-100,-100,100)));$('viewpointVal').textContent=angleLabel(mean);$('viewpoint').setAttribute('aria-valuetext',`Perspective ${angleLabel(mean)}`)}const scale=Math.round(pair.first.pose.scale/Math.max(.001,pair.second.pose.scale)*100),harmony=Math.round(state.regionHarmony*100);$('viewpointStatus').textContent=`Vues A ${angleLabel(pair.first.pose.yaw)} / B ${angleLabel(pair.second.pose.yaw)} · écart ${Math.round(pair.poseGap*45)}° · échelle B corrigée à ${scale}%${harmony?` · harmonisation lumière ${harmony}%`:''}.`;updateScanUI()
+}
+function pairPreparationStatus(message){status.textContent=message;if($('alignStage').classList.contains('active'))$('alignStatus').textContent=message}
+function disableViewpointControls(disabled){$('viewpoint').disabled=disabled;$('applyViewpoint').disabled=disabled;document.querySelectorAll('[data-viewpoint]').forEach(button=>button.disabled=disabled)}
+function chooseStableMatchedPair(options){
+ const closest=chooseMatchedPair(state.sessions[0],state.sessions[1],options);if(!closest)return null;const initial=chooseMatchedPair(state.sessions[0],state.sessions[1],{...options,maxPoseGap:.34});if(!initial)return{pair:null,closest};const candidates=[];for(const first of state.sessions[0])for(const second of state.sessions[1]){const poseGap=Math.abs(first.pose.yaw-second.pose.yaw);if(poseGap>.34)continue;const cost=pairCost(first,second,options);if(Number.isFinite(cost))candidates.push({first,second,cost,poseGap,confidence:clamp(1-cost/5.5,0,1)})}candidates.sort((a,b)=>a.cost-b.cost);let fallback=null;for(const candidate of candidates.slice(0,3)){const compatibility=evaluateMorphCompatibility(candidate.first.landmarks,candidate.second.landmarks),entry={...candidate,preflight:compatibility};if(!fallback)fallback=entry;if(compatibility.status!=='unusable')return{pair:entry}}return{pair:fallback||initial}
+}
+async function applyMatchedView(targetYaw=null,{automatic=false}={}){
+ if(state.applyingPair)return;const options={preserveExpressionDifference:$('preserveExpression').checked};if(Number.isFinite(targetYaw))options.targetYaw=targetYaw;const selection=chooseStableMatchedPair(options),pair=selection?.pair;if(!pair){const gap=selection?.closest?.poseGap;pairPreparationStatus(Number.isFinite(gap)?`Aucune perspective commune : l’écart minimal est ${Math.round(gap*45)}°. Reprends une vue du visage B dans le même angle que A.`:'Aucune perspective commune utilisable. Reprends au moins une vue de face pour chaque visage.');return}const generation=++state.operationGeneration,wasAlign=$('alignStage').classList.contains('active'),previousMode=state.mode,previousHarmony=state.regionHarmony;state.applyingPair=true;disableViewpointControls(true);if(wasAlign){$('alignStage').inert=true;$('alignStage').setAttribute('aria-busy','true')}stopAnimation({render:false});updateScanUI();pairPreparationStatus('Préparation des deux portraits, de la tête et des cheveux…');
+ try{
+  const photos=await Promise.all([blobToCanvas(pair.first.blob),blobToCanvas(pair.second.blob)]);if(generation!==state.operationGeneration)return;const marks=[pair.first.landmarks,pair.second.landmarks],headRings=[];await ensureSegmenter();if(generation!==state.operationGeneration)return;
+  for(let index=0;index<2;index++){pairPreparationStatus(`Analyse de la silhouette ${index+1}/2…`);headRings[index]=await extractHeadRing(photos[index],marks[index]);if(generation!==state.operationGeneration)return}
+  stopCamera();closeSegmenter();state.photos=photos;state.marks=marks;state.headRings=headRings;state.selectedPair=pair;state.step=0;state.solutionURL='';state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.buffers.clear();invalidateFaceLighting();state.regionHarmony=wasAlign?previousHarmony:automaticHarmony(pair.first.photometry,pair.second.photometry);syncRegionControls();photos.forEach((photo,index)=>{const thumbnail=makeCanvas(192),ctx=thumbnail.getContext('2d');ctx.drawImage(photo,0,0,192,192);const value=`url(${thumbnail.toDataURL('image/jpeg',.8)})`;$('thumb'+(index+1)).style.backgroundImage=value;$('sourceThumb'+(index+1)).style.backgroundImage=value});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();state.animation.userFrozen=false;syncPairUI();autoAlign({activate:false,render:false});syncViewpointUI(pair);updateModeAvailability();if(wasAlign){$('alignStage').inert=false;$('alignStage').removeAttribute('aria-busy')}if(canMeshMorph()){const desiredMode=['canvas','webgl','regions'].includes(previousMode)?previousMode:'canvas';setMode(desiredMode);if(!automatic||!reducedMotionQuery?.matches)maybeAutoStartAnimation()}else scheduleRender();(state.pair.status==='unusable'?$('retakePhoto2'):$('alignStatus')).focus()
+ }catch(error){console.error(error);if(generation===state.operationGeneration){pairPreparationStatus('Préparation du morphing impossible : '+(error.message||error));showStage(wasAlign?'alignStage':'captureStage')}}
+ finally{if(generation===state.operationGeneration){state.applyingPair=false;$('alignStage').inert=false;$('alignStage').removeAttribute('aria-busy');disableViewpointControls(false);updateScanUI()}}
 }
 
 function readControls(){return{x:+$('offsetX').value,y:+$('offsetY').value,s:+$('scale').value/100,r:+$('rotation').value*Math.PI/180,a:+$('blend').value/100}}
@@ -541,7 +683,7 @@ function drawBackground(canvas){const ctx=canvas.getContext('2d'),size=canvas.wi
 function drawMorphBackground(canvas,v,geometry){
  const ctx=drawBackground(canvas),size=canvas.width,amount=smoother(clamp(geometry.t,0,1));if(amount>.001){ctx.globalAlpha=amount;ctx.drawImage(state.photos[1],0,0,size,size);ctx.globalAlpha=1}return ctx
 }
-function renderPortraitEndpoint(canvas,index){const ctx=canvas.getContext('2d'),size=canvas.width;ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(state.photos[index],0,0,size,size);return{fallback:false,message:`Photo ${index+1} exacte · extrémité du morphing.`}}
+function renderPortraitEndpoint(canvas,index){const ctx=canvas.getContext('2d'),size=canvas.width,source=morphPhoto(index);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(source,0,0,size,size);return{fallback:false,message:`Portrait ${index+1} canonique · extrémité continue du morphing.`}}
 function renderCanvasMorph(canvas,v,providedGeometry=null){
  if(v.a<=.0001)return renderPortraitEndpoint(canvas,0);if(v.a>=.9999)return renderPortraitEndpoint(canvas,1);const faceGeometry=providedGeometry||meshGeometry(v),geometry=providedGeometry?.contextTriangles?providedGeometry:faceGeometry&&fullFrameGeometry(faceGeometry);if(!geometry)return renderAlphaFallback(canvas,v);const size=canvas.width;
  const triangles=geometry.triangles,warpA=warpImage('warpA',size,state.photos[0],geometry.raw1,geometry.target,triangles),warpB=warpImage('warpB',size,morphPhoto(1),geometry.raw2,geometry.target,triangles);
@@ -806,7 +948,7 @@ async function buildPuzzle(){
  try{state.solutionURL=finalImage(snapshot).toDataURL('image/jpeg',.92);state.tiles=Array.from({length:16},(_,i)=>i);state.blank=15;showStage('gameStage');createTiles();shuffle(180);created=true}
  catch(e){console.error(e);$('modeStatus').textContent='Création impossible : '+(e.message||e)}finally{state.animation.exporting=false;controls.forEach((control,index)=>control.disabled=disabled[index]);if(!created&&state.animation.resumeAfterGame)resumeAutomaticAnimation()}
 }
-function createTiles(){const root=$('puzzle');root.innerHTML='';for(let i=0;i<15;i++){const el=document.createElement('div');el.className='tile';el.dataset.tile=i;el.onclick=()=>moveTile(i);root.appendChild(el)}layout()}
+function createTiles(){const root=$('puzzle');root.innerHTML='';for(let i=0;i<15;i++){const el=document.createElement('button');el.type='button';el.className='tile';el.dataset.tile=i;el.setAttribute('aria-label',`Déplacer la pièce ${i+1}`);el.onclick=()=>moveTile(i);root.appendChild(el)}layout()}
 function layout(){const root=$('puzzle'),w=root.clientWidth||480,ts=w/GRID;root.querySelectorAll('.tile').forEach(el=>{const tile=+el.dataset.tile,pos=state.tiles.indexOf(tile),r=Math.floor(pos/GRID),c=pos%GRID,sr=Math.floor(tile/GRID),sc=tile%GRID;Object.assign(el.style,{width:ts+'px',height:ts+'px',backgroundImage:`url(${state.solutionURL})`,backgroundSize:`${w}px ${w}px`,backgroundPosition:`${-sc*ts}px ${-sr*ts}px`,transform:`translate(${c*ts}px,${r*ts}px)`,visibility:state.showing?'hidden':'visible'})});$('win').classList.toggle('show',isSolved()&&!state.showing)}
 function adjacent(a,b){return Math.abs(Math.floor(a/GRID)-Math.floor(b/GRID))+Math.abs(a%GRID-b%GRID)===1}
 function moveTile(tile){if(state.showing)return;const p=state.tiles.indexOf(tile),b=state.tiles.indexOf(state.blank);if(!adjacent(p,b))return;[state.tiles[p],state.tiles[b]]=[state.tiles[b],state.tiles[p]];layout()}
@@ -814,32 +956,33 @@ function shuffle(n=150){state.showing=false;$('showSolution').textContent='Voir 
 function isSolved(){return state.tiles.every((v,i)=>v===i)}
 function showSolution(){state.showing=!state.showing;$('puzzle').style.background=state.showing?`#000 url(${state.solutionURL}) center/cover no-repeat`:'#070707';$('showSolution').textContent=state.showing?'Revenir au jeu':'Voir la solution';layout()}
 function resetAll(preserveAnimationSettings=false){
- stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,autoStartRaf:0,exporting:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();closeSegmenter();state.photos=[];state.marks=[];state.headRings=[];state.step=0;state.pair={status:'empty',score:null,reasons:[],advice:[],metrics:null,hint:''};state.photoVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.morphTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTrianglesVersion=-1;state.auto={scale:1,rot:0,tx:0,ty:0};state.validatedControls={x:0,y:0,s:1,r:0};state.buffers.clear();invalidateFaceLighting();
+ cancelPendingOperations();stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,autoStartRaf:0,exporting:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();closeSegmenter();state.photos=[];state.marks=[];state.headRings=[];state.sessions=[[],[]];state.selectedPair=null;state.commonViewRange=null;state.applyingPair=false;state.videoDetectorNeedsReset=state.detectTimestamp>0;state.solutionURL='';state.step=0;state.pair={status:'empty',score:null,reasons:[],advice:[],metrics:null,hint:''};state.photoVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.morphTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTrianglesVersion=-1;state.auto={scale:1,rot:0,tx:0,ty:0};state.validatedControls={x:0,y:0,s:1,r:0};state.buffers.clear();invalidateFaceLighting();
  if(!preserveAnimationSettings){state.regionAnimationStyle='progressive';state.regionHarmony=0;state.animation.randomSeed=137;$('animationAmplitude').value=45;$('animationSpeed').value=110}
  ['offsetX','offsetY','rotation'].forEach(id=>$(id).value=0);$('scale').value=100;$('blend').value=50;
- captureBtn.textContent='Prendre le visage 1';for(const id of ['thumb1','thumb2','sourceThumb1','sourceThumb2'])$(id).style.backgroundImage='none';showStage('captureStage');
- status.textContent=state.detectorState==='ready'?'Détecteur prêt. Active la caméra.':state.detectorState==='failed'?'Détecteur indisponible : recharge la page pour activer le contrôle de compatibilité.':'Chargement du détecteur de visage…';syncRegionControls();syncAnimationControls();syncPairUI()
+ $('viewpointControls').hidden=true;for(const id of ['thumb1','thumb2','sourceThumb1','sourceThumb2'])$(id).style.backgroundImage='none';showStage('captureStage');showScanGuide('Cadrez tout le visage');updateScanUI();
+ status.textContent=state.detectorState==='ready'?'Détecteur prêt. Active la caméra ou importe plusieurs photos.':state.detectorState==='failed'?'Détecteur indisponible : recharge la page pour activer le contrôle de compatibilité.':'Chargement du détecteur de visage…';syncRegionControls();syncAnimationControls();syncPairUI()
 }
 function retakePhoto2(){
- const guidance=state.pair.advice?.slice(0,2).join(' ')||'Reproduis le cadrage, l’angle et l’expression de la photo 1.';stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();closeSegmenter();state.photos.length=Math.min(1,state.photos.length);state.marks.length=Math.min(1,state.marks.length);state.headRings.length=Math.min(1,state.headRings.length);state.step=1;state.pair={status:'capturing2',score:null,reasons:[],advice:[],metrics:null,hint:`Photo 1 conservée. ${guidance}`};state.photoVersion++;state.auto={scale:1,rot:0,tx:0,ty:0};state.validatedControls={x:0,y:0,s:1,r:0};state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.morphTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTrianglesVersion=-1;state.regionCache=null;state.solutionURL='';state.buffers.clear();invalidateFaceLighting();if(state.webgl)state.webgl.indexVersion='';for(const id of ['thumb2','sourceThumb2'])$(id).style.backgroundImage='none';captureBtn.textContent='Prendre le visage 2';showStage('captureStage');syncPairUI();updateModeAvailability();status.textContent=state.pair.hint;status.focus();ensureSegmenter();startCamera()
+ const guidance=state.pair.advice?.slice(0,2).join(' ')||'Capture une perspective aussi proche que possible d’une vue du visage A.';cancelPendingOperations();stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();closeSegmenter();state.photos.length=Math.min(1,state.photos.length);state.marks.length=Math.min(1,state.marks.length);state.headRings.length=Math.min(1,state.headRings.length);state.sessions[1]=[];state.selectedPair=null;state.commonViewRange=null;state.videoDetectorNeedsReset=true;state.step=1;state.pair={status:'capturing2',score:null,reasons:[],advice:[],metrics:null,hint:`Visage A conservé. ${guidance}`};state.photoVersion++;state.auto={scale:1,rot:0,tx:0,ty:0};state.validatedControls={x:0,y:0,s:1,r:0};state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.morphTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTrianglesVersion=-1;state.regionCache=null;state.solutionURL='';state.buffers.clear();invalidateFaceLighting();if(state.webgl)state.webgl.indexVersion='';for(const id of ['thumb2','sourceThumb2'])$(id).style.backgroundImage='none';$('viewpointControls').hidden=true;showStage('captureStage');showScanGuide('Visage B · tourne lentement des deux côtés');updateScanUI();syncPairUI();updateModeAvailability();status.textContent=state.pair.hint;status.focus();ensureSegmenter();startCamera()
 }
 async function loadDemoPortrait(src){
  const image=await new Promise((resolve,reject)=>{const element=new Image();element.decoding='async';element.onload=()=>resolve(element);element.onerror=()=>reject(new Error(`Image de démonstration introuvable : ${src}`));element.src=src}),canvas=makeCanvas(SIZE),ctx=canvas.getContext('2d'),side=Math.min(image.naturalWidth,image.naturalHeight),sx=(image.naturalWidth-side)/2,sy=(image.naturalHeight-side)/2;ctx.drawImage(image,sx,sy,side,side,0,0,SIZE,SIZE);return canvas
 }
 async function loadDemoLandmarks(src){const response=await fetch(src,{cache:'no-store'});if(!response.ok)throw new Error(`Repères de démonstration indisponibles (${response.status})`);return response.json()}
 async function loadDemoPair(){
- await landmarkerReady;stopCamera();const base='../../Make%20puzzle%20-%20from%20Iphone/',[photos,fixture]=await Promise.all([Promise.all([loadDemoPortrait(base+'visage_homme.png'),loadDemoPortrait(base+'visage_femme.png')]),loadDemoLandmarks('./portrait-landmarks.json?v=20260817')]),marks=[fixture['visage_homme.png'],fixture['visage_femme.png']];if(state.meshTriangles.length<800||marks.some(mark=>!mark||mark.length<478))throw new Error('Maillage de démonstration incomplet');status.textContent='Analyse des têtes et des cheveux de démonstration…';const headRings=[];for(let index=0;index<photos.length;index++)headRings[index]=await extractHeadRing(photos[index],marks[index]);closeSegmenter();state.photos=photos;state.marks=marks;state.headRings=headRings;state.step=0;state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;invalidateFaceLighting();photos.forEach((photo,index)=>{const url=`url(${photo.toDataURL('image/jpeg',.9)})`;$('thumb'+(index+1)).style.backgroundImage=url;$('sourceThumb'+(index+1)).style.backgroundImage=url});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();syncPairUI();autoAlign({activate:false,render:false});updateModeAvailability();if(canMeshMorph()){setMode('webgl');maybeAutoStartAnimation()}else scheduleRender()
+ await landmarkerReady;stopCamera();const base='../Make%20puzzle%20-%20from%20Iphone/',[photos,fixture]=await Promise.all([Promise.all([loadDemoPortrait(base+'visage_homme.png'),loadDemoPortrait(base+'visage_femme.png')]),loadDemoLandmarks('./qa/portrait-landmarks.json?v=20260817')]),marks=[fixture['visage_homme.png'],fixture['visage_femme.png']];if(state.meshTriangles.length<800||marks.some(mark=>!mark||mark.length<478))throw new Error('Maillage de démonstration incomplet');status.textContent='Analyse des têtes et des cheveux de démonstration…';const headRings=[];for(let index=0;index<photos.length;index++)headRings[index]=await extractHeadRing(photos[index],marks[index]);closeSegmenter();state.photos=photos;state.marks=marks;state.headRings=headRings;state.step=0;state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;invalidateFaceLighting();photos.forEach((photo,index)=>{const url=`url(${photo.toDataURL('image/jpeg',.9)})`;$('thumb'+(index+1)).style.backgroundImage=url;$('sourceThumb'+(index+1)).style.backgroundImage=url});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();syncPairUI();autoAlign({activate:false,render:false});updateModeAvailability();if(canMeshMorph()){setMode('webgl');maybeAutoStartAnimation()}else scheduleRender()
 }
-$('startCamera').onclick=startCamera;$('capture').onclick=takePhoto;$('switchCamera').onclick=()=>{state.facing=state.facing==='user'?'environment':'user';startCamera()};$('resetAll').onclick=()=>resetAll(false);
+$('startCamera').onclick=startCamera;$('capture').onclick=startMultiviewScan;$('stopScan').onclick=()=>{stopMultiviewScan();finalizeCurrentSession()};$('quickPhoto').onclick=singlePhoto;$('importPhotos').addEventListener('change',event=>importPhotoFiles(event.target.files));$('switchCamera').onclick=()=>{stopMultiviewScan();state.facing=state.facing==='user'?'environment':'user';startCamera()};$('resetAll').onclick=()=>resetAll(false);
+$('viewpoint').addEventListener('input',()=>{const label=angleLabel(viewpointTarget());$('viewpointVal').textContent=label;$('viewpoint').setAttribute('aria-valuetext',`Perspective ${label}`)});document.querySelectorAll('[data-viewpoint]').forEach(button=>button.addEventListener('click',()=>{$('viewpoint').value=button.dataset.viewpoint;$('viewpoint').dispatchEvent(new Event('input'))}));$('applyViewpoint').onclick=()=>applyMatchedView(viewpointTarget());
 $('backCapture').onclick=()=>resetAll(true);$('retakePhoto2').onclick=retakePhoto2;$('autoAlign').onclick=()=>autoAlign();$('makePuzzle').onclick=buildPuzzle;$('shuffle').onclick=()=>shuffle(180);$('showSolution').onclick=showSolution;
 $('backAlign').onclick=()=>{state.showing=false;showStage('alignStage');updatePreviewSize();scheduleRender();if(state.animation.resumeAfterGame){state.animation.userFrozen=false;resumeAutomaticAnimation()}};
 window.addEventListener('resize',()=>requestAnimationFrame(()=>{if($('alignStage').classList.contains('active'))updatePreviewSize();layout()}));
-document.addEventListener('visibilitychange',()=>{const animation=state.animation;if(document.hidden){if(animation.raf)cancelAnimationFrame(animation.raf);animation.raf=0;animation.lastTick=0;if($('captureStage').classList.contains('active'))stopCamera()}else if($('captureStage').classList.contains('active')&&!state.stream){captureBtn.disabled=true;status.textContent=state.detectorState==='failed'?'Détecteur indisponible : recharge la page avant de reprendre les photos.':`Caméra arrêtée. Appuie sur « Activer la caméra » pour continuer ${state.step?'le visage 2':'le visage 1'}.`}else if(animation.resumeOnPageShow&&$('alignStage').classList.contains('active')){animation.resumeOnPageShow=false;if(animation.running){animation.lastTick=performance.now();queueAnimationLoop()}else if(animation.frozenFrame)resumeAutomaticAnimation();else maybeAutoStartAnimation()}else if(animation.running&&$('alignStage').classList.contains('active')){animation.lastTick=performance.now();queueAnimationLoop()}});
-window.addEventListener('pagehide',()=>{const animation=state.animation;animation.resumeOnPageShow=animation.running||!!animation.autoStartRaf;cancelPendingAutoStart();if(animation.raf)cancelAnimationFrame(animation.raf);animation.raf=0;animation.lastTick=0;stopCamera()});
+document.addEventListener('visibilitychange',()=>{const animation=state.animation;if(document.hidden){cancelPendingOperations();if(animation.raf)cancelAnimationFrame(animation.raf);animation.raf=0;animation.lastTick=0;if($('captureStage').classList.contains('active'))stopCamera()}else if($('captureStage').classList.contains('active')&&!state.stream){captureBtn.disabled=true;status.textContent=state.detectorState==='failed'?'Détecteur indisponible : recharge la page avant de reprendre les photos.':`Caméra arrêtée. Appuie sur « Activer la caméra » pour continuer ${state.step?'le visage 2':'le visage 1'}.`}else if(animation.resumeOnPageShow&&$('alignStage').classList.contains('active')){animation.resumeOnPageShow=false;if(animation.running){animation.lastTick=performance.now();queueAnimationLoop()}else if(animation.frozenFrame)resumeAutomaticAnimation();else maybeAutoStartAnimation()}else if(animation.running&&$('alignStage').classList.contains('active')){animation.lastTick=performance.now();queueAnimationLoop()}});
+window.addEventListener('pagehide',()=>{const animation=state.animation;cancelPendingOperations();animation.resumeOnPageShow=animation.running||!!animation.autoStartRaf;cancelPendingAutoStart();if(animation.raf)cancelAnimationFrame(animation.raf);animation.raf=0;animation.lastTick=0;stopCamera()});
 window.addEventListener('pageshow',event=>{const animation=state.animation;if(event.persisted&&$('captureStage').classList.contains('active')&&!state.stream){captureBtn.disabled=true;status.textContent=state.detectorState==='failed'?'Détecteur indisponible : recharge la page avant de reprendre les photos.':`Caméra arrêtée. Appuie sur « Activer la caméra » pour continuer ${state.step?'le visage 2':'le visage 1'}.`}if(animation.resumeOnPageShow&&!document.hidden&&$('alignStage').classList.contains('active')){animation.resumeOnPageShow=false;if(animation.running){animation.lastTick=performance.now();queueAnimationLoop()}else if(animation.frozenFrame)resumeAutomaticAnimation();else maybeAutoStartAnimation()}});
 function reducedMotionChanged(event){const animation=state.animation;if(event.matches){const shouldResume=animation.running||!!animation.autoStartRaf;cancelPendingAutoStart();if(animation.running)stopAnimation({freeze:true});animation.resumeAfterMotion=shouldResume&&!animation.userFrozen;if(animation.resumeAfterMotion)$('modeStatus').textContent='Animation suspendue par le réglage iPhone « Réduire les animations ».';syncAnimationControls()}else{syncAnimationControls();if(animation.resumeAfterMotion||animation.resumeAfterGame)resumeAutomaticAnimation();else maybeAutoStartAnimation()}}
 if(reducedMotionQuery){if(reducedMotionQuery.addEventListener)reducedMotionQuery.addEventListener('change',reducedMotionChanged);else reducedMotionQuery.addListener?.(reducedMotionChanged)}
-syncRegionControls();syncAnimationControls();syncPairUI();
+syncRegionControls();syncAnimationControls();syncPairUI();updateScanUI();
 if(new URLSearchParams(location.search).get('demo')==='1')loadDemoPair().catch(error=>{console.error(error);status.textContent='Démonstration indisponible : '+(error.message||error)});
 </script>
 </body>
