@@ -25,7 +25,7 @@ test('v15 contains unique element identifiers and all static lookups resolve', (
 });
 
 test('v15 exposes multiview, import, fallback and viewpoint controls', () => {
-  for (const id of ['capture', 'stopScan', 'quickPhoto', 'importPhotos', 'scanCoverage', 'viewpoint', 'applyViewpoint']) {
+  for (const id of ['capture', 'stopScan', 'quickPhoto', 'nativePhoto', 'importPhotos', 'scanCoverage', 'viewpoint', 'applyViewpoint']) {
     assert.match(page, new RegExp(`id="${id}"`));
   }
   assert.match(page, /detectForVideo\(/);
@@ -38,6 +38,17 @@ test('v15 states the requested goal and the unresolved perspective limitation', 
   assert.match(page, /même visage ou de deux visages différents/);
   assert.match(page, /ne reconstruit pas un visage sous un nouvel angle/);
   assert.match(page, /au moins une perspective suffisamment proche/);
+  assert.match(page, /reproduction CPU du pipeline géométrique/);
+  assert.match(page, /ne valide pas le pilote WebGL de l’iPhone/);
+});
+
+test('v15 prefers WebGL after the first validated pair and keeps full-frame alignment automatic', () => {
+  assert.match(page, /const desiredMode=wasAlign&&\['canvas','webgl','regions'\]\.includes\(previousMode\)\?previousMode:'webgl'/);
+  assert.match(page, /const MANUAL_ALIGNMENT_IDS=\['offsetX','offsetY','scale','rotation'\]/);
+  assert.match(page, /MANUAL_ALIGNMENT_IDS\.includes\(id\)&&state\.mode!=='regions'/);
+  assert.match(page, /manual affine refinement is therefore intentionally reserved to Régions/);
+  assert.match(page, /L’interpolation globale y est intégrée au maillage/);
+  assert.match(page, /Horizontal, Vertical, Zoom fin et Rotation fin sont réservés à Régions/);
 });
 
 test('v15 keeps dependencies reproducible and camera mirroring conditional', () => {
@@ -47,4 +58,24 @@ test('v15 keeps dependencies reproducible and camera mirroring conditional', () 
   const captureFunction = page.match(/function captureSquare\([\s\S]*?\n\}/)?.[0] ?? '';
   assert.doesNotMatch(captureFunction, /scale\(-1,1\)/);
   assert.match(page, /confidenceMasks\?\.\[1\]/);
+});
+
+test('v15 keeps slow iPhone camera permission requests alive and offers native capture', () => {
+  assert.match(page, /<video id="video" autoplay playsinline muted>/);
+  assert.match(page, /id="nativePhoto"[^>]+capture="user"/);
+  assert.doesNotMatch(page, /Promise\.race\(\[cameraPromise/);
+  assert.match(page, /Autorisation toujours en attente/);
+  assert.match(page, /Annuler l’attente/);
+  assert.match(page, /contains\('active'\)\)\{if\(state\.stream\)stopCamera\(\);else updateScanUI\(\)\}/);
+  assert.match(page, /append:true,finalize:false/);
+  assert.match(page, /\['importPhotos','nativePhoto'\].*cameraPending\|\|state\.stream/);
+});
+
+test('v15 explosive regions stay attached to the face', () => {
+  assert.match(page, /explosivePulse\(/);
+  assert.match(page, /sans détacher de fragments du visage/);
+  assert.doesNotMatch(page, /advanced-region-effect-layer/);
+  assert.doesNotMatch(page, /advanced-region-effect-composition/);
+  assert.doesNotMatch(page, /applyRegionAnimationEffect\(/);
+  assert.doesNotMatch(page, /renderStyle/);
 });

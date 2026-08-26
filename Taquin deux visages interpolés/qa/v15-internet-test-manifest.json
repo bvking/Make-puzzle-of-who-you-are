@@ -1,0 +1,108 @@
+{
+  "date": "2026-08-26",
+  "application": "../v15-multiview.html",
+  "detector": {
+    "packageVersion": "0.10.35",
+    "implementation": "MediaPipe Python native CPU; not the page's JavaScript/WASM runtime",
+    "model": "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+    "modelSha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff",
+    "analysisSize": 512,
+    "portraitSize": 768,
+    "runningMode": "IMAGE",
+    "numFaces": 2,
+    "minFaceDetectionConfidence": 0.55,
+    "minFacePresenceConfidence": 0.55,
+    "minTrackingConfidence": 0.5,
+    "outputFaceBlendshapes": true,
+    "outputFacialTransformationMatrixes": true
+  },
+  "testHarness": {
+    "python": "3.12.13",
+    "mediapipe": "0.10.35",
+    "opencvPackage": "opencv-contrib-python==5.0.0.93",
+    "opencvRuntime": "5.0.0",
+    "numpy": "2.5.2",
+    "pillow": "12.3.0",
+    "renderer": "OpenCV CPU reproduction sampled at 0, 25, 50, 75 and 100 percent; not Canvas 2D or WebGL",
+    "headContour": "geometric fallback; Selfie Segmenter was not executed",
+    "browserWebGLValidated": false,
+    "scriptsCommitted": false
+  },
+  "sourceRefNote": "Some source URLs follow a mutable branch. The SHA-256 values identify the exact downloaded bytes used on the test date.",
+  "controlledVariantMethod": {
+    "normalization": "Pillow EXIF transpose, convert to RGB, then constrain the longest edge to 1400 pixels. When resized, each dimension is round(originalDimension * scale) with Image.Resampling.LANCZOS.",
+    "darkening": "Pillow ImageEnhance.Brightness(normalizedImage).enhance(0.58).",
+    "scaling": "Resize each normalized dimension to round(dimension * 0.58) with Image.Resampling.LANCZOS, then paste at integer floor offsets ((canvasWidth - imageWidth) // 2, (canvasHeight - imageHeight) // 2) on an original-size RGB canvas filled with (105, 105, 105).",
+    "pixelHash": "SHA-256 of contiguous row-major RGB pixel bytes after the controlled operation and before face crop."
+  },
+  "sources": [
+    {
+      "id": "obama",
+      "url": "https://raw.githubusercontent.com/ageitgey/face_recognition/master/examples/obama.jpg",
+      "sha256": "0930e3aa8cae5920329c0c8cbc6a2ab70f47b0e67b432875beaa95cbf7e741f6"
+    },
+    {
+      "id": "obama2",
+      "url": "https://raw.githubusercontent.com/ageitgey/face_recognition/master/examples/obama2.jpg",
+      "sha256": "a7efcc907375274796f39646510704aa86672d59f6d5469d69af3c85590976a6"
+    },
+    {
+      "id": "biden",
+      "url": "https://raw.githubusercontent.com/ageitgey/face_recognition/master/examples/biden.jpg",
+      "sha256": "3c17508bb91554c637a2eabddfae790e5bb1caba93130814fc2ac50be9760c4c"
+    },
+    {
+      "id": "lin-manuel-miranda",
+      "url": "https://raw.githubusercontent.com/ageitgey/face_recognition/master/examples/lin-manuel-miranda.png",
+      "sha256": "1f29c132951d7741431b32aaaf569d79a11bc690b04b843f12b7e306f080599a"
+    },
+    {
+      "id": "alex-lacamoire",
+      "url": "https://raw.githubusercontent.com/ageitgey/face_recognition/master/examples/alex-lacamoire.png",
+      "sha256": "affd4bba70510b20286c5b392e6a73ef149f4dff02105a09e19ce80d7d138707"
+    },
+    {
+      "id": "jeanette-epps",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Jeanette_J._Epps.jpg",
+      "sha256": "65987f83eea94b5aa71f57a645c42fd8c1b76ea29298fb5e01c7c3915470fca3",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Jeanette_J._Epps.jpg"
+    },
+    {
+      "id": "megan-mcarthur",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Megan_McArthur%2C_official_portrait_%282020%29_%28cropped%29.jpg",
+      "sha256": "1eb66071f6dad611e2973feb43047842a611a99bbe4392bb9e99f409d6171bf5",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Megan_McArthur,_official_portrait_(2020)_(cropped).jpg"
+    }
+  ],
+  "controlledVariants": [
+    {
+      "id": "lin-dark-58",
+      "source": "lin-manuel-miranda",
+      "operation": "controlledVariantMethod.darkening",
+      "resultSize": [704, 612],
+      "pixelSha256": "be341ec9edb0e8176164ff0a3eac8138fe48785ddf63b60cc0b4002ff9201d54"
+    },
+    {
+      "id": "lin-small-58",
+      "source": "lin-manuel-miranda",
+      "operation": "controlledVariantMethod.scaling",
+      "resultSize": [704, 612],
+      "pixelSha256": "f008564f8fca71daa32485fccfbbb342478a574e3e5a698182ac7bcd0f0a9397"
+    },
+    {
+      "id": "megan-dark-58",
+      "source": "megan-mcarthur",
+      "operation": "controlledVariantMethod.darkening",
+      "resultSize": [999, 1400],
+      "pixelSha256": "7a1e4c7a7fb6149c42c856a9bae1d1f7146d727b3b6e7ed737fc9b523fadfd6c"
+    },
+    {
+      "id": "megan-small-58",
+      "source": "megan-mcarthur",
+      "operation": "controlledVariantMethod.scaling",
+      "resultSize": [999, 1400],
+      "pixelSha256": "5f3ac057738f899235a771a8b69609f3b422d15b903bfd8fed0a0be180073c04"
+    }
+  ],
+  "privacy": "The downloaded portraits and derived landmarks were transient QA inputs and are not committed to this repository."
+}

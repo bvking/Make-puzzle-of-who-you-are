@@ -16,6 +16,7 @@ import {
 import landmarksFixture from '../Taquin deux visages interpolés/qa/portrait-landmarks.json' with { type: 'json' };
 
 const base = landmarksFixture['visage_homme.png'];
+const secondDemoFace = landmarksFixture['visage_femme.png'];
 const FACE_OVAL = [10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109];
 
 function seededRandom(seed) {
@@ -89,6 +90,32 @@ test('pose is invariant to global translation and scale', () => {
   assert.ok(Math.abs(original.yaw - changed.yaw) < 1e-6);
   assert.ok(Math.abs(original.pitch - changed.pitch) < 1e-6);
   assert.ok(Math.abs(changed.scale / original.scale - 0.72) < 1e-6);
+});
+
+test('bundled two-person demo remains matchable despite a different mouth expression', () => {
+  const firstPose = derivePose(base, FACE_OVAL);
+  const secondPose = derivePose(secondDemoFace, FACE_OVAL);
+  assert.ok(firstPose && secondPose);
+  assert.ok(Math.abs(firstPose.yaw - secondPose.yaw) < 0.34, 'demo viewpoints must remain matchable');
+  assert.ok(Math.abs(firstPose.mouthOpen - secondPose.mouthOpen) > 0.12, 'demo mouth expressions must remain different');
+
+  const first = {
+    ...candidate('demo-a', firstPose.yaw, 90, 0.48),
+    pose: firstPose,
+    landmarks: base,
+  };
+  const second = {
+    ...candidate('demo-b', secondPose.yaw, 90, 0.5),
+    pose: secondPose,
+    landmarks: secondDemoFace,
+  };
+  const pair = chooseMatchedPair([first], [second], {
+    maxPoseGap: 0.34,
+    preserveExpressionDifference: true,
+  });
+  assert.ok(pair);
+  assert.equal(pair.first.id, 'demo-a');
+  assert.equal(pair.second.id, 'demo-b');
 });
 
 test('seeded random scale and translation preserve normalized pose', () => {
