@@ -698,10 +698,28 @@ function drawMorphBackground(canvas,v,geometry){
  const ctx=drawBackground(canvas),size=canvas.width,amount=smoother(clamp(geometry.t,0,1));if(amount>.001){ctx.globalAlpha=amount;ctx.drawImage(state.photos[1],0,0,size,size);ctx.globalAlpha=1}return ctx
 }
 function renderPortraitEndpoint(canvas,index){const ctx=canvas.getContext('2d'),size=canvas.width,source=morphPhoto(index);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(source,0,0,size,size);return{fallback:false,message:`Portrait ${index+1} canonique · extrémité continue du morphing.`}}
+// Match WebGL's linear-light blend, including partially covered mesh edges.
+// Tables avoid per-pixel powers during the Canvas fallback animation.
+const MORPH_LINEAR=Float32Array.from({length:256},(_,i)=>{const c=i/255;return c<=.04045?c/12.92:((c+.055)/1.055)**2.4});
+const MORPH_SRGB=Uint8ClampedArray.from({length:4097},(_,i)=>{const c=i/4096;return 255*(c<=.0031308?c*12.92:1.055*c**(1/2.4)-.055)});
+function blendMorphPixels(first,second,amount,output){
+ const t=Math.max(0,Math.min(1,amount));
+ for(let i=0;i<output.length;i+=4){
+  const a=first[i+3]/255*(1-t),b=second[i+3]/255*t,alpha=a+b;
+  output[i+3]=Math.round(alpha*255);
+  for(let channel=0;channel<3;channel++)output[i+channel]=alpha>0?MORPH_SRGB[Math.round((MORPH_LINEAR[first[i+channel]]*a+MORPH_LINEAR[second[i+channel]]*b)/alpha*4096)]:0;
+ }
+ return output
+}
+function morphTopologyMatches(indices,triangles){
+ if(!indices||indices.length!==triangles.length*3)return false;
+ for(let i=0;i<triangles.length;i++)for(let j=0;j<3;j++)if(indices[i*3+j]!==triangles[i][j])return false;
+ return true
+}
 function renderCanvasMorph(canvas,v,providedGeometry=null){
  if(v.a<=.0001)return renderPortraitEndpoint(canvas,0);if(v.a>=.9999)return renderPortraitEndpoint(canvas,1);const faceGeometry=providedGeometry||meshGeometry(v),geometry=providedGeometry?.contextTriangles?providedGeometry:faceGeometry&&fullFrameGeometry(faceGeometry);if(!geometry)return renderAlphaFallback(canvas,v);const size=canvas.width;
  const triangles=geometry.triangles,warpA=warpImage('warpA',size,state.photos[0],geometry.raw1,geometry.target,triangles),warpB=warpImage('warpB',size,morphPhoto(1),geometry.raw2,geometry.target,triangles);
- const mixed=getBuffer('mixedFace',size),mctx=mixed.getContext('2d');mctx.drawImage(warpA,0,0);mctx.globalAlpha=geometry.t;mctx.drawImage(warpB,0,0);mctx.globalAlpha=1;
+ const mixed=getBuffer('mixedFace',size),mctx=mixed.getContext('2d'),pixelsA=warpA.getContext('2d').getImageData(0,0,size,size),pixelsB=warpB.getContext('2d').getImageData(0,0,size,size);blendMorphPixels(pixelsA.data,pixelsB.data,geometry.t,pixelsA.data);mctx.putImageData(pixelsA,0,0);
  const ctx=canvas.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(mixed,0,0);
  return{fallback:false,message:`Morphing du portrait complet Canvas 2D · ${lightingStatus()} · ${triangles.length} triangles.`}
 }
@@ -723,7 +741,7 @@ function createWebGLResources(renderer){
  if(!renderer.position||!renderer.uv1||!renderer.uv2||!renderer.index||!renderer.tex1||!renderer.tex2)throw new Error('Ressource WebGL indisponible');
  renderer.locations={position:gl.getAttribLocation(program,'aPosition'),uv1:gl.getAttribLocation(program,'aUv1'),uv2:gl.getAttribLocation(program,'aUv2'),resolution:gl.getUniformLocation(program,'uResolution'),mix:gl.getUniformLocation(program,'uMix'),texture1:gl.getUniformLocation(program,'uTexture1'),texture2:gl.getUniformLocation(program,'uTexture2')};
  if(renderer.locations.position<0||renderer.locations.uv1<0||renderer.locations.uv2<0||!renderer.locations.resolution||!renderer.locations.mix||!renderer.locations.texture1||!renderer.locations.texture2)throw new Error('Attribut ou uniforme WebGL introuvable');
- Object.assign(renderer,{indexVersion:'',indexCount:0});assertWebGL(gl,'Initialisation');renderer.failed=false;renderer.lost=false
+ Object.assign(renderer,{indexVersion:'',indexCount:0,indices:null});assertWebGL(gl,'Initialisation');renderer.failed=false;renderer.lost=false
 }
 function disposeWebGL(renderer){
  if(!renderer?.gl||renderer.gl.isContextLost())return;const gl=renderer.gl;
@@ -754,7 +772,7 @@ function uploadAttribute(gl,buffer,location,data){gl.bindBuffer(gl.ARRAY_BUFFER,
 function renderWebGLFace(size,geometry){
  const r=initWebGLRenderer();if(r.failed||r.lost)return null;const {gl}=r;if(gl.isContextLost()){r.lost=true;return null}while(gl.getError()!==gl.NO_ERROR){}if(r.canvas.width!==size||r.canvas.height!==size){r.canvas.width=r.canvas.height=size}
  gl.viewport(0,0,size,size);gl.useProgram(r.program);
- const activeTriangles=geometry.triangles||morphTrianglesForGeometry(geometry),indexVersion=`${state.morphTopologyVersion}|full-frame-v2|${activeTriangles.length}`;if(r.indexVersion!==indexVersion){const indices=new Uint16Array(activeTriangles.flat());gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,r.index);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);r.indexCount=indices.length;r.indexVersion=indexVersion;assertWebGL(gl,'Chargement de la topologie')}
+ const activeTriangles=geometry.triangles||morphTrianglesForGeometry(geometry),indexVersion=`${state.morphTopologyVersion}|full-frame-v2|${activeTriangles.length}`;if(r.indexVersion!==indexVersion||!morphTopologyMatches(r.indices,activeTriangles)){const indices=new Uint16Array(activeTriangles.flat());gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,r.index);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);assertWebGL(gl,'Chargement de la topologie');r.indices=indices;r.indexCount=indices.length;r.indexVersion=indexVersion}
  const textureVersion=morphPhoto2Key();if(r.textureVersion!==textureVersion){uploadTexture(gl,r.tex1,state.photos[0],gl.TEXTURE0);uploadTexture(gl,r.tex2,morphPhoto(1),gl.TEXTURE1);assertWebGL(gl,'Chargement des textures');r.textureVersion=textureVersion}
  const count=geometry.raw1.length,positions=new Float32Array(count*2),uv1=new Float32Array(count*2),uv2=new Float32Array(count*2),q=size/SIZE;
  for(let i=0;i<count;i++){positions[i*2]=geometry.target[i].x*q;positions[i*2+1]=geometry.target[i].y*q;uv1[i*2]=geometry.raw1[i].x/SIZE;uv1[i*2+1]=geometry.raw1[i].y/SIZE;uv2[i*2]=geometry.raw2[i].x/SIZE;uv2[i*2+1]=geometry.raw2[i].y/SIZE}
