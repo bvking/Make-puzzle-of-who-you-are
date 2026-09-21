@@ -188,7 +188,7 @@ function showStage(id){stages.forEach(s=>$(s).classList.toggle('active',s===id))
 function makeCanvas(size){const c=document.createElement('canvas');c.width=c.height=size;return c}
 function getBuffer(name,size){
  let c=state.buffers.get(name);
- if(!c){c=makeCanvas(size);state.buffers.set(name,c)}
+ if(!c){c=makeCanvas(size);if(name==='warpA'||name==='warpB')c.getContext('2d',{willReadFrequently:true});state.buffers.set(name,c)}
  if(c.width!==size||c.height!==size){c.width=c.height=size}
  const ctx=c.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';if('filter' in ctx)ctx.filter='none';ctx.clearRect(0,0,size,size);
  ctx.imageSmoothingEnabled=true;if('imageSmoothingQuality' in ctx)ctx.imageSmoothingQuality='high';
@@ -734,7 +734,7 @@ function assertWebGL(gl,label){
 function createWebGLResources(renderer){
  const {gl}=renderer;while(gl.getError()!==gl.NO_ERROR){}
  const vertex=compileShader(gl,gl.VERTEX_SHADER,'attribute vec2 aPosition;attribute vec2 aUv1;attribute vec2 aUv2;uniform vec2 uResolution;varying vec2 vUv1;varying vec2 vUv2;void main(){vec2 clip=aPosition/uResolution*2.0-1.0;gl_Position=vec4(clip.x,-clip.y,0.0,1.0);vUv1=aUv1;vUv2=aUv2;}');
- const fragment=compileShader(gl,gl.FRAGMENT_SHADER,'precision mediump float;uniform sampler2D uTexture1;uniform sampler2D uTexture2;uniform float uMix;varying vec2 vUv1;varying vec2 vUv2;vec3 toLinear(vec3 c){vec3 low=c/12.92;vec3 high=pow((c+0.055)/1.055,vec3(2.4));return mix(low,high,step(vec3(0.04045),c));}vec3 toSrgb(vec3 c){c=max(c,vec3(0.0));vec3 low=c*12.92;vec3 high=1.055*pow(c,vec3(1.0/2.4))-0.055;return mix(low,high,step(vec3(0.0031308),c));}void main(){vec4 a=texture2D(uTexture1,vUv1);vec4 b=texture2D(uTexture2,vUv2);vec3 color=toSrgb(mix(toLinear(a.rgb),toLinear(b.rgb),uMix));gl_FragColor=vec4(color,mix(a.a,b.a,uMix));}');
+ const fragment=compileShader(gl,gl.FRAGMENT_SHADER,'#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nuniform sampler2D uTexture1;uniform sampler2D uTexture2;uniform float uMix;varying vec2 vUv1;varying vec2 vUv2;vec3 toLinear(vec3 c){vec3 low=c/12.92;vec3 high=pow((c+0.055)/1.055,vec3(2.4));return mix(low,high,step(vec3(0.04045),c));}vec3 toSrgb(vec3 c){c=clamp(c,vec3(0.0),vec3(1.0));vec3 low=c*12.92;vec3 high=1.055*pow(c,vec3(1.0/2.4))-0.055;return mix(low,high,step(vec3(0.0031308),c));}void main(){vec4 a=texture2D(uTexture1,vUv1);vec4 b=texture2D(uTexture2,vUv2);float weightA=a.a*(1.0-uMix);float weightB=b.a*uMix;float alpha=weightA+weightB;vec3 linearColor=alpha>0.0?(toLinear(a.rgb)*weightA+toLinear(b.rgb)*weightB)/alpha:vec3(0.0);gl_FragColor=vec4(toSrgb(linearColor),alpha);}');
  const program=gl.createProgram();if(!program)throw new Error('Création du programme WebGL impossible');gl.attachShader(program,vertex);gl.attachShader(program,fragment);gl.linkProgram(program);
  if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program)||'Erreur programme WebGL');gl.deleteShader(vertex);gl.deleteShader(fragment);
  Object.assign(renderer,{program,position:gl.createBuffer(),uv1:gl.createBuffer(),uv2:gl.createBuffer(),index:gl.createBuffer(),tex1:gl.createTexture(),tex2:gl.createTexture(),textureVersion:-1});
