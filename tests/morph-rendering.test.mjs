@@ -19,6 +19,14 @@ test('transparent mesh edges do not leak hidden colors',()=>{
  assert.deepEqual(blend([255,0,0,0],[0,0,255,255],.5),[0,0,255,128]);
  assert.deepEqual(blend([255,0,0,0],[0,0,255,0],.5),[0,0,0,0]);
 });
+test('partially transparent endpoints preserve visible color and alpha',()=>{
+ assert.deepEqual(blend([37,149,231,0],[255,0,0,0],0),[0,0,0,0]);
+ for(const alpha of [1,63,127,128,191,254,255]){
+  const pixel=[37,149,231,alpha];
+  assert.deepEqual(blend(pixel,[255,0,0,0],0),pixel);
+  assert.deepEqual(blend([255,0,0,0],pixel,1),pixel);
+ }
+});
 test('in-place blend equals separate output and is symmetric',()=>{
  const a=new Uint8ClampedArray([70,123,211,127,255,0,60,255]),b=new Uint8ClampedArray([190,45,90,255,12,220,78,60]);
  const expected=blend(a,b,.35);
@@ -32,4 +40,14 @@ test('WebGL notices changed connectivity even with the same triangle count',()=>
  assert.equal(morphTopologyMatches(indices,[[0,1,3],[1,2,3]]),false);
  assert.equal(morphTopologyMatches(indices,[[0,1,2]]),false);
  assert.equal(morphTopologyMatches(null,[[0,1,2]]),false);
+});
+test('WebGL uses the same alpha-weighted linear-light equation as Canvas',()=>{
+ assert.match(page,/float weightA=a\.a\*\(1\.0-uMix\)/);
+ assert.match(page,/float weightB=b\.a\*uMix/);
+ assert.match(page,/\(toLinear\(a\.rgb\)\*weightA\+toLinear\(b\.rgb\)\*weightB\)\/alpha/);
+ assert.doesNotMatch(page,/mix\(toLinear\(a\.rgb\),toLinear\(b\.rgb\),uMix\)/);
+});
+test('WebGL requests high precision when the browser supports it',()=>{
+ assert.match(page,/#ifdef GL_FRAGMENT_PRECISION_HIGH\\nprecision highp float/);
+ assert.match(page,/#else\\nprecision mediump float/);
 });
