@@ -47,6 +47,8 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 .diagnostic-grid figure{margin:0;min-width:0}
 .diagnostic-grid figure:last-child{grid-column:1/-1}
 .diagnostic-triptych{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:10px}
+.diagnostic-open{display:block;width:100%;min-height:54px;margin:0 0 12px;background:#9fe7ff;color:#061014;font-weight:800;position:sticky;top:calc(env(safe-area-inset-top) + 4px);z-index:8;box-shadow:0 7px 20px #000a}
+.diagnostic-open:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .diagnostic-triptych figure{margin:0;min-width:0}
 .diagnostic-triptych canvas{display:block;width:100%;aspect-ratio:1;border:1px solid #35464f;border-radius:7px;background:#000}
 .diagnostic-triptych figcaption{text-align:center;margin-top:4px;font-size:12px;font-weight:700;color:#9fe7ff}
@@ -88,6 +90,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <p class="note">Les images sont analysées uniquement dans ce navigateur : aucune vidéo n’est enregistrée ni envoyée. En cas d’incompatibilité, la <a href="./index.html">version 13 stable à photo unique</a> reste disponible.</p>
 </div></section>
 <section id="alignStage" class="stage"><div class="card">
+<button id="diagnosticOpen" class="diagnostic-open" type="button" aria-controls="morphDiagnostic">Ouvrir le diagnostic 25 / 50 / 75 %</button>
 <div class="viewport"><canvas id="alignCanvas" role="img" aria-label="Aperçu de la composition des deux visages">Aperçu de la composition des deux visages.</canvas><span id="animationBadge" class="animation-badge" aria-hidden="true" hidden>MORPHING ACTIF</span></div>
 <div id="alignStatus" class="status" role="status" aria-live="polite" tabindex="-1"></div>
 <div id="compatibilityPanel" class="compatibility" role="status" aria-live="polite" hidden>
@@ -976,6 +979,13 @@ function captureMorphDiagnostic(){
  }
 }
 $('diagnosticCapture').addEventListener('click',captureMorphDiagnostic);
+$('diagnosticOpen').addEventListener('click',()=>{
+ const section=$('morphDiagnostic');
+ section.open=true;
+ if(state.mode==='regions'&&canMeshMorph())setMode('webgl');
+ captureMorphDiagnostic();
+ requestAnimationFrame(()=>section.scrollIntoView({behavior:'smooth',block:'start'}));
+});
 function animationModeAvailable(){return canMeshMorph()&&(state.mode==='webgl'||state.mode==='regions')}
 function animationSettings(){return{amplitude:+$('animationAmplitude').value/100,speed:+$('animationSpeed').value/100}}
 function syncAnimationControls(){
