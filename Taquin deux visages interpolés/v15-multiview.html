@@ -331,7 +331,10 @@ function detectDetailed(c){
  try{state.detectTimestamp=Math.max(state.detectTimestamp+1,Math.round(performance.now()));return state.landmarker.detectForVideo(c,state.detectTimestamp)}
  catch(e){console.error(e);state.landmarker=null;state.detectorState='failed';return null}
 }
-function detectImageDetailed(image){try{return state.imageLandmarker?.detect(image)||null}catch(error){console.error(error);closeImageLandmarker();return null}}
+function detectImageDetailed(image){
+ if(!state.imageLandmarker)throw new Error('Moteur de détection des photos indisponible. Réessaie la capture ou recharge la page.');
+ try{return state.imageLandmarker.detect(image)}catch(error){console.error(error);closeImageLandmarker();throw new Error('Erreur technique MediaPipe lors de l’analyse de la photo : '+String(error?.message||error).slice(0,180))}
+}
 function detect(c){
  const result=detectDetailed(c);return result?.faceLandmarks?.length===1?result.faceLandmarks[0]:null
 }
