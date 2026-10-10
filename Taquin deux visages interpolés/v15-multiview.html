@@ -46,6 +46,10 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 .diagnostic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:8px}
 .diagnostic-grid figure{margin:0;min-width:0}
 .diagnostic-grid figure:last-child{grid-column:1/-1}
+.diagnostic-triptych{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:10px}
+.diagnostic-triptych figure{margin:0;min-width:0}
+.diagnostic-triptych canvas{display:block;width:100%;aspect-ratio:1;border:1px solid #35464f;border-radius:7px;background:#000}
+.diagnostic-triptych figcaption{text-align:center;margin-top:4px;font-size:12px;font-weight:700;color:#9fe7ff}
 .diagnostic-grid canvas{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:#000;border:1px solid #35464f;border-radius:9px}
 .diagnostic-grid figcaption{margin-top:4px;font-size:11px;color:#d0e3e9;text-align:center}
 </style>
@@ -115,9 +119,15 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <select id="diagnosticPosition" aria-label="Pourcentage du morphing à comparer">
 <option value="0">0 %</option><option value="25">25 %</option><option value="50" selected>50 %</option><option value="75">75 %</option><option value="100">100 %</option>
 </select>
-<button id="diagnosticCapture" type="button" class="secondary">Figer et comparer</button>
+<button id="diagnosticCapture" type="button" class="secondary">Vérifier 25 · 50 · 75 %</button>
 </div>
-<div id="diagnosticStatus" class="status" role="status" aria-live="polite">Prêt à inspecter le résultat après les scans.</div>
+<div id="diagnosticStatus" class="status" role="status" aria-live="polite">Après les scans, lance le test des trois positions.</div>
+<p>Ces trois cadres proviennent du moteur de morphing réellement sélectionné, pas d’un fondu d’illustration. Un moteur de secours est signalé.</p>
+<div class="diagnostic-triptych" role="group" aria-label="Morphing réel à 25, 50 et 75 pour cent">
+<figure><canvas id="diagnostic25" aria-label="Morphing à 25 pour cent"></canvas><figcaption>25 %</figcaption></figure>
+<figure><canvas id="diagnostic50" aria-label="Morphing à 50 pour cent"></canvas><figcaption>50 %</figcaption></figure>
+<figure><canvas id="diagnostic75" aria-label="Morphing à 75 pour cent"></canvas><figcaption>75 %</figcaption></figure>
+</div>
 <div class="diagnostic-grid" role="group" aria-label="Sources déformées et résultat">
 <figure><canvas id="diagnosticWarpA" aria-label="Portrait A déformé"></canvas><figcaption>Source A déformée</figcaption></figure>
 <figure><canvas id="diagnosticWarpB" aria-label="Portrait B déformé"></canvas><figcaption>Source B déformée</figcaption></figure>
@@ -752,7 +762,7 @@ function renderCanvasMorph(canvas,v,providedGeometry=null){
  const triangles=geometry.triangles,warpA=warpImage('warpA',size,state.photos[0],geometry.raw1,geometry.target,triangles),warpB=warpImage('warpB',size,morphPhoto(1),geometry.raw2,geometry.target,triangles);
  const mixed=getBuffer('mixedFace',size),mctx=mixed.getContext('2d'),pixelsA=warpA.getContext('2d').getImageData(0,0,size,size),pixelsB=warpB.getContext('2d').getImageData(0,0,size,size);blendMorphPixels(pixelsA.data,pixelsB.data,geometry.t,pixelsA.data);mctx.putImageData(pixelsA,0,0);
  const ctx=canvas.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(mixed,0,0);
- return{fallback:false,message:`Morphing du portrait complet Canvas 2D · ${lightingStatus()} · ${triangles.length} triangles.`}
+ return{fallback:false,renderer:'canvas',message:`Morphing du portrait complet Canvas 2D · ${lightingStatus()} · ${triangles.length} triangles.`}
 }
 
 function compileShader(gl,type,source){
@@ -816,7 +826,7 @@ function renderWebGLMorph(canvas,v){
  try{
   const webglFace=renderWebGLFace(canvas.width,geometry);if(!webglFace){const result=renderCanvasMorph(canvas,v,geometry);result.message='WebGL indisponible : morphing Canvas 2D utilisé.';return result}
   const ctx=canvas.getContext('2d'),size=canvas.width;ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(webglFace,0,0);
-  return{fallback:false,message:`Morphing du portrait complet WebGL · ${lightingStatus()} · ${geometry.triangles.length} triangles.`}
+  return{fallback:false,renderer:'webgl',message:`Morphing du portrait complet WebGL · ${lightingStatus()} · ${geometry.triangles.length} triangles.`}
  }catch(e){console.error(e);if(state.webgl){state.webgl.failed=true;state.webgl.failedAt=performance.now();state.webgl.error=e.message||String(e)}const result=renderCanvasMorph(canvas,v,geometry);result.message='Erreur WebGL : morphing Canvas 2D utilisé.';return result}
 }
 
@@ -890,26 +900,80 @@ function renderSelected(canvas,{updateUI=true,values=null,regionMix=null,regionB
  if(mode==='webgl')info=renderWebGLMorph(canvas,v);else if(mode==='regions')info=renderRegions(canvas,v,regionMix||state.regionMix,regionBaseValues,regionEffect);else if(mode==='fallback')info=renderAlphaFallback(canvas,v);else info=renderCanvasMorph(canvas,v);
  if(updateUI){updateControlLabels(v);$('modeStatus').textContent=info?.message||''}return info
 }
-// Non-destructive QA capture: compare two separately warped sources with the
-// actual renderer at identical interpolation progress, without exporting faces.
+// Controlled diagnostic. Every sample uses the same renderSelected pipeline as the
+// actual preview, not an approximate alpha cross-fade or a separate shader.
+function diagnosticMorphValue(controls,percent){
+ const number=Number(percent);
+ if(!Number.isFinite(number))throw new Error('Pourcentage du diagnostic invalide');
+ return {...controls,a:Math.min(100,Math.max(0,number))/100};
+}
+function diagnosticMorphEngine(info){
+ if(info?.fallback)return 'fallback';
+ if(info?.renderer==='webgl'||info?.renderer==='canvas')return info.renderer;
+ return 'inconnu';
+}
+function diagnosticFrameDifference(first,second){
+ // Mean absolute RGB change, ignoring fully transparent pixels. This only
+ // detects a visually static output; it is NOT a score of morphing quality.
+ const a=first.getContext('2d',{willReadFrequently:true}).getImageData(0,0,first.width,first.height).data;
+ const b=second.getContext('2d',{willReadFrequently:true}).getImageData(0,0,second.width,second.height).data;
+ let total=0,count=0;
+ for(let i=0;i<a.length;i+=16){
+  if(!a[i+3]&&!b[i+3])continue;
+  for(let k=0;k<3;k++)total+=Math.abs(a[i+k]-b[i+k]);
+  count+=3;
+ }
+ return count?total/count:0;
+}
 function captureMorphDiagnostic(){
  const report=$('diagnosticStatus');
  if(!canMeshMorph()){report.textContent='Deux scans compatibles sont nécessaires avant le diagnostic.';return}
- if(state.mode==='regions'){report.textContent='Sélectionne Triangles WebGL ou Triangles 2D pour examiner le maillage complet.';return}
+ if(state.mode!=='webgl'&&state.mode!=='canvas'){report.textContent='Sélectionne Triangles WebGL ou Triangles 2D avant de vérifier les trois positions.';return}
  stopAnimation({freeze:false,render:false});state.animation.userFrozen=true;syncAnimationControls();
- const percent=clamp(Number($('diagnosticPosition').value)||0,0,100);
+ const percent=Number($('diagnosticPosition').value);
+ if(!Number.isFinite(percent)){report.textContent='Position de diagnostic non reconnue.';return}
  $('blend').value=String(percent);
- const v=readControls();
+ const controls=readControls();
+ const size=Math.min(320,PREVIEW_SIZE);
+ const copy=(id,source)=>{const target=$(id);target.width=target.height=size;target.getContext('2d').drawImage(source,0,0,size,size);return target};
  try{
+  const frames=[],engines=[],problems=[];
+  // Render all three snapshots at the exact requested t, in the same mode.
+  for(const position of [25,50,75]){
+   const v=diagnosticMorphValue(controls,position);
+   const face=meshGeometry(v),geometry=face&&fullFrameGeometry(face);
+   if(!geometry||!Number.isFinite(geometry.t)||Math.abs(geometry.t-position/100)>1e-8||!geometry.triangles?.length){
+    throw new Error('Maillage intermédiaire invalide à '+position+' %. Aucun résultat fictif ne sera affiché.');
+   }
+   const info=renderSelected(alignCanvas,{updateUI:false,values:v,mode:state.mode});
+   const engine=diagnosticMorphEngine(info);
+   if(engine==='fallback'||engine==='inconnu'){
+    throw new Error('Rendu triangulaire indisponible à '+position+' %. '+(info?.message||''));
+   }
+   frames.push(copy('diagnostic'+position,alignCanvas));
+   engines.push(engine);
+   if(engine!==state.mode)problems.push(position+' % rendu par Canvas 2D (WebGL indisponible)');
+  }
+  const delta25_50=diagnosticFrameDifference(frames[0],frames[1]),delta50_75=diagnosticFrameDifference(frames[1],frames[2]);
+  if(delta25_50<.05||delta50_75<.05)problems.push('deux positions semblent presque identiques : inspecte les expressions');
+  const v=diagnosticMorphValue(controls,percent);
   const faceGeometry=meshGeometry(v),geometry=faceGeometry&&fullFrameGeometry(faceGeometry);
-  if(!geometry){report.textContent='La géométrie du portrait complet est indisponible pour cette paire.';return}
-  const size=Math.min(320,PREVIEW_SIZE),a=warpImage('diagnostic-warp-a',size,state.photos[0],geometry.raw1,geometry.target,geometry.triangles),b=warpImage('diagnostic-warp-b',size,morphPhoto(1),geometry.raw2,geometry.target,geometry.triangles);
-  const copy=(id,source)=>{const target=$(id);target.width=target.height=size;const ctx=target.getContext('2d');ctx.drawImage(source,0,0,size,size)};
+  if(!geometry)throw new Error('Maillage manquant à '+percent+' %.');
+  const a=warpImage('diagnostic-warp-a',size,state.photos[0],geometry.raw1,geometry.target,geometry.triangles);
+  const b=warpImage('diagnostic-warp-b',size,morphPhoto(1),geometry.raw2,geometry.target,geometry.triangles);
   copy('diagnosticWarpA',a);copy('diagnosticWarpB',b);
-  const info=renderSelected(alignCanvas,{values:v});
+  const info=renderSelected(alignCanvas,{values:v,mode:state.mode});
+  if(['fallback','inconnu'].includes(diagnosticMorphEngine(info)))throw new Error('Rendu du contrôle sélectionné non triangulaire.');
   copy('diagnosticMixed',alignCanvas);
-  report.textContent=`Comparaison figée à ${percent} % · ${geometry.triangles.length} triangles · ${info?.message||'Rendu indisponible'}`;
- }catch(error){console.error('Diagnostic du morphing',error);report.textContent='Diagnostic impossible : '+(error?.message||String(error))}
+  const enginesSummary=[...new Set(engines)].join(' / ');
+  report.textContent=`Images 25 / 50 / 75 % calculées aux positions 0,25 / 0,50 / 0,75 · moteur(s) : ${enginesSummary} · écarts moyens : ${delta25_50.toFixed(2)} et ${delta50_75.toFixed(2)} niveaux RGB. ${problems.length?'Attention : '+problems.join(' ; '):'Les trois images ne sont pas figées sur un même résultat.'} Cela ne mesure pas la qualité esthétique du morphing.`;
+ }catch(error){
+  console.error('Diagnostic du morphing',error);
+  for(const id of ['diagnostic25','diagnostic50','diagnostic75','diagnosticWarpA','diagnosticWarpB','diagnosticMixed']){
+   const canvas=$(id);canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+  }
+  report.textContent='Test des 25 / 50 / 75 % non validé : '+(error?.message||String(error));
+ }
 }
 $('diagnosticCapture').addEventListener('click',captureMorphDiagnostic);
 function animationModeAvailable(){return canMeshMorph()&&(state.mode==='webgl'||state.mode==='regions')}
