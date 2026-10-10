@@ -78,12 +78,17 @@ export function robustStableAlignment(first,second,size=768){
   const p=applySimilarity(anchor.src,fit);
   return hypot(p.x-anchor.ref.x,p.y-anchor.ref.y);
  });
- const rms=Math.sqrt(residuals.reduce((acc,r,i)=>acc+base[i]*r*r,0)/base.reduce((a,b)=>a+b,0));
+ // Estimate pose consistency on a trimmed subset: an isolated unreliable
+ // landmark should not make an otherwise successful camera correction fail.
+ const sortedResiduals=residuals.slice().sort((a,b)=>a-b);
+ const inlierResiduals=sortedResiduals.slice(0,Math.max(10,Math.floor(sortedResiduals.length*.85)));
+ const rms=Math.sqrt(inlierResiduals.reduce((acc,r)=>acc+r*r,0)/inlierResiduals.length);
+ const rejectedAnchors=residuals.filter(r=>r>Math.max(6,4*rms)).length;
  const distance=(a,b)=>hypot((a.x-b.x)*size,(a.y-b.y)*size);
  const eyeSpan=first[33]&&first[263]?distance(first[33],first[263]):size*.25;
  const normalizedRms=rms/Math.max(1,eyeSpan),rollDegrees=fit.roll*180/Math.PI;
  // A 2-D transform cannot recover surfaces hidden by changed camera angle.
  const reliable=fit.scale>=.50&&fit.scale<=2&&normalizedRms<.25;
- const warning=!reliable?'Écart important : la vue manquante ne peut pas être reconstruite en 2D.':normalizedRms>.13?'Inclinaison/perspective résiduelle : contour et oreilles peuvent être approximatifs.':'';
- return {...fit,rms,normalizedRms,rollDegrees,anchorCount:anchors.length,reliable,warning};
+ const warning=!reliable?'Écart important : la vue manquante ne peut pas être reconstruite en 2D.':normalizedRms>.13?'Inclinaison/perspective résiduelle : contour et oreilles peuvent être approximatifs.':rejectedAnchors?'Repères aberrants écartés du recalage automatique.':'';
+ return {...fit,rms,normalizedRms,rollDegrees,anchorCount:anchors.length,rejectedAnchors,reliable,warning};
 }
