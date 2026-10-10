@@ -16,7 +16,7 @@ function moduleSource(html) {
 }
 
 test('v15 inline module has valid JavaScript syntax', () => {
-  const source = moduleSource(page).replace(/^import\s+.*?;\s*$/m, '');
+  const source = moduleSource(page).replace(/^import\s+.*?;\s*$/gm, '');
   assert.doesNotThrow(() => new Function(source));
 });
 
