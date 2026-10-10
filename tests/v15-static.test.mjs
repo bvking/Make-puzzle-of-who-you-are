@@ -93,3 +93,22 @@ test('v15 explosive regions stay attached to the face', () => {
   assert.doesNotMatch(page, /applyRegionAnimationEffect\(/);
   assert.doesNotMatch(page, /renderStyle/);
 });
+
+test('v15 scan diagnostic compares separately warped portraits to the real renderer', () => {
+  for (const id of ['morphDiagnostic', 'diagnosticPosition', 'diagnosticCapture', 'diagnosticStatus', 'diagnosticWarpA', 'diagnosticWarpB', 'diagnosticMixed']) {
+    assert.match(page, new RegExp(`id="${id}"`));
+  }
+  for (const percent of [0, 25, 50, 75, 100]) {
+    assert.match(page, new RegExp(`<option value="${percent}"`));
+  }
+  assert.match(page, /function captureMorphDiagnostic\(/);
+  assert.match(page, /state\.animation\.userFrozen=true/);
+  assert.match(page, /geometry\.raw1,geometry\.target,geometry\.triangles/);
+  assert.match(page, /geometry\.raw2,geometry\.target,geometry\.triangles/);
+  assert.match(page, /renderSelected\(alignCanvas,\{values:v\}\)/);
+});
+
+test('v15 does not confuse MediaPipe import errors with no face detected', () => {
+  assert.match(page, /Erreur technique MediaPipe lors de l’analyse de la photo/);
+  assert.doesNotMatch(page, /closeImageLandmarker\(\);return null/);
+});
