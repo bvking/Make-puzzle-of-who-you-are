@@ -37,6 +37,17 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 .scan-guide{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);max-width:92%;padding:8px 11px;border-radius:999px;background:#050505d9;border:1px solid #9fe7ff80;color:#e9fbff;font-size:12px;font-weight:750;text-align:center;pointer-events:none}.scan-guide[data-level="warn"]{border-color:#ffd37a;color:#ffe8b6}.scan-guide[data-level="good"]{border-color:#83f5ae;color:#dfffea}
 .scan-session{display:grid;gap:8px;padding:10px;border:1px solid #303d43;border-radius:12px;background:#071015}.scan-session strong{font-size:13px}.scan-coverage{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.scan-cell{height:8px;border-radius:999px;background:#252b2e}.scan-cell.is-filled{background:#7cddff;box-shadow:0 0 8px #7cddff66}.scan-cell.is-selected{outline:2px solid #fff;outline-offset:1px}.scan-summary{font-size:12px;color:#b9c9d0}.scan-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.scan-actions .wide{grid-column:1/-1}.file-button{display:grid;place-items:center;min-height:46px;padding:10px 12px;border:1px solid #454545;border-radius:10px;background:#171717;color:#fff;font:inherit;font-weight:700;text-align:center;cursor:pointer}.file-button.is-disabled{opacity:.45;cursor:default}.file-button input{position:absolute;inline-size:1px;block-size:1px;opacity:0;pointer-events:none}.capture-options{display:grid;gap:8px;padding:9px;border:1px solid #272727;border-radius:10px}.capture-options label{display:flex;grid-template-columns:none;gap:8px;align-items:flex-start;color:#cfd8dc}.capture-options input{margin-top:3px}.viewpoint-controls{display:grid;gap:8px;padding:10px;border:1px solid #315465;border-radius:12px;background:#08141a}.viewpoint-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.viewpoint-controls label{grid-template-columns:105px 1fr 48px}.viewpoint-status{font-size:12px;color:#b8c8ce}.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 @media (max-width:420px){.scan-actions{grid-template-columns:1fr}.scan-actions .wide{grid-column:auto}.viewpoint-presets{grid-template-columns:1fr}}
+.morph-diagnostic{border:1px solid #315465;border-radius:12px;padding:10px;background:#071116}
+.morph-diagnostic summary{cursor:pointer;font-size:13px;font-weight:750;color:#9fe7ff;min-height:28px}
+.morph-diagnostic p{margin:9px 0;font-size:12px;color:#c4d7de;line-height:1.4}
+.morph-diagnostic select{min-width:88px;min-height:44px;border:1px solid #536269;border-radius:9px;padding:9px;background:#131f25;color:#fff;font:inherit}
+.morph-diagnostic .diagnostic-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.morph-diagnostic .diagnostic-actions button{flex:1}
+.diagnostic-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:8px}
+.diagnostic-grid figure{margin:0;min-width:0}
+.diagnostic-grid figure:last-child{grid-column:1/-1}
+.diagnostic-grid canvas{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:#000;border:1px solid #35464f;border-radius:9px}
+.diagnostic-grid figcaption{margin-top:4px;font-size:11px;color:#d0e3e9;text-align:center}
 </style>
 </head>
 <body>
@@ -96,6 +107,23 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <label>Lumière visage <input id="regionHarmony" type="range" min="0" max="100" value="0"><span id="regionHarmonyVal" class="value">0%</span></label>
 <span class="region-title">Optionnel : augmente ce réglage seulement si les deux photos ont des éclairages très différents.</span>
 <div id="modeStatus" class="status" aria-live="polite"></div>
+<details id="morphDiagnostic" class="morph-diagnostic">
+<summary>Diagnostic du morphing · inspecter les doubles contours</summary>
+<p>Après les deux scans, choisis Triangles WebGL ou Triangles 2D, puis fige une même position. Les images A et B sont déformées séparément vers la géométrie du rendu ; la troisième est le résultat réellement affiché.</p>
+<div class="diagnostic-actions">
+<label for="diagnosticPosition">Transition</label>
+<select id="diagnosticPosition" aria-label="Pourcentage du morphing à comparer">
+<option value="0">0 %</option><option value="25">25 %</option><option value="50" selected>50 %</option><option value="75">75 %</option><option value="100">100 %</option>
+</select>
+<button id="diagnosticCapture" type="button" class="secondary">Figer et comparer</button>
+</div>
+<div id="diagnosticStatus" class="status" role="status" aria-live="polite">Prêt à inspecter le résultat après les scans.</div>
+<div class="diagnostic-grid" role="group" aria-label="Sources déformées et résultat">
+<figure><canvas id="diagnosticWarpA" aria-label="Portrait A déformé"></canvas><figcaption>Source A déformée</figcaption></figure>
+<figure><canvas id="diagnosticWarpB" aria-label="Portrait B déformé"></canvas><figcaption>Source B déformée</figcaption></figure>
+<figure><canvas id="diagnosticMixed" aria-label="Morphing rendu à la position choisie"></canvas><figcaption>Rendu réel : même position et même mode</figcaption></figure>
+</div>
+</details>
 <div id="animationControls" class="animation-controls" role="group" aria-label="Animation douce du morphing" hidden>
 <button id="toggleAnimation" type="button" class="secondary" aria-pressed="false">Animer doucement</button>
 <span id="animationState" class="animation-state">Animation en attente</span>
@@ -859,6 +887,28 @@ function renderSelected(canvas,{updateUI=true,values=null,regionMix=null,regionB
  if(mode==='webgl')info=renderWebGLMorph(canvas,v);else if(mode==='regions')info=renderRegions(canvas,v,regionMix||state.regionMix,regionBaseValues,regionEffect);else if(mode==='fallback')info=renderAlphaFallback(canvas,v);else info=renderCanvasMorph(canvas,v);
  if(updateUI){updateControlLabels(v);$('modeStatus').textContent=info?.message||''}return info
 }
+// Non-destructive QA capture: compare two separately warped sources with the
+// actual renderer at identical interpolation progress, without exporting faces.
+function captureMorphDiagnostic(){
+ const report=$('diagnosticStatus');
+ if(!canMeshMorph()){report.textContent='Deux scans compatibles sont nécessaires avant le diagnostic.';return}
+ if(state.mode==='regions'){report.textContent='Sélectionne Triangles WebGL ou Triangles 2D pour examiner le maillage complet.';return}
+ stopAnimation({freeze:false,render:false});state.animation.userFrozen=true;syncAnimationControls();
+ const percent=clamp(Number($('diagnosticPosition').value)||0,0,100);
+ $('blend').value=String(percent);
+ const v=readControls();
+ try{
+  const faceGeometry=meshGeometry(v),geometry=faceGeometry&&fullFrameGeometry(faceGeometry);
+  if(!geometry){report.textContent='La géométrie du portrait complet est indisponible pour cette paire.';return}
+  const size=Math.min(320,PREVIEW_SIZE),a=warpImage('diagnostic-warp-a',size,state.photos[0],geometry.raw1,geometry.target,geometry.triangles),b=warpImage('diagnostic-warp-b',size,morphPhoto(1),geometry.raw2,geometry.target,geometry.triangles);
+  const copy=(id,source)=>{const target=$(id);target.width=target.height=size;const ctx=target.getContext('2d');ctx.drawImage(source,0,0,size,size)};
+  copy('diagnosticWarpA',a);copy('diagnosticWarpB',b);
+  const info=renderSelected(alignCanvas,{values:v});
+  copy('diagnosticMixed',alignCanvas);
+  report.textContent=`Comparaison figée à ${percent} % · ${geometry.triangles.length} triangles · ${info?.message||'Rendu indisponible'}`;
+ }catch(error){console.error('Diagnostic du morphing',error);report.textContent='Diagnostic impossible : '+(error?.message||String(error))}
+}
+$('diagnosticCapture').addEventListener('click',captureMorphDiagnostic);
 function animationModeAvailable(){return canMeshMorph()&&(state.mode==='webgl'||state.mode==='regions')}
 function animationSettings(){return{amplitude:+$('animationAmplitude').value/100,speed:+$('animationSpeed').value/100}}
 function syncAnimationControls(){
