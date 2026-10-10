@@ -56,8 +56,12 @@ test('v15 states the requested goal and the unresolved perspective limitation', 
   assert.match(page, /ne valide pas le pilote WebGL de l’iPhone/);
 });
 
-test('v15 prefers WebGL after the first validated pair and keeps full-frame alignment automatic', () => {
-  assert.match(page, /const desiredMode=wasAlign&&\['canvas','webgl','regions'\]\.includes\(previousMode\)\?previousMode:'webgl'/);
+test('v15 offers camera-stabilized faces by default while keeping legacy full-frame modes', () => {
+  assert.match(page, /const desiredMode=wasAlign&&\['canvas','webgl','regions','stabilized'\]\.includes\(previousMode\)\?previousMode:'stabilized'/);
+  assert.match(page, /data-mode="stabilized"/);
+  assert.match(page, /function renderStabilizedFace\(/);
+  assert.match(page, /const key=state\.photoVersion\+'\|'\+state\.morphTopologyVersion/);
+  assert.match(page, /mode==='stabilized'\?stabilizedGeometry\(v\)/);
   assert.match(page, /const MANUAL_ALIGNMENT_IDS=\['offsetX','offsetY','scale','rotation'\]/);
   assert.match(page, /MANUAL_ALIGNMENT_IDS\.includes\(id\)&&state\.mode!=='regions'/);
   assert.match(page, /manual affine refinement is therefore intentionally reserved to Régions/);
