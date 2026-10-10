@@ -89,5 +89,5 @@ test('stabilized animation keeps its own mode instead of switching to regions',(
  assert.equal(frame.regions,null);
  assert.ok(frame.values.a>0&&frame.values.a<1);
  assert.match(page,/state\.mode==='stabilized'&&!!stabilizedGeometry/);
- assert.match(page,/mode==='stabilized'\?1000\/15/);
+ assert.match(page,/state\.mode==='stabilized'\?\(state\.webgl\?\.failed\?1000\/8:1000\/15\)/);
 });
