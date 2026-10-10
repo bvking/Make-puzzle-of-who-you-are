@@ -49,23 +49,35 @@ export function robustStableAlignment(first,second,size=768){
  }).filter(Boolean);
  if(anchors.length<10)return null;
  const src=anchors.map(a=>a.src),dst=anchors.map(a=>a.ref),base=anchors.map(a=>a.weight);
- let fit=weightedFit(src,dst,base);
+ // Fit hypotheses omit each anchor in turn so one bad detection does not
+ // tilt the entire camera correction. A deterministic, tiny RANSAC analogue.
+ const candidateWeights=[base,...base.map((_,omit)=>base.map((w,i)=>i===omit?0:w))];
+ let fit=null,bestScore=Infinity;
+ for(const weights of candidateWeights){
+  const candidate=weightedFit(src,dst,weights);if(!candidate)continue;
+  const residuals=anchors.map(anchor=>{
+   const p=applySimilarity(anchor.src,candidate);
+   return hypot(p.x-anchor.ref.x,p.y-anchor.ref.y);
+  });
+  const sorted=residuals.slice().sort((a,b)=>a-b),trimmed=sorted.slice(0,Math.max(8,Math.floor(sorted.length*.8)));
+  const score=median(residuals)+.35*trimmed.reduce((total,value)=>total+value,0)/trimmed.length;
+  if(score<bestScore){bestScore=score;fit=candidate}
+ }
  if(!fit)return null;
- // Reweight aberrant correspondences but never turn a single feature
- // into a camera-wide translation: the eye and nose anchors remain.
- for(let iteration=0;iteration<3;iteration++){
-  const residuals=anchors.map(a=>hypot(
-   applySimilarity(a.src,fit).x-a.ref.x,applySimilarity(a.src,fit).y-a.ref.y
-  ));
-  const robustScale=Math.max(1.5,median(residuals)*1.4826);
-  const threshold=Math.max(4,2.5*robustScale);
+ for(let iteration=0;iteration<5;iteration++){
+  const residuals=anchors.map(anchor=>{
+   const p=applySimilarity(anchor.src,fit);
+   return hypot(p.x-anchor.ref.x,p.y-anchor.ref.y);
+  });
+  const threshold=Math.max(3,2.5*Math.max(.8,median(residuals)*1.4826));
   const weights=base.map((w,i)=>w*Math.min(1,threshold/Math.max(.001,residuals[i])));
   const next=weightedFit(src,dst,weights);
   if(!next)return null;fit=next;
  }
- const residuals=anchors.map(a=>hypot(
-  applySimilarity(a.src,fit).x-a.ref.x,applySimilarity(a.src,fit).y-a.ref.y
- ));
+ const residuals=anchors.map(anchor=>{
+  const p=applySimilarity(anchor.src,fit);
+  return hypot(p.x-anchor.ref.x,p.y-anchor.ref.y);
+ });
  const rms=Math.sqrt(residuals.reduce((acc,r,i)=>acc+base[i]*r*r,0)/base.reduce((a,b)=>a+b,0));
  const distance=(a,b)=>hypot((a.x-b.x)*size,(a.y-b.y)*size);
  const eyeSpan=first[33]&&first[263]?distance(first[33],first[263]):size*.25;
