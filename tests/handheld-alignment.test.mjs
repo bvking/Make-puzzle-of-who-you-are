@@ -74,3 +74,20 @@ test('stabilized mode warps UV from unmodified captured B, with original A as un
  assert.match(page,/state\.mode==='stabilized'\?stabilizedGeometry\(v\)/);
  for(const fraction of [25,50,75])assert.match(page,new RegExp('id="diagnostic'+fraction+'"'));
 });
+
+test('stabilized animation keeps its own mode instead of switching to regions',()=>{
+ const page=readFileSync(new URL('../Taquin deux visages interpolés/v15-multiview.html',import.meta.url),'utf8');
+ const from=page.indexOf('function animationFrame(){'),to=page.indexOf('function automaticMotionReduced()',from);
+ assert.ok(from>0&&to>from);
+ const code=page.slice(from,to);
+ const state={mode:'stabilized',animation:{baseControls:{a:.5,x:0,y:0,s:1,r:0},phase:1,ramp:1}};
+ const snapshot=(mode,values,regions)=>({mode,values,regions});
+ const frame=new Function('state','animationSettings','smoothstep','oscillatedBounded','animationSnapshot',code+';return animationFrame')(
+  state,()=>({amplitude:.35}),x=>x*x*(3-2*x),(base,amount,wave,min,max)=>Math.min(max,Math.max(min,base+amount*wave)),snapshot
+ )();
+ assert.equal(frame.mode,'stabilized');
+ assert.equal(frame.regions,null);
+ assert.ok(frame.values.a>0&&frame.values.a<1);
+ assert.match(page,/state\.mode==='stabilized'&&!!stabilizedGeometry/);
+ assert.match(page,/mode==='stabilized'\?1000\/15/);
+});
