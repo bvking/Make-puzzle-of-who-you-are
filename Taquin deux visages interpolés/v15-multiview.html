@@ -52,6 +52,11 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 .diagnostic-triptych figure{margin:0;min-width:0}
 .diagnostic-triptych canvas{display:block;width:100%;aspect-ratio:1;border:1px solid #35464f;border-radius:7px;background:#000}
 .diagnostic-triptych figcaption{text-align:center;margin-top:4px;font-size:12px;font-weight:700;color:#9fe7ff}
+.diagnostic-isolation-label{font-size:13px;font-weight:750;color:#9fe7ff;margin:14px 0 6px}
+.diagnostic-isolation-option{display:flex;gap:9px;align-items:center;background:#0c222a;border:1px solid #356073;border-radius:9px;padding:10px;margin:8px 0}
+.diagnostic-isolation-option input{width:22px;height:22px;flex:none}
+.diagnostic-isolation-option span{flex:1;font-size:12px;line-height:1.4}
+.diagnostic-isolation-note{font-size:11px;color:#b3c7cc;line-height:1.4;margin:6px 0}
 .diagnostic-grid canvas{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:#000;border:1px solid #35464f;border-radius:9px}
 .diagnostic-grid figcaption{margin-top:4px;font-size:11px;color:#d0e3e9;text-align:center}
 </style>
@@ -124,12 +129,23 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 </select>
 <button id="diagnosticCapture" type="button" class="secondary">Vérifier 25 · 50 · 75 %</button>
 </div>
+<label class="diagnostic-isolation-option"><input id="diagnosticNeutralEnabled" type="checkbox" checked><span><strong>Comparer aussi le visage sur fond neutre</strong> — la même géométrie, sans le décor.</span></label>
 <div id="diagnosticStatus" class="status" role="status" aria-live="polite">Après les scans, lance le test des trois positions.</div>
-<p>Ces trois cadres proviennent du moteur de morphing réellement sélectionné, pas d’un fondu d’illustration. Un moteur de secours est signalé.</p>
-<div class="diagnostic-triptych" role="group" aria-label="Morphing réel à 25, 50 et 75 pour cent">
-<figure><canvas id="diagnostic25" aria-label="Morphing à 25 pour cent"></canvas><figcaption>25 %</figcaption></figure>
-<figure><canvas id="diagnostic50" aria-label="Morphing à 50 pour cent"></canvas><figcaption>50 %</figcaption></figure>
-<figure><canvas id="diagnostic75" aria-label="Morphing à 75 pour cent"></canvas><figcaption>75 %</figcaption></figure>
+<p>Les deux séries sont calculées avec le moteur de morphing sélectionné, et non un fondu de présentation.</p>
+<p class="diagnostic-isolation-label">A · Morphing complet (référence)</p>
+<div class="diagnostic-triptych" role="group" aria-label="Morphing complet à 25, 50 et 75 pour cent">
+<figure><canvas id="diagnostic25" aria-label="Morphing complet à 25 pour cent"></canvas><figcaption>25 %</figcaption></figure>
+<figure><canvas id="diagnostic50" aria-label="Morphing complet à 50 pour cent"></canvas><figcaption>50 %</figcaption></figure>
+<figure><canvas id="diagnostic75" aria-label="Morphing complet à 75 pour cent"></canvas><figcaption>75 %</figcaption></figure>
+</div>
+<div id="diagnosticNeutralBlock">
+<p class="diagnostic-isolation-label">B · Visage isolé / fond neutre (même maillage)</p>
+<div class="diagnostic-triptych" role="group" aria-label="Morphing isolé à 25, 50 et 75 pour cent">
+<figure><canvas id="diagnosticNeutral25" aria-label="Visage isolé à 25 pour cent"></canvas><figcaption>25 %</figcaption></figure>
+<figure><canvas id="diagnosticNeutral50" aria-label="Visage isolé à 50 pour cent"></canvas><figcaption>50 %</figcaption></figure>
+<figure><canvas id="diagnosticNeutral75" aria-label="Visage isolé à 75 pour cent"></canvas><figcaption>75 %</figcaption></figure>
+</div>
+<p class="diagnostic-isolation-note">Le contour tête/cheveux est approximatif : un bord coupé par ce masque n’est pas forcément un défaut du morphing.</p>
 </div>
 <div class="diagnostic-grid" role="group" aria-label="Sources déformées et résultat">
 <figure><canvas id="diagnosticWarpA" aria-label="Portrait A déformé"></canvas><figcaption>Source A déformée</figcaption></figure>
@@ -760,9 +776,9 @@ function morphTopologyMatches(indices,triangles){
  for(let i=0;i<triangles.length;i++)for(let j=0;j<3;j++)if(indices[i*3+j]!==triangles[i][j])return false;
  return true
 }
-function renderCanvasMorph(canvas,v,providedGeometry=null){
+function renderCanvasMorph(canvas,v,providedGeometry=null,sourceOverrides=null){
  if(v.a<=.0001)return renderPortraitEndpoint(canvas,0);if(v.a>=.9999)return renderPortraitEndpoint(canvas,1);const faceGeometry=providedGeometry||meshGeometry(v),geometry=providedGeometry?.contextTriangles?providedGeometry:faceGeometry&&fullFrameGeometry(faceGeometry);if(!geometry)return renderAlphaFallback(canvas,v);const size=canvas.width;
- const triangles=geometry.triangles,warpA=warpImage('warpA',size,state.photos[0],geometry.raw1,geometry.target,triangles),warpB=warpImage('warpB',size,morphPhoto(1),geometry.raw2,geometry.target,triangles);
+ const sources=sourceOverrides||[state.photos[0],morphPhoto(1)],triangles=geometry.triangles,warpA=warpImage('warpA',size,sources[0],geometry.raw1,geometry.target,triangles),warpB=warpImage('warpB',size,sources[1],geometry.raw2,geometry.target,triangles);
  const mixed=getBuffer('mixedFace',size),mctx=mixed.getContext('2d'),pixelsA=warpA.getContext('2d').getImageData(0,0,size,size),pixelsB=warpB.getContext('2d').getImageData(0,0,size,size);blendMorphPixels(pixelsA.data,pixelsB.data,geometry.t,pixelsA.data);mctx.putImageData(pixelsA,0,0);
  const ctx=canvas.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(mixed,0,0);
  return{fallback:false,renderer:'canvas',message:`Morphing du portrait complet Canvas 2D · ${lightingStatus()} · ${triangles.length} triangles.`}
@@ -813,24 +829,24 @@ function uploadTexture(gl,texture,image,unit){
  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image)
 }
 function uploadAttribute(gl,buffer,location,data){gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,data,gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(location);gl.vertexAttribPointer(location,2,gl.FLOAT,false,0,0)}
-function renderWebGLFace(size,geometry){
+function renderWebGLFace(size,geometry,sourceOverrides=null){
  const r=initWebGLRenderer();if(r.failed||r.lost)return null;const {gl}=r;if(gl.isContextLost()){r.lost=true;return null}while(gl.getError()!==gl.NO_ERROR){}if(r.canvas.width!==size||r.canvas.height!==size){r.canvas.width=r.canvas.height=size}
  gl.viewport(0,0,size,size);gl.useProgram(r.program);
  const activeTriangles=geometry.triangles||morphTrianglesForGeometry(geometry),indexVersion=`${state.morphTopologyVersion}|full-frame-v2|${activeTriangles.length}`;if(r.indexVersion!==indexVersion||!morphTopologyMatches(r.indices,activeTriangles)){const indices=new Uint16Array(activeTriangles.flat());gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,r.index);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);assertWebGL(gl,'Chargement de la topologie');r.indices=indices;r.indexCount=indices.length;r.indexVersion=indexVersion}
- const textureVersion=morphPhoto2Key();if(r.textureVersion!==textureVersion){uploadTexture(gl,r.tex1,state.photos[0],gl.TEXTURE0);uploadTexture(gl,r.tex2,morphPhoto(1),gl.TEXTURE1);assertWebGL(gl,'Chargement des textures');r.textureVersion=textureVersion}
+ const textureVersion=sourceOverrides?null:morphPhoto2Key();if(sourceOverrides||r.textureVersion!==textureVersion){const sources=sourceOverrides||[state.photos[0],morphPhoto(1)];uploadTexture(gl,r.tex1,sources[0],gl.TEXTURE0);uploadTexture(gl,r.tex2,sources[1],gl.TEXTURE1);assertWebGL(gl,'Chargement des textures');r.textureVersion=textureVersion}
  const count=geometry.raw1.length,positions=new Float32Array(count*2),uv1=new Float32Array(count*2),uv2=new Float32Array(count*2),q=size/SIZE;
  for(let i=0;i<count;i++){positions[i*2]=geometry.target[i].x*q;positions[i*2+1]=geometry.target[i].y*q;uv1[i*2]=geometry.raw1[i].x/SIZE;uv1[i*2+1]=geometry.raw1[i].y/SIZE;uv2[i*2]=geometry.raw2[i].x/SIZE;uv2[i*2+1]=geometry.raw2[i].y/SIZE}
  uploadAttribute(gl,r.position,r.locations.position,positions);uploadAttribute(gl,r.uv1,r.locations.uv1,uv1);uploadAttribute(gl,r.uv2,r.locations.uv2,uv2);assertWebGL(gl,'Chargement du maillage');
  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,r.index);gl.uniform2f(r.locations.resolution,size,size);gl.uniform1f(r.locations.mix,geometry.t);gl.uniform1i(r.locations.texture1,0);gl.uniform1i(r.locations.texture2,1);
  gl.disable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.drawElements(gl.TRIANGLES,r.indexCount,gl.UNSIGNED_SHORT,0);gl.flush();assertWebGL(gl,'Rendu du maillage');return r.canvas
 }
-function renderWebGLMorph(canvas,v){
+function renderWebGLMorph(canvas,v,sourceOverrides=null){
  if(v.a<=.0001)return renderPortraitEndpoint(canvas,0);if(v.a>=.9999)return renderPortraitEndpoint(canvas,1);const faceGeometry=meshGeometry(v),geometry=faceGeometry&&fullFrameGeometry(faceGeometry);if(!geometry)return renderAlphaFallback(canvas,v);
  try{
-  const webglFace=renderWebGLFace(canvas.width,geometry);if(!webglFace){const result=renderCanvasMorph(canvas,v,geometry);result.message='WebGL indisponible : morphing Canvas 2D utilisé.';return result}
+  const webglFace=renderWebGLFace(canvas.width,geometry,sourceOverrides);if(!webglFace){const result=renderCanvasMorph(canvas,v,geometry,sourceOverrides);result.message='WebGL indisponible : morphing Canvas 2D utilisé.';return result}
   const ctx=canvas.getContext('2d'),size=canvas.width;ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(webglFace,0,0);
   return{fallback:false,renderer:'webgl',message:`Morphing du portrait complet WebGL · ${lightingStatus()} · ${geometry.triangles.length} triangles.`}
- }catch(e){console.error(e);if(state.webgl){state.webgl.failed=true;state.webgl.failedAt=performance.now();state.webgl.error=e.message||String(e)}const result=renderCanvasMorph(canvas,v,geometry);result.message='Erreur WebGL : morphing Canvas 2D utilisé.';return result}
+ }catch(e){console.error(e);if(state.webgl){state.webgl.failed=true;state.webgl.failedAt=performance.now();state.webgl.error=e.message||String(e)}const result=renderCanvasMorph(canvas,v,geometry,sourceOverrides);result.message='Erreur WebGL : morphing Canvas 2D utilisé.';return result}
 }
 
 function clamp(value,min,max){return Math.max(min,Math.min(max,value))}
@@ -898,10 +914,27 @@ function renderRegions(canvas,v,regionMix=state.regionMix,regionBaseValues=null,
  const ctx=drawBackground(canvas);ctx.drawImage(displayedFace,0,0);
  return{fallback:false,message:`Régions avancées · forme ${Math.round(v.a*100)} % · gauche ${Math.round(mix.left*100)} %, droite ${Math.round(mix.right*100)} % · ${lightingStatus()}.`}
 }
-function renderSelected(canvas,{updateUI=true,values=null,regionMix=null,regionBaseValues=null,regionEffect=null,mode=state.mode}={}){
+function renderSelected(canvas,{updateUI=true,values=null,regionMix=null,regionBaseValues=null,regionEffect=null,mode=state.mode,sourceOverrides=null}={}){
  if(state.photos.length<2)return null;const v=values||readControls();let info;
- if(mode==='webgl')info=renderWebGLMorph(canvas,v);else if(mode==='regions')info=renderRegions(canvas,v,regionMix||state.regionMix,regionBaseValues,regionEffect);else if(mode==='fallback')info=renderAlphaFallback(canvas,v);else info=renderCanvasMorph(canvas,v);
+ if(mode==='webgl')info=renderWebGLMorph(canvas,v,sourceOverrides);else if(mode==='regions')info=renderRegions(canvas,v,regionMix||state.regionMix,regionBaseValues,regionEffect);else if(mode==='fallback')info=renderAlphaFallback(canvas,v);else info=renderCanvasMorph(canvas,v,null,sourceOverrides);
  if(updateUI){updateControlLabels(v);$('modeStatus').textContent=info?.message||''}return info
+}
+// Diagnostic: neutralize each source IN canonical-image space before warping.
+// We use the exact head ring adopted by the full-frame triangulation.
+// This is an approximate silhouette crop, not accurate semantic matting.
+function diagnosticNeutralPortrait(source,headRing){
+ if(!source||!Array.isArray(headRing)||headRing.length<24||headRing.some(p=>!Number.isFinite(p?.x)||!Number.isFinite(p?.y)))throw new Error('Contour tête/cheveux incomplet.');
+ const canvas=makeCanvas(SIZE),ctx=canvas.getContext('2d');ctx.fillStyle='#20252b';ctx.fillRect(0,0,SIZE,SIZE);
+ ctx.save();ctx.beginPath();ctx.moveTo(headRing[0].x,headRing[0].y);
+ for(let i=1;i<headRing.length;i++)ctx.lineTo(headRing[i].x,headRing[i].y);
+ ctx.closePath();ctx.clip();ctx.drawImage(source,0,0,SIZE,SIZE);ctx.restore();
+ return canvas;
+}
+function diagnosticNeutralSources(geometry){
+ const count=commonLandmarkCount(),length=state.faceOval.length;
+ if(geometry.raw1.length<count+3*length||geometry.raw2.length<count+3*length)throw new Error('Contour tête absent du maillage complet.');
+ const ringA=geometry.raw1.slice(count,count+length),ringB=geometry.raw2.slice(count,count+length);
+ return[diagnosticNeutralPortrait(state.photos[0],ringA),diagnosticNeutralPortrait(morphPhoto(1),ringB)];
 }
 // Controlled diagnostic. Every sample uses the same renderSelected pipeline as the
 // actual preview, not an approximate alpha cross-fade or a separate shader.
@@ -937,10 +970,12 @@ function captureMorphDiagnostic(){
  if(!Number.isFinite(percent)){report.textContent='Position de diagnostic non reconnue.';return}
  $('blend').value=String(percent);
  const controls=readControls();
- const size=Math.min(320,PREVIEW_SIZE);
+ const size=Math.min(320,PREVIEW_SIZE),withNeutral=$('diagnosticNeutralEnabled').checked;
+ $('diagnosticNeutralBlock').hidden=!withNeutral;
  const copy=(id,source)=>{const target=$(id);target.width=target.height=size;target.getContext('2d').drawImage(source,0,0,size,size);return target};
  try{
-  const frames=[],engines=[],problems=[];
+  const frames=[],engines=[],problems=[];let neutralSources=null;
+  for(const id of ['diagnosticNeutral25','diagnosticNeutral50','diagnosticNeutral75']){const out=$(id);out.getContext('2d').clearRect(0,0,out.width,out.height)}
   // Render all three snapshots at the exact requested t, in the same mode.
   for(const position of [25,50,75]){
    const v=diagnosticMorphValue(controls,position);
@@ -956,6 +991,14 @@ function captureMorphDiagnostic(){
    frames.push(copy('diagnostic'+position,alignCanvas));
    engines.push(engine);
    if(engine!==state.mode)problems.push(position+' % rendu par Canvas 2D (WebGL indisponible)');
+   if(withNeutral){
+    if(!neutralSources)neutralSources=diagnosticNeutralSources(geometry);
+    const isolated=renderSelected(alignCanvas,{updateUI:false,values:v,mode:state.mode,sourceOverrides:neutralSources});
+    const engineNeutral=diagnosticMorphEngine(isolated);
+    if(engineNeutral==='fallback'||engineNeutral==='inconnu')throw new Error('Rendu isolé non triangulaire à '+position+' %.');
+    copy('diagnosticNeutral'+position,alignCanvas);
+    if(engineNeutral!==state.mode)problems.push(position+' % isolé calculé en Canvas 2D (WebGL indisponible)');
+   }
   }
   const delta25_50=diagnosticFrameDifference(frames[0],frames[1]),delta50_75=diagnosticFrameDifference(frames[1],frames[2]);
   if(delta25_50<.05||delta50_75<.05)problems.push('deux positions semblent presque identiques : inspecte les expressions');
@@ -969,16 +1012,20 @@ function captureMorphDiagnostic(){
   if(['fallback','inconnu'].includes(diagnosticMorphEngine(info)))throw new Error('Rendu du contrôle sélectionné non triangulaire.');
   copy('diagnosticMixed',alignCanvas);
   const enginesSummary=[...new Set(engines)].join(' / ');
-  report.textContent=`Images 25 / 50 / 75 % calculées aux positions 0,25 / 0,50 / 0,75 · moteur(s) : ${enginesSummary} · écarts moyens : ${delta25_50.toFixed(2)} et ${delta50_75.toFixed(2)} niveaux RGB. ${problems.length?'Attention : '+problems.join(' ; '):'Les trois images ne sont pas figées sur un même résultat.'} Cela ne mesure pas la qualité esthétique du morphing.`;
+  report.textContent=`Morphing 25 / 50 / 75 % réalisé ${withNeutral?'avec et sans décor':'avec décor'} · positions exactes 0,25 / 0,50 / 0,75 · moteur : ${enginesSummary} · écarts des portraits complets : ${delta25_50.toFixed(2)} et ${delta50_75.toFixed(2)} niveaux RGB. ${problems.length?'Attention : '+problems.join(' ; '):'Les trois rendus complets sont distincts.'} Contour isolé approximatif.`;
  }catch(error){
   console.error('Diagnostic du morphing',error);
-  for(const id of ['diagnostic25','diagnostic50','diagnostic75','diagnosticWarpA','diagnosticWarpB','diagnosticMixed']){
+  for(const id of ['diagnostic25','diagnostic50','diagnostic75','diagnosticNeutral25','diagnosticNeutral50','diagnosticNeutral75','diagnosticWarpA','diagnosticWarpB','diagnosticMixed']){
    const canvas=$(id);canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
   }
   report.textContent='Test des 25 / 50 / 75 % non validé : '+(error?.message||String(error));
  }
 }
 $('diagnosticCapture').addEventListener('click',captureMorphDiagnostic);
+$('diagnosticNeutralEnabled').addEventListener('change',()=>{
+ $('diagnosticNeutralBlock').hidden=!$('diagnosticNeutralEnabled').checked;
+ if(canMeshMorph()&&$('morphDiagnostic').open)captureMorphDiagnostic();
+});
 $('diagnosticOpen').addEventListener('click',()=>{
  const section=$('morphDiagnostic');
  section.open=true;
