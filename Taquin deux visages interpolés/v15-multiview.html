@@ -20,7 +20,7 @@ video,.viewport canvas{position:absolute;inset:0;width:100%;height:100%;object-f
 .controls{display:grid;gap:9px;margin-top:12px}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
 button{appearance:none;border:0;border-radius:12px;padding:13px 14px;font-weight:750;font-size:15px;background:#f1f1f1;color:#050505;min-height:46px}
 button.secondary{background:#222;color:#fff;border:1px solid #383838}button.danger{background:#3a1717;color:#ffdede}button:disabled{opacity:.45}
-.mode-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.mode-picker button{min-width:0;padding:10px 6px;font-size:12px}.mode-picker button.is-active{background:#9fe7ff;color:#061014;border-color:#9fe7ff}
+.mode-picker{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.mode-picker button{min-width:0;padding:10px 6px;font-size:12px}.mode-picker button.is-active{background:#9fe7ff;color:#061014;border-color:#9fe7ff}
 .region-controls{display:grid;gap:9px;padding:10px;border:1px solid #303030;border-radius:12px;background:#0a0a0a}.region-title{font-size:12px;color:#bbb}.region-presets{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.region-presets button{min-height:44px;padding:8px;font-size:12px}.region-presets button:last-child{grid-column:1/-1}.region-mixers{display:grid;gap:7px}.region-mixers label,.region-options label{grid-template-columns:105px 1fr 42px}.region-options{display:grid;gap:7px;padding-top:9px;border-top:1px solid #292929}.source-key{display:grid;grid-template-columns:1fr 1fr;gap:8px}.source-card{display:grid;grid-template-columns:50px 1fr;gap:8px;align-items:center;padding:6px;border:1px solid #303030;border-radius:10px;background:#090909;font-size:12px;color:#ccc}.source-thumb{width:50px;aspect-ratio:1;border-radius:8px;background:#000 center/cover no-repeat;border:1px solid #333}
 .animation-controls{display:grid;gap:8px;padding:10px;border:1px solid #315465;border-radius:12px;background:#08141a;transition:border-color .25s,box-shadow .25s}.animation-controls label{grid-template-columns:88px 1fr 48px}.animation-controls button.is-running{background:#9fe7ff;color:#061014;border-color:#9fe7ff}.animation-controls.is-animating{border-color:#9fe7ff;box-shadow:0 0 18px #52d8ff42}.animation-state{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:750;color:#b8c4c9}.animation-state:before{content:"";width:9px;height:9px;border-radius:50%;background:#68757a}.animation-controls.is-animating .animation-state{color:#9fe7ff}.animation-controls.is-animating .animation-state:before{background:#65e6ff;box-shadow:0 0 0 0 #65e6ff99;animation:animationPulse 1.3s ease-out infinite}.region-animation-styles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.region-animation-styles .region-animation-title{grid-column:1/-1;color:#9fe7ff;font-size:12px;font-weight:750}.region-animation-styles button{min-width:0;min-height:46px;padding:8px 5px;font-size:12px}.region-animation-styles button.is-active{background:#9fe7ff;color:#061014;border-color:#9fe7ff}.animation-badge{position:absolute;z-index:3;top:10px;left:10px;max-width:calc(100% - 20px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px;border-radius:999px;background:#06151be8;border:1px solid #9fe7ff;color:#9fe7ff;font-size:11px;font-weight:850;letter-spacing:.04em;box-shadow:0 0 16px #52d8ff55}.animation-badge:before{content:"●";margin-right:6px}.animation-hint{font-size:12px;line-height:1.35;color:#a8c8d5}@keyframes animationPulse{70%{box-shadow:0 0 0 7px #65e6ff00}100%{box-shadow:0 0 0 0 #65e6ff00}}@media(prefers-reduced-motion:reduce){.animation-controls.is-animating .animation-state:before{animation:none}}
 [hidden]{display:none!important}
@@ -112,12 +112,13 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <span id="viewpointStatus" class="viewpoint-status"></span>
 </div>
 <div id="modePicker" class="mode-picker" role="group" aria-label="Mode de composition">
+<button type="button" class="secondary" data-mode="stabilized" aria-pressed="false">Visage stabilisé</button>
 <button type="button" class="secondary is-active" data-mode="canvas" aria-pressed="true">Triangles 2D</button>
 <button type="button" class="secondary" data-mode="webgl" aria-pressed="false">Triangles WebGL</button>
 <button type="button" class="secondary" data-mode="regions" aria-pressed="false">Régions</button>
 </div>
 <label>Lumière visage <input id="regionHarmony" type="range" min="0" max="100" value="0"><span id="regionHarmonyVal" class="value">0%</span></label>
-<span class="region-title">Optionnel : augmente ce réglage seulement si les deux photos ont des éclairages très différents.</span>
+<span class="region-title">Le mode « Visage stabilisé » corrige les mouvements de caméra estimés à partir des yeux et du nez. Les cheveux et l’arrière-plan de la photo A restent fixes. Il ne reconstruit pas les parties du visage cachées par un autre angle.</span><span class="region-title">Lumière : augmente ce réglage seulement si les deux photos ont des éclairages très différents.</span>
 <div id="modeStatus" class="status" aria-live="polite"></div>
 <details id="morphDiagnostic" class="morph-diagnostic">
 <summary>Diagnostic du morphing · inspecter les doubles contours</summary>
@@ -203,6 +204,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 </main>
 <script type="module">
 import {analyzePhotometry,automaticHarmony,captureQuality,chooseMatchedPair,commonYawRange,derivePose,laplacianVariance,pairCost,POSE_BINS,retainBestByPose,sessionCoverage} from './multiview-core.mjs';
+import {applySimilarity,robustStableAlignment} from './handheld-alignment.mjs';
 const MEDIAPIPE_MODULE="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs";
 const MEDIAPIPE_WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm";
 const FACE_MODEL="https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
@@ -234,7 +236,7 @@ const state={
  pair:{status:'empty',score:null,reasons:[],advice:[],metrics:null,hint:''},
  mode:'canvas',regionMix:{left:0,right:0,leftEye:1,rightEye:1,nose:0,mouth:1},regionFeather:.5,regionHarmony:0,regionAnimationStyle:'progressive',regionCache:null,
  meshTriangles:[],morphTriangles:[],morphTrianglesVersion:-1,morphTopologyVersion:0,previewTriangles:[],previewTrianglesVersion:-1,validatedControls:{x:0,y:0,s:1,r:0},faceOval:FALLBACK_FACE_OVAL.slice(),
- buffers:new Map(),webgl:null,photoVersion:0,lighting:{version:-1,corrected:null,blended:null,blendKey:'',stats:null},renderQueued:false,quickRenderQueued:false,accurateRenderTimer:null,
+ buffers:new Map(),webgl:null,photoVersion:0,stabilizedCache:{key:'',geometry:null,fit:null,warning:''},lighting:{version:-1,corrected:null,blended:null,blendKey:'',stats:null},renderQueued:false,quickRenderQueued:false,accurateRenderTimer:null,
  animation:{running:false,raf:0,autoStartRaf:0,exporting:false,phase:0,ramp:0,lastTick:0,lastRender:0,randomSeed:137,styleTransition:null,baseControls:null,baseRegionMix:null,lastFrame:null,frozenFrame:null,userFrozen:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false}
 };
 const video=$('video'),captureBtn=$('capture'),status=$('captureStatus'),alignCanvas=$('alignCanvas');
@@ -575,7 +577,7 @@ async function applyMatchedView(targetYaw=null,{automatic=false}={}){
  try{
   const photos=await Promise.all([blobToCanvas(pair.first.blob),blobToCanvas(pair.second.blob)]);if(generation!==state.operationGeneration)return;const marks=[pair.first.landmarks,pair.second.landmarks],headRings=[];await ensureSegmenter();if(generation!==state.operationGeneration)return;
   for(let index=0;index<2;index++){pairPreparationStatus(`Analyse de la silhouette ${index+1}/2…`);headRings[index]=await extractHeadRing(photos[index],marks[index]);if(generation!==state.operationGeneration)return}
-  stopCamera();closeSegmenter();state.photos=photos;state.marks=marks;state.headRings=headRings;state.selectedPair=pair;state.step=0;state.solutionURL='';state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.buffers.clear();invalidateFaceLighting();state.regionHarmony=wasAlign?previousHarmony:automaticHarmony(pair.first.photometry,pair.second.photometry);syncRegionControls();photos.forEach((photo,index)=>{const thumbnail=makeCanvas(192),ctx=thumbnail.getContext('2d');ctx.drawImage(photo,0,0,192,192);const value=`url(${thumbnail.toDataURL('image/jpeg',.8)})`;$('thumb'+(index+1)).style.backgroundImage=value;$('sourceThumb'+(index+1)).style.backgroundImage=value});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();state.animation.userFrozen=false;syncPairUI();autoAlign({activate:false,render:false});syncViewpointUI(pair);updateModeAvailability();if(wasAlign){$('alignStage').inert=false;$('alignStage').removeAttribute('aria-busy')}if(canMeshMorph()){const desiredMode=wasAlign&&['canvas','webgl','regions'].includes(previousMode)?previousMode:'webgl';setMode(desiredMode);if(!automatic||!reducedMotionQuery?.matches)maybeAutoStartAnimation()}else scheduleRender();(state.pair.status==='unusable'?$('retakePhoto2'):$('alignStatus')).focus()
+  stopCamera();closeSegmenter();state.photos=photos;state.marks=marks;state.headRings=headRings;state.selectedPair=pair;state.step=0;state.solutionURL='';state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.buffers.clear();invalidateFaceLighting();state.regionHarmony=wasAlign?previousHarmony:automaticHarmony(pair.first.photometry,pair.second.photometry);syncRegionControls();photos.forEach((photo,index)=>{const thumbnail=makeCanvas(192),ctx=thumbnail.getContext('2d');ctx.drawImage(photo,0,0,192,192);const value=`url(${thumbnail.toDataURL('image/jpeg',.8)})`;$('thumb'+(index+1)).style.backgroundImage=value;$('sourceThumb'+(index+1)).style.backgroundImage=value});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();state.animation.userFrozen=false;syncPairUI();autoAlign({activate:false,render:false});syncViewpointUI(pair);updateModeAvailability();if(wasAlign){$('alignStage').inert=false;$('alignStage').removeAttribute('aria-busy')}if(canMeshMorph()){const desiredMode=wasAlign&&['canvas','webgl','regions','stabilized'].includes(previousMode)?previousMode:'stabilized';setMode(desiredMode);if(!automatic||!reducedMotionQuery?.matches)maybeAutoStartAnimation()}else scheduleRender();(state.pair.status==='unusable'?$('retakePhoto2'):$('alignStatus')).focus()
  }catch(error){console.error(error);if(generation===state.operationGeneration){pairPreparationStatus('Préparation du morphing impossible : '+(error.message||error));showStage(wasAlign?'alignStage':'captureStage')}}
  finally{if(generation===state.operationGeneration){state.applyingPair=false;$('alignStage').inert=false;$('alignStage').removeAttribute('aria-busy');disableViewpointControls(false);updateScanUI()}}
 }
@@ -701,6 +703,76 @@ function meshGeometry(v){
  const count=commonLandmarkCount(),raw1=landmarkPoints(0).slice(0,count),raw2=landmarkPoints(1).slice(0,count),aligned2=raw2.map(point=>mapPoint(photo2Matrix(v),point)),fullPortrait=state.mode!=='regions',alignmentStrength=1-smoother(clamp(v.a,0,1)),frame2=fullPortrait?raw2:raw2.map(point=>mapPoint(photo2Matrix(v,alignmentStrength),point)),topologyShape=raw1.map((point,index)=>({x:(point.x+(fullPortrait?raw2[index]:aligned2[index]).x)/2,y:(point.y+(fullPortrait?raw2[index]:aligned2[index]).y)/2}));
  const target=raw1.map((point,index)=>({x:point.x+(frame2[index].x-point.x)*v.a,y:point.y+(frame2[index].y-point.y)*v.a})),eyeTriangles=count>=478?REFINED_EYE_MESH_IDS.flatMap(ids=>delaunayTriangles(topologyShape,ids)):[],mouthIds=MOUTH_HOLE_IDS.filter(id=>id<count),mouthTriangles=mouthIds.length===MOUTH_HOLE_IDS.length?delaunayTriangles(topologyShape,mouthIds):[],head1=fullPortrait?(state.headRings[0]||fallbackHeadRing(raw1)):null,head2=fullPortrait?(state.headRings[1]||fallbackHeadRing(raw2)):null,headTarget=fullPortrait&&head1&&head2?head1.map((point,index)=>lerpPoint(point,head2[index],v.a)):null;
  return{raw1,raw2,aligned2,frame2,target,head1,head2,headTarget,eyeTriangles,mouthTriangles,faceCount:count,t:v.a}
+}
+// Mode mobile: use source-B UV coordinates exactly as captured, but interpolate
+// its face landmarks AFTER rigid B-to-A alignment. This corrects hand motion
+// without pretending that camera perspective is known for hidden surfaces.
+function stabilizedGeometry(v){
+ if(!canMeshMorph())return null;
+ const key=state.photoVersion+'|'+state.morphTopologyVersion;
+ let cached=state.stabilizedCache;
+ if(cached.key!==key){
+  const fit=robustStableAlignment(state.marks[0],state.marks[1],SIZE);
+  if(!fit||!Number.isFinite(fit.normalizedRms)||fit.scale<.50||fit.scale>2){
+   cached={key,geometry:null,fit,warning:'Recalage yeux/nez indisponible ou échelle trop différente.'};
+  }else{
+   const count=commonLandmarkCount(),first=landmarkPoints(0).slice(0,count),second=landmarkPoints(1).slice(0,count);
+   const aligned=second.map(p=>applySimilarity(p,fit)),oval=new Set(state.faceOval);
+   // Soft constraint of the visible face outline when perspective is unequal.
+   const edgeStrength=fit.normalizedRms>.13?.80:.94;
+   const stableSecond=aligned.map((p,i)=>oval.has(i)?lerpPoint(first[i],p,edgeStrength):p);
+   const middle=first.map((p,i)=>lerpPoint(p,stableSecond[i],.5)),ids=Array.from({length:Math.min(count,468)},(_,i)=>i);
+   const mouth=MOUTH_HOLE_IDS.filter(i=>i<count),mouthTriangles=mouth.length===MOUTH_HOLE_IDS.length?delaunayTriangles(middle,mouth):[];
+   const eyeTriangles=count>=478?REFINED_EYE_MESH_IDS.flatMap(indexes=>delaunayTriangles(middle,indexes)):[];
+   const choices=[{label:'topologie captation',triangles:state.morphTriangles},{label:'topologie MediaPipe',triangles:state.meshTriangles},{label:'triangulation moyenne',triangles:delaunayTriangles(middle,ids)}]
+    .filter(option=>option.triangles?.length)
+    .map(option=>({...option,metrics:assessMorphTopology(first,stableSecond,option.triangles,option.label)}))
+    .sort((a,b)=>a.metrics.risk-b.metrics.risk);
+   const chosen=choices.find(c=>c.metrics.flipArea<.03&&c.metrics.collapseArea<.05&&c.metrics.severeStretchArea<.18&&c.metrics.p99Stretch<14);
+   cached=chosen?{
+    key,fit,warning:fit.warning,geometry:{raw1:first,raw2:second,alignedSecond:stableSecond,
+     triangles:chosen.triangles.concat(eyeTriangles,mouthTriangles),contextTriangles:[],
+     quality:chosen.metrics,topologyName:chosen.label}
+   }:{key,fit,geometry:null,warning:'Triangles du visage instables après recalage : ne pas afficher un résultat trompeur.'};
+  }
+  state.stabilizedCache=cached;
+ }
+ if(!cached.geometry)return null;
+ const g=cached.geometry;
+ return {...g,t:v.a,target:g.raw1.map((p,i)=>lerpPoint(p,g.alignedSecond[i],v.a)),fit:cached.fit,warning:cached.warning};
+}
+function stabilizedFaceMask(size,points){
+ const mask=getBuffer('stabilized-face-mask',size),ctx=mask.getContext('2d'),q=size/SIZE;
+ const indices=state.faceOval.filter(i=>points[i]);if(indices.length<30)return null;
+ ctx.save();ctx.beginPath();ctx.moveTo(points[indices[0]].x*q,points[indices[0]].y*q);
+ for(let i=1;i<indices.length;i++)ctx.lineTo(points[indices[i]].x*q,points[indices[i]].y*q);
+ ctx.closePath();ctx.lineJoin='round';
+ // Feather using overlapping translucent strokes, without Canvas filter or
+ // heavyweight per-frame Gaussian blurs on iPhone Safari.
+ for(const [width,alpha] of [[18,.10],[12,.17],[7,.30],[3,.5]]){
+  ctx.lineWidth=width*size/SIZE;ctx.strokeStyle='rgba(255,255,255,'+alpha+')';ctx.stroke();
+ }
+ ctx.fillStyle='#fff';ctx.fill();ctx.restore();return mask;
+}
+function renderStabilizedFace(canvas,v){
+ const geometry=stabilizedGeometry(v),ctx=drawBackground(canvas);
+ if(!geometry)return{fallback:true,message:'Visage stabilisé indisponible : '+(state.stabilizedCache.warning||'maillage non validé')+'. Choisis Triangles 2D ou reprends une vue commune.'};
+ if(v.a<.0001)return{fallback:false,renderer:'stabilized',message:'Visage A intact · fond fixe.'};
+ const layer=getBuffer('stabilized-face-layer',canvas.width);let renderer='canvas';
+ try{
+  const webgl=renderWebGLFace(canvas.width,geometry);
+  if(webgl){layer.getContext('2d').drawImage(webgl,0,0);renderer='webgl'}
+  else{const result=renderCanvasMorph(layer,v,geometry);if(result.fallback)return result}
+ }catch(error){
+  console.warn('Visage stabilisé : WebGL indisponible, essai Canvas 2D',error);
+  const result=renderCanvasMorph(layer,v,geometry);if(result.fallback)return result;
+ }
+ const mask=stabilizedFaceMask(canvas.width,geometry.target);
+ if(!mask)return{fallback:true,message:'Contour facial indisponible pour la composition stabilisée.'};
+ const masked=getBuffer('stabilized-masked-layer',canvas.width),mctx=masked.getContext('2d');
+ mctx.drawImage(layer,0,0);mctx.globalCompositeOperation='destination-in';mctx.drawImage(mask,0,0);
+ mctx.globalCompositeOperation='source-over';ctx.drawImage(masked,0,0);
+ return{fallback:false,renderer,message:'Visage stabilisé · fond A fixe · caméra B recalée '+Math.round(geometry.fit.scale*100)+' % / '+geometry.fit.rollDegrees.toFixed(1)+'° · '+(geometry.warning||'adaptation 2D vérifiée')};
 }
 function morphTrianglesForGeometry(geometry){const semantic=state.morphTriangles.length?state.morphTriangles:state.meshTriangles;return semantic.concat(geometry.eyeTriangles||[],geometry.mouthTriangles||[])}
 function manualGeometryIsSafe(v){if(!hasLandmarkPair()||!state.morphTriangles.length)return false;const first=landmarkPoints(0).slice(0,468),second=landmarkPoints(1).slice(0,468).map(point=>mapPoint(photo2Matrix(v),point)),metrics=assessMorphTopology(first,second,state.morphTriangles,'réglage manuel'),cropA=faceOvalCrop(first),cropB=faceOvalCrop(second),outsideArea=Math.max(cropA.outsideArea,cropB.outsideArea),maxOverflow=Math.max(cropA.maxOverflow,cropB.maxOverflow);return!topologyTechnicallyUnusable(metrics,outsideArea,maxOverflow)}
@@ -916,7 +988,7 @@ function renderRegions(canvas,v,regionMix=state.regionMix,regionBaseValues=null,
 }
 function renderSelected(canvas,{updateUI=true,values=null,regionMix=null,regionBaseValues=null,regionEffect=null,mode=state.mode,sourceOverrides=null}={}){
  if(state.photos.length<2)return null;const v=values||readControls();let info;
- if(mode==='webgl')info=renderWebGLMorph(canvas,v,sourceOverrides);else if(mode==='regions')info=renderRegions(canvas,v,regionMix||state.regionMix,regionBaseValues,regionEffect);else if(mode==='fallback')info=renderAlphaFallback(canvas,v);else info=renderCanvasMorph(canvas,v,null,sourceOverrides);
+ if(mode==='stabilized')info=renderStabilizedFace(canvas,v);else if(mode==='webgl')info=renderWebGLMorph(canvas,v,sourceOverrides);else if(mode==='regions')info=renderRegions(canvas,v,regionMix||state.regionMix,regionBaseValues,regionEffect);else if(mode==='fallback')info=renderAlphaFallback(canvas,v);else info=renderCanvasMorph(canvas,v,null,sourceOverrides);
  if(updateUI){updateControlLabels(v);$('modeStatus').textContent=info?.message||''}return info
 }
 // Diagnostic: neutralize each source IN canonical-image space before warping.
@@ -964,13 +1036,14 @@ function diagnosticFrameDifference(first,second){
 function captureMorphDiagnostic(){
  const report=$('diagnosticStatus');
  if(!canMeshMorph()){report.textContent='Deux scans compatibles sont nécessaires avant le diagnostic.';return}
- if(state.mode!=='webgl'&&state.mode!=='canvas'){report.textContent='Sélectionne Triangles WebGL ou Triangles 2D avant de vérifier les trois positions.';return}
+ if(!['webgl','canvas','stabilized'].includes(state.mode)){report.textContent='Sélectionne Visage stabilisé, Triangles WebGL ou Triangles 2D pour vérifier les trois positions.';return}
  stopAnimation({freeze:false,render:false});state.animation.userFrozen=true;syncAnimationControls();
  const percent=Number($('diagnosticPosition').value);
  if(!Number.isFinite(percent)){report.textContent='Position de diagnostic non reconnue.';return}
  $('blend').value=String(percent);
  const controls=readControls();
- const size=Math.min(320,PREVIEW_SIZE),withNeutral=$('diagnosticNeutralEnabled').checked;
+ const size=Math.min(320,PREVIEW_SIZE),withNeutral=state.mode!=='stabilized'&&$('diagnosticNeutralEnabled').checked;
+ $('diagnosticNeutralEnabled').disabled=state.mode==='stabilized';
  $('diagnosticNeutralBlock').hidden=!withNeutral;
  const copy=(id,source)=>{const target=$(id);target.width=target.height=size;target.getContext('2d').drawImage(source,0,0,size,size);return target};
  try{
@@ -979,7 +1052,7 @@ function captureMorphDiagnostic(){
   // Render all three snapshots at the exact requested t, in the same mode.
   for(const position of [25,50,75]){
    const v=diagnosticMorphValue(controls,position);
-   const face=meshGeometry(v),geometry=face&&fullFrameGeometry(face);
+   const face=state.mode==='stabilized'?null:meshGeometry(v),geometry=state.mode==='stabilized'?stabilizedGeometry(v):face&&fullFrameGeometry(face);
    if(!geometry||!Number.isFinite(geometry.t)||Math.abs(geometry.t-position/100)>1e-8||!geometry.triangles?.length){
     throw new Error('Maillage intermédiaire invalide à '+position+' %. Aucun résultat fictif ne sera affiché.');
    }
@@ -1003,7 +1076,7 @@ function captureMorphDiagnostic(){
   const delta25_50=diagnosticFrameDifference(frames[0],frames[1]),delta50_75=diagnosticFrameDifference(frames[1],frames[2]);
   if(delta25_50<.05||delta50_75<.05)problems.push('deux positions semblent presque identiques : inspecte les expressions');
   const v=diagnosticMorphValue(controls,percent);
-  const faceGeometry=meshGeometry(v),geometry=faceGeometry&&fullFrameGeometry(faceGeometry);
+  const faceGeometry=state.mode==='stabilized'?null:meshGeometry(v),geometry=state.mode==='stabilized'?stabilizedGeometry(v):faceGeometry&&fullFrameGeometry(faceGeometry);
   if(!geometry)throw new Error('Maillage manquant à '+percent+' %.');
   const a=warpImage('diagnostic-warp-a',size,state.photos[0],geometry.raw1,geometry.target,geometry.triangles);
   const b=warpImage('diagnostic-warp-b',size,morphPhoto(1),geometry.raw2,geometry.target,geometry.triangles);
@@ -1012,7 +1085,7 @@ function captureMorphDiagnostic(){
   if(['fallback','inconnu'].includes(diagnosticMorphEngine(info)))throw new Error('Rendu du contrôle sélectionné non triangulaire.');
   copy('diagnosticMixed',alignCanvas);
   const enginesSummary=[...new Set(engines)].join(' / ');
-  report.textContent=`Morphing 25 / 50 / 75 % réalisé ${withNeutral?'avec et sans décor':'avec décor'} · positions exactes 0,25 / 0,50 / 0,75 · moteur : ${enginesSummary} · écarts des portraits complets : ${delta25_50.toFixed(2)} et ${delta50_75.toFixed(2)} niveaux RGB. ${problems.length?'Attention : '+problems.join(' ; '):'Les trois rendus complets sont distincts.'} Contour isolé approximatif.`;
+  report.textContent=`Morphing 25 / 50 / 75 % réalisé ${state.mode==='stabilized'?'avec visage stabilisé et fond A fixe':withNeutral?'avec et sans décor':'avec décor'} · positions exactes 0,25 / 0,50 / 0,75 · moteur : ${enginesSummary} · écarts des portraits complets : ${delta25_50.toFixed(2)} et ${delta50_75.toFixed(2)} niveaux RGB. ${problems.length?'Attention : '+problems.join(' ; '):'Les trois rendus complets sont distincts.'} Contour isolé approximatif.`;
  }catch(error){
   console.error('Diagnostic du morphing',error);
   for(const id of ['diagnostic25','diagnostic50','diagnostic75','diagnosticNeutral25','diagnosticNeutral50','diagnosticNeutral75','diagnosticWarpA','diagnosticWarpB','diagnosticMixed']){
@@ -1033,10 +1106,10 @@ $('diagnosticOpen').addEventListener('click',()=>{
  captureMorphDiagnostic();
  requestAnimationFrame(()=>section.scrollIntoView({behavior:'smooth',block:'start'}));
 });
-function animationModeAvailable(){return canMeshMorph()&&(state.mode==='webgl'||state.mode==='regions')}
+function animationModeAvailable(){return canMeshMorph()&&(state.mode==='webgl'||state.mode==='regions'||state.mode==='stabilized')}
 function animationSettings(){return{amplitude:+$('animationAmplitude').value/100,speed:+$('animationSpeed').value/100}}
 function syncAnimationControls(){
- const meshReady=canMeshMorph(),modeReady=state.mode==='webgl'||state.mode==='regions',available=meshReady&&modeReady,animation=state.animation,running=animation.running,frozen=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode,{amplitude,speed}=animationSettings(),controls=$('animationControls'),badge=$('animationBadge'),reduced=automaticMotionReduced(),styleLabel=REGION_ANIMATION_LABELS[state.regionAnimationStyle]||REGION_ANIMATION_LABELS.progressive,styles=$('regionAnimationStyles');controls.hidden=state.photos.length<2;styles.hidden=state.mode!=='regions';document.querySelectorAll('[data-region-animation-style]').forEach(button=>{const active=button.dataset.regionAnimationStyle===state.regionAnimationStyle;button.classList.toggle('is-active',active);button.setAttribute('aria-pressed',String(active))});controls.classList.toggle('is-animating',running);badge.hidden=!running;badge.textContent=running?`MORPHING ACTIF · ${state.mode==='webgl'?'WEBGL':`RÉGIONS · ${styleLabel.toUpperCase()}`} · ${Math.round(amplitude*100)} %`:'MORPHING ACTIF';$('toggleAnimation').disabled=!available||amplitude<=0;$('toggleAnimation').classList.toggle('is-running',running);$('toggleAnimation').setAttribute('aria-pressed',String(running));$('toggleAnimation').textContent=running?'Arrêter et figer':frozen?'Reprendre doucement':'Démarrer l’animation';
+ const meshReady=canMeshMorph(),modeReady=state.mode==='webgl'||state.mode==='regions'||state.mode==='stabilized',available=meshReady&&modeReady,animation=state.animation,running=animation.running,frozen=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode,{amplitude,speed}=animationSettings(),controls=$('animationControls'),badge=$('animationBadge'),reduced=automaticMotionReduced(),styleLabel=REGION_ANIMATION_LABELS[state.regionAnimationStyle]||REGION_ANIMATION_LABELS.progressive,styles=$('regionAnimationStyles');controls.hidden=state.photos.length<2;styles.hidden=state.mode!=='regions';document.querySelectorAll('[data-region-animation-style]').forEach(button=>{const active=button.dataset.regionAnimationStyle===state.regionAnimationStyle;button.classList.toggle('is-active',active);button.setAttribute('aria-pressed',String(active))});controls.classList.toggle('is-animating',running);badge.hidden=!running;badge.textContent=running?`MORPHING ACTIF · ${state.mode==='webgl'?'WEBGL':`RÉGIONS · ${styleLabel.toUpperCase()}`} · ${Math.round(amplitude*100)} %`:'MORPHING ACTIF';$('toggleAnimation').disabled=!available||amplitude<=0;$('toggleAnimation').classList.toggle('is-running',running);$('toggleAnimation').setAttribute('aria-pressed',String(running));$('toggleAnimation').textContent=running?'Arrêter et figer':frozen?'Reprendre doucement':'Démarrer l’animation';
  $('regionHarmony').disabled=state.photos.length<2||!meshReady;
  $('animationAmplitudeVal').textContent=Math.round(amplitude*100)+'%';$('animationAmplitude').setAttribute('aria-valuetext',`${Math.round(amplitude*100)} %`);$('animationSpeedVal').textContent=speed.toFixed(2)+'×';$('animationSpeed').setAttribute('aria-valuetext',`${speed.toFixed(2)} fois`);
  let description;if(state.pair.status==='unusable')description='Animation bloquée : conserve la photo 1 et reprends la photo 2 selon les indications ci-dessus.';else if(!meshReady)description='Animation indisponible : les deux visages doivent être détectés et le maillage doit rester stable.';else if(!modeReady)description='Choisis Triangles WebGL ou Régions pour lancer automatiquement le morphing animé.';else description=state.mode==='webgl'?'La forme et le mélange oscillent sans déplacer, tourner ni redimensionner le recalage global.':REGION_ANIMATION_HINTS[state.regionAnimationStyle];if(state.pair.status==='adapted'&&meshReady)description+=' Le maillage renforcé compense automatiquement la différence de pose.';if(reduced&&available&&!running)description+=' Le réglage iPhone « Réduire les animations » bloque seulement le démarrage automatique : le bouton reste utilisable.';$('animationState').textContent=running?'Animation active':frozen?'Image figée':state.pair.status==='unusable'?'Photo 2 à reprendre':!meshReady?'Paire non validée':!modeReady?'Mode statique':reduced?'Prête · démarrage manuel':'Prête à démarrer';$('animationHint').textContent=description+(amplitude<=0?' Amplitude 0 % : animation suspendue.':frozen?' Les curseurs conservent les valeurs centrales.':'')
@@ -1077,13 +1150,13 @@ function resumeAutomaticAnimation(){queueAutomaticAnimationStart(true)}
 function queueAnimationLoop(){if(state.animation.running&&!state.animation.raf&&!document.hidden&&$('alignStage').classList.contains('active'))state.animation.raf=requestAnimationFrame(animationTick)}
 function animationTick(now){
  const animation=state.animation;animation.raf=0;if(!animation.running)return;if(!animationModeAvailable()){stopAnimation({render:false});return}
- const elapsed=Math.min(.1,Math.max(0,(now-animation.lastTick)/1000)),settings=animationSettings();animation.lastTick=now;animation.phase+=elapsed*.65*settings.speed;animation.ramp=Math.min(1,animation.ramp+elapsed/1.2);if(animation.styleTransition)animation.styleTransition.progress=Math.min(1,animation.styleTransition.progress+elapsed/animation.styleTransition.duration);const interval=state.mode==='webgl'?1000/20:1000/8;
+ const elapsed=Math.min(.1,Math.max(0,(now-animation.lastTick)/1000)),settings=animationSettings();animation.lastTick=now;animation.phase+=elapsed*.65*settings.speed;animation.ramp=Math.min(1,animation.ramp+elapsed/1.2);if(animation.styleTransition)animation.styleTransition.progress=Math.min(1,animation.styleTransition.progress+elapsed/animation.styleTransition.duration);const interval=state.mode==='webgl'?1000/20:state.mode==='stabilized'?1000/15:1000/8;
  if(now-animation.lastRender>=interval-1){const frame=animationFrame();if(frame){const info=renderSelected(alignCanvas,{updateUI:false,values:frame.values,regionMix:frame.regionMix,regionBaseValues:frame.regionBaseValues,regionEffect:frame.regionEffect,mode:frame.mode});animation.lastFrame=frame;animation.lastRender=now;
    if(state.mode==='webgl'&&(!info||info.message.includes('Canvas 2D'))){stopAnimation({freeze:true,render:false});$('modeStatus').textContent='Animation WebGL figée : WebGL indisponible, cette image Canvas est conservée.';return}
   }}queueAnimationLoop()
 }
 function startAnimation(automatic=false){
- cancelPendingAutoStart();if(state.animation.exporting||automatic&&(automaticMotionReduced()||(state.mode==='webgl'&&(state.webgl?.failed||state.webgl?.lost))))return;if(!animationModeAvailable()||state.animation.running||animationSettings().amplitude<=0||!$('alignStage').classList.contains('active'))return;const animation=state.animation;animation.userFrozen=false;animation.resumeAfterGame=false;animation.resumeAfterMotion=false;animation.resumeOnPageShow=false;if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}const resuming=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode&&animation.baseControls;if(!resuming){animation.phase=0;animation.ramp=0;animation.baseControls=readControls();animation.baseRegionMix={...state.regionMix};if(state.mode==='regions'&&state.regionAnimationStyle==='random')animation.randomSeed=(animation.randomSeed*1664525+1013904223)>>>0;animation.lastFrame=animationSnapshot(state.mode,{...animation.baseControls},state.mode==='regions'?{...animation.baseRegionMix}:null,state.mode==='regions'?animation.baseControls:null,state.mode==='regions'?emptyRegionEffect():null)}animation.frozenFrame=null;animation.running=true;animation.lastTick=performance.now();animation.lastRender=animation.lastTick-(state.mode==='webgl'?1000/20:1000/8);syncAnimationControls();const {amplitude,speed}=animationSettings(),styleLabel=REGION_ANIMATION_LABELS[state.regionAnimationStyle];$('modeStatus').textContent=resuming?'Animation reprise doucement.':state.mode==='webgl'?`Animation WebGL active · amplitude ${Math.round(amplitude*100)} % · vitesse ${speed.toFixed(2)}×.`:`Animation Régions ${styleLabel.toLowerCase()} active · amplitude ${Math.round(amplitude*100)} % · jusqu’à 8 images/s.`;queueAnimationLoop()
+ cancelPendingAutoStart();if(state.animation.exporting||automatic&&(automaticMotionReduced()||(state.mode==='webgl'&&(state.webgl?.failed||state.webgl?.lost))))return;if(!animationModeAvailable()||state.animation.running||animationSettings().amplitude<=0||!$('alignStage').classList.contains('active'))return;const animation=state.animation;animation.userFrozen=false;animation.resumeAfterGame=false;animation.resumeAfterMotion=false;animation.resumeOnPageShow=false;if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}const resuming=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode&&animation.baseControls;if(!resuming){animation.phase=0;animation.ramp=0;animation.baseControls=readControls();animation.baseRegionMix={...state.regionMix};if(state.mode==='regions'&&state.regionAnimationStyle==='random')animation.randomSeed=(animation.randomSeed*1664525+1013904223)>>>0;animation.lastFrame=animationSnapshot(state.mode,{...animation.baseControls},state.mode==='regions'?{...animation.baseRegionMix}:null,state.mode==='regions'?animation.baseControls:null,state.mode==='regions'?emptyRegionEffect():null)}animation.frozenFrame=null;animation.running=true;animation.lastTick=performance.now();animation.lastRender=animation.lastTick-(state.mode==='webgl'?1000/20:state.mode==='stabilized'?1000/15:1000/8);syncAnimationControls();const {amplitude,speed}=animationSettings(),styleLabel=REGION_ANIMATION_LABELS[state.regionAnimationStyle];$('modeStatus').textContent=resuming?'Animation reprise doucement.':state.mode==='webgl'?`Animation WebGL active · amplitude ${Math.round(amplitude*100)} % · vitesse ${speed.toFixed(2)}×.`:`Animation Régions ${styleLabel.toLowerCase()} active · amplitude ${Math.round(amplitude*100)} % · jusqu’à 8 images/s.`;queueAnimationLoop()
 }
 function stopAnimation({freeze=false,render=true}={}){
  cancelPendingAutoStart();const animation=state.animation;animation.styleTransition=null;if(!animation.running){if(!freeze&&animation.frozenFrame){animation.frozenFrame=null;animation.baseControls=null;animation.baseRegionMix=null;animation.lastFrame=null;syncAnimationControls();if(render&&state.photos.length>=2&&$('alignStage').classList.contains('active'))scheduleRender()}return}if(animation.raf)cancelAnimationFrame(animation.raf);if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}animation.raf=0;animation.running=false;if(freeze&&animation.lastFrame)animation.frozenFrame=animation.lastFrame;else{animation.frozenFrame=null;animation.baseControls=null;animation.baseRegionMix=null;animation.lastFrame=null;animation.phase=0;animation.ramp=0}syncAnimationControls();if(freeze&&render)$('modeStatus').textContent='Animation figée · Reprendre doucement pour continuer.';if(render&&state.photos.length>=2&&$('alignStage').classList.contains('active'))scheduleRender()
