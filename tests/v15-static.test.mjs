@@ -95,6 +95,10 @@ test('v15 explosive regions stay attached to the face', () => {
 });
 
 test('v15 diagnostic generates actual 25, 50, and 75 percent renderer snapshots', () => {
+  assert.match(page, /id="diagnosticOpen"[^>]*>Ouvrir le diagnostic 25 \/ 50 \/ 75 %<\/button>/);
+  assert.match(page, /\$\('diagnosticOpen'\)\.addEventListener\('click'/);
+  assert.match(page, /section\.open=true/);
+  assert.match(page, /section\.scrollIntoView/);
   for (const id of ['morphDiagnostic', 'diagnosticPosition', 'diagnosticCapture', 'diagnosticStatus', 'diagnosticWarpA', 'diagnosticWarpB', 'diagnosticMixed', 'diagnostic25', 'diagnostic50', 'diagnostic75']) {
     assert.match(page, new RegExp(`id="${id}"`));
   }
