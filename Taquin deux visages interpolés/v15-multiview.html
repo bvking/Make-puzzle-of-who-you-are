@@ -60,6 +60,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 .diagnostic-isolation-note{font-size:11px;color:#b3c7cc;line-height:1.4;margin:6px 0}
 .diagnostic-grid canvas{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:#000;border:1px solid #35464f;border-radius:9px}
 .diagnostic-grid figcaption{margin-top:4px;font-size:11px;color:#d0e3e9;text-align:center}
+.scan-archive{display:grid;gap:8px;padding:12px;border:1px solid #476579;border-radius:12px;background:#0b1820}.scan-archive strong{font-size:14px;color:#9fe7ff}.scan-archive p{font-size:12px;color:#c0d5df;line-height:1.45;margin:0}.scan-archive .row{align-items:stretch}.scan-archive .row>*{min-width:145px}.scan-archive .file-button{font-size:13px}
 </style>
 </head>
 <body>
@@ -86,6 +87,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <button id="stopScan" type="button" class="secondary" disabled>Terminer ce scan</button><button id="quickPhoto" type="button" class="secondary" disabled>Photo unique</button>
 <label class="file-button wide">Prendre une photo iPhone · mode secours<input id="nativePhoto" type="file" accept="image/*" capture="user"></label>
 <label class="file-button wide">Importer plusieurs photos<input id="importPhotos" type="file" accept="image/*" multiple></label>
+<label class="file-button wide">Réutiliser deux scans depuis un ZIP privé<input id="importScanArchive" type="file" accept=".zip,application/zip"></label>
 <button id="switchCamera" type="button" class="secondary">Changer caméra</button><button id="resetAll" type="button" class="danger">Recommencer</button>
 </div>
 <p class="note">Si cette page est ouverte dans ChatGPT et que la caméra directe est refusée, ouvre-la dans Safari. Le mode secours permet aussi de prendre plusieurs photos, une par une, puis de les valider.</p>
@@ -105,6 +107,12 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 </div>
 <div class="controls">
 <div class="source-key" role="group" aria-label="Photos sources"><div class="source-card"><div id="sourceThumb1" class="source-thumb" role="img" aria-label="Photo source 1"></div><span>Photo 1</span></div><div class="source-card"><div id="sourceThumb2" class="source-thumb" role="img" aria-label="Photo source 2"></div><span>Photo 2</span></div></div>
+<div class="scan-archive" aria-label="Sauvegarder les scans du morphing">
+<strong>Conserver tes deux scans pour les prochaines versions</strong>
+<p>Archive ZIP privée contenant les deux images recadrées utilisées, les points MediaPipe et les contours de tête. Les photos originales pleine résolution ne sont pas conservées par cette application. Aucune transmission à GitHub.</p>
+<div class="row"><button id="exportScanArchive" type="button" disabled>Exporter les deux scans (.zip)</button></div>
+<p id="archiveStatus" role="status" aria-live="polite">Conserve cette archive dans Fichiers sur l’iPhone, puis réimporte-la depuis le premier écran pour reprendre les tests.</p>
+</div>
 <div id="viewpointControls" class="viewpoint-controls" hidden>
 <span class="region-title">Choisir une perspective commune parmi les vues enregistrées</span>
 <label>Perspective <input id="viewpoint" type="range" min="-100" max="100" value="0"><span id="viewpointVal" class="value">Face</span></label>
@@ -209,6 +217,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 import {analyzePhotometry,automaticHarmony,captureQuality,chooseMatchedPair,commonYawRange,derivePose,laplacianVariance,pairCost,POSE_BINS,retainBestByPose,sessionCoverage} from './multiview-core.mjs';
 import {applySimilarity,robustStableAlignment} from './handheld-alignment.mjs';
 import {localMaskFeatures} from './local-expression.mjs';
+import {createScanArchive,readScanArchive} from './scan-archive.mjs';
 const MEDIAPIPE_MODULE="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs";
 const MEDIAPIPE_WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm";
 const FACE_MODEL="https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
@@ -474,7 +483,7 @@ function evaluateMorphCompatibility(first,second){
 function pairUsable(){return state.pair.status==='good'||state.pair.status==='adapted'}
 function pairSummary(){const pair=state.pair;if(pair.status==='good')return`Maillage stable ${pair.score}/100.`;if(pair.status==='adapted')return`Maillage adapté ${pair.score}/100 : ${pair.reasons.slice(0,2).join(' · ')}.`;if(pair.status==='unusable')return`Maillage inutilisable ${pair.score}/100 : ${pair.reasons.slice(0,2).join(' · ')}.`;return''}
 function syncPairUI(){
- const pair=state.pair,panel=$('compatibilityPanel'),good=pair.status==='good',adapted=pair.status==='adapted',unusable=pair.status==='unusable',checking=pair.status==='checking',usable=good||adapted,blocked=state.photos.length>=2&&!usable,unavailable=state.photos.length<2||blocked;panel.hidden=!(good||adapted||unusable||checking);panel.classList.toggle('is-good',good);panel.classList.toggle('is-adapted',adapted);panel.classList.toggle('is-bad',unusable);$('compatibilityTitle').textContent=good?`Maillage stable · ${pair.score}/100`:adapted?`Stabilité du maillage ${pair.score}/100 · adaptation renforcée`:unusable?`Photo 2 à reprendre · stabilité ${pair.score}/100`:'Essai de plusieurs maillages…';$('compatibilityText').textContent=good?`La trajectoire du maillage reste stable. Taille, inclinaison, traits et contour sont adaptés automatiquement${pair.reasons.length?` : ${pair.reasons.slice(0,2).join(' · ')}`:''}.`:adapted?`${pair.reasons.slice(0,3).join(' · ')}. La stabilité du maillage permet quand même l’animation ; la reprise de la photo 2 est facultative.`:unusable?`${pair.reasons.slice(0,3).join(' · ')}. ${pair.advice.slice(0,2).join(' ')}`:'L’application compare les maillages construits depuis les deux photos et leur forme moyenne.';const retake=$('retakePhoto2');retake.hidden=!(adapted||unusable);retake.textContent=adapted?'Améliorer le visage 2 (facultatif)':'Reprendre uniquement le visage 2';retake.classList.toggle('danger',unusable);retake.classList.toggle('secondary',adapted);$('makePuzzle').disabled=!usable;$('autoAlign').disabled=unavailable;
+ const pair=state.pair,panel=$('compatibilityPanel'),good=pair.status==='good',adapted=pair.status==='adapted',unusable=pair.status==='unusable',checking=pair.status==='checking',usable=good||adapted,blocked=state.photos.length>=2&&!usable,unavailable=state.photos.length<2||blocked;panel.hidden=!(good||adapted||unusable||checking);panel.classList.toggle('is-good',good);panel.classList.toggle('is-adapted',adapted);panel.classList.toggle('is-bad',unusable);$('compatibilityTitle').textContent=good?`Maillage stable · ${pair.score}/100`:adapted?`Stabilité du maillage ${pair.score}/100 · adaptation renforcée`:unusable?`Photo 2 à reprendre · stabilité ${pair.score}/100`:'Essai de plusieurs maillages…';$('compatibilityText').textContent=good?`La trajectoire du maillage reste stable. Taille, inclinaison, traits et contour sont adaptés automatiquement${pair.reasons.length?` : ${pair.reasons.slice(0,2).join(' · ')}`:''}.`:adapted?`${pair.reasons.slice(0,3).join(' · ')}. La stabilité du maillage permet quand même l’animation ; la reprise de la photo 2 est facultative.`:unusable?`${pair.reasons.slice(0,3).join(' · ')}. ${pair.advice.slice(0,2).join(' ')}`:'L’application compare les maillages construits depuis les deux photos et leur forme moyenne.';const retake=$('retakePhoto2');retake.hidden=!(adapted||unusable);retake.textContent=adapted?'Améliorer le visage 2 (facultatif)':'Reprendre uniquement le visage 2';retake.classList.toggle('danger',unusable);retake.classList.toggle('secondary',adapted);$('makePuzzle').disabled=!usable;$('autoAlign').disabled=unavailable;$('exportScanArchive').disabled=!usable;
  for(const id of [...MANUAL_ALIGNMENT_IDS,'blend','regionHarmony','animationAmplitude','animationSpeed'])$(id).disabled=unavailable||(MANUAL_ALIGNMENT_IDS.includes(id)&&state.mode!=='regions');document.querySelectorAll('#regionControls button,#regionControls input,#regionAnimationStyles button').forEach(control=>control.disabled=unavailable)
 }
 function autoAlign({activate=true,focusRejected=false,render=true}={}){
@@ -579,8 +588,10 @@ function chooseStableMatchedPair(options){
 async function applyMatchedView(targetYaw=null,{automatic=false}={}){
  if(state.applyingPair)return;const options={preserveExpressionDifference:$('preserveExpression').checked};if(Number.isFinite(targetYaw))options.targetYaw=targetYaw;const selection=chooseStableMatchedPair(options),pair=selection?.pair;if(!pair){const gap=selection?.closest?.poseGap;pairPreparationStatus(Number.isFinite(gap)?`Aucune perspective commune : l’écart minimal est ${Math.round(gap*45)}°. Reprends une vue du visage B dans le même angle que A.`:'Aucune perspective commune utilisable. Reprends au moins une vue de face pour chaque visage.');return}const generation=++state.operationGeneration,wasAlign=$('alignStage').classList.contains('active'),previousMode=state.mode,previousHarmony=state.regionHarmony;state.applyingPair=true;disableViewpointControls(true);if(wasAlign){$('alignStage').inert=true;$('alignStage').setAttribute('aria-busy','true')}stopAnimation({render:false});updateScanUI();pairPreparationStatus('Préparation des deux portraits, de la tête et des cheveux…');
  try{
-  const photos=await Promise.all([blobToCanvas(pair.first.blob),blobToCanvas(pair.second.blob)]);if(generation!==state.operationGeneration)return;const marks=[pair.first.landmarks,pair.second.landmarks],headRings=[];await ensureSegmenter();if(generation!==state.operationGeneration)return;
-  for(let index=0;index<2;index++){pairPreparationStatus(`Analyse de la silhouette ${index+1}/2…`);headRings[index]=await extractHeadRing(photos[index],marks[index]);if(generation!==state.operationGeneration)return}
+  const photos=await Promise.all([blobToCanvas(pair.first.blob),blobToCanvas(pair.second.blob)]);if(generation!==state.operationGeneration)return;const marks=[pair.first.landmarks,pair.second.landmarks],headRings=[],savedCandidates=[pair.first,pair.second];
+  const hasSavedRings=savedCandidates.every(candidate=>Array.isArray(candidate.headRing)&&candidate.headRing.length===state.faceOval.length&&candidate.headRing.every(point=>Number.isFinite(point?.x)&&Number.isFinite(point?.y)));
+  if(!hasSavedRings)await ensureSegmenter();if(generation!==state.operationGeneration)return;
+  for(let index=0;index<2;index++){pairPreparationStatus(`Analyse de la silhouette ${index+1}/2…`);headRings[index]=hasSavedRings?savedCandidates[index].headRing.map(point=>({...point})):await extractHeadRing(photos[index],marks[index]);if(generation!==state.operationGeneration)return}
   stopCamera();closeSegmenter();state.photos=photos;state.marks=marks;state.headRings=headRings;state.selectedPair=pair;state.step=0;state.solutionURL='';state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.buffers.clear();invalidateFaceLighting();state.regionHarmony=wasAlign?previousHarmony:automaticHarmony(pair.first.photometry,pair.second.photometry);syncRegionControls();photos.forEach((photo,index)=>{const thumbnail=makeCanvas(192),ctx=thumbnail.getContext('2d');ctx.drawImage(photo,0,0,192,192);const value=`url(${thumbnail.toDataURL('image/jpeg',.8)})`;$('thumb'+(index+1)).style.backgroundImage=value;$('sourceThumb'+(index+1)).style.backgroundImage=value});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();state.animation.userFrozen=false;syncPairUI();autoAlign({activate:false,render:false});syncViewpointUI(pair);updateModeAvailability();if(wasAlign){$('alignStage').inert=false;$('alignStage').removeAttribute('aria-busy')}if(canMeshMorph()){const desiredMode=wasAlign&&['canvas','webgl','regions','stabilized','local'].includes(previousMode)?previousMode:'local';setMode(desiredMode);if(!automatic||!reducedMotionQuery?.matches)maybeAutoStartAnimation()}else scheduleRender();(state.pair.status==='unusable'?$('retakePhoto2'):$('alignStatus')).focus()
  }catch(error){console.error(error);if(generation===state.operationGeneration){pairPreparationStatus('Préparation du morphing impossible : '+(error.message||error));showStage(wasAlign?'alignStage':'captureStage')}}
  finally{if(generation===state.operationGeneration){state.applyingPair=false;$('alignStage').inert=false;$('alignStage').removeAttribute('aria-busy');disableViewpointControls(false);updateScanUI()}}
@@ -1296,6 +1307,63 @@ async function loadDemoLandmarks(src){const response=await fetch(src,{cache:'no-
 async function loadDemoPair(){
  await landmarkerReady;stopCamera();const base='../Make%20puzzle%20-%20from%20Iphone/',[photos,fixture]=await Promise.all([Promise.all([loadDemoPortrait(base+'visage_homme.png'),loadDemoPortrait(base+'visage_femme.png')]),loadDemoLandmarks('./qa/portrait-landmarks.json?v=20260817')]),marks=[fixture['visage_homme.png'],fixture['visage_femme.png']];if(state.meshTriangles.length<800||marks.some(mark=>!mark||mark.length<478))throw new Error('Maillage de démonstration incomplet');status.textContent='Analyse des têtes et des cheveux de démonstration…';const headRings=[];for(let index=0;index<photos.length;index++)headRings[index]=await extractHeadRing(photos[index],marks[index]);closeSegmenter();state.photos=photos;state.marks=marks;state.headRings=headRings;state.step=0;state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;invalidateFaceLighting();photos.forEach((photo,index)=>{const url=`url(${photo.toDataURL('image/jpeg',.9)})`;$('thumb'+(index+1)).style.backgroundImage=url;$('sourceThumb'+(index+1)).style.backgroundImage=url});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();syncPairUI();autoAlign({activate:false,render:false});updateModeAvailability();if(canMeshMorph()){setMode('webgl');maybeAutoStartAnimation()}else scheduleRender()
 }
+
+async function exportCurrentScans(){
+ const feedback=$('archiveStatus'),button=$('exportScanArchive');
+ if(!canMeshMorph()||state.photos.length!==2){feedback.textContent='Les deux portraits doivent être validés avant l’export.';return}
+ button.disabled=true;feedback.textContent='Préparation de l’archive locale…';
+ try{
+  const pair=state.selectedPair,faces=[];
+  for(let index=0;index<2;index++){
+   const candidate=pair?.[index===0?'first':'second'];
+   faces.push({photoBlob:candidate?.blob||await canvasToBlob(state.photos[index],.92),
+    landmarks:state.marks[index],headRing:state.headRings[index]||null,
+    pose:candidate?.pose||derivePose(state.marks[index],state.faceOval),
+    photometry:candidate?.photometry||null,quality:candidate?.quality||null,
+    sharpness:candidate?.sharpness});
+  }
+  const archive=await createScanArchive(faces),url=URL.createObjectURL(archive);
+  const a=document.createElement('a');a.href=url;
+  a.download='Taquin-scans-prives-'+new Date().toISOString().slice(0,10)+'.zip';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+  feedback.textContent='Archive créée : enregistre le ZIP dans Fichiers et garde-le privé. Pour restaurer ces scans, utilise « Réutiliser deux scans » sur le premier écran.';
+ }catch(error){console.error('Export des scans',error);feedback.textContent='Export impossible : '+(error?.message||error)}
+ finally{button.disabled=!canMeshMorph()}
+}
+async function restoreSavedScans(file){
+ if(!file)return;
+ status.textContent='Vérification locale de l’archive des scans…';
+ try{
+  const archive=await readScanArchive(file);
+  await landmarkerReady;
+  if(state.detectorState!=='ready'||state.meshTriangles.length<800)throw new Error('Le moteur MediaPipe doit d’abord être chargé pour reconstruire le maillage.');
+  // Vérifier le décodage des deux JPEG avant de remplacer la session courante.
+  await Promise.all(archive.faces.map(face=>blobToCanvas(face.photoBlob)));
+  const candidates=archive.faces.map((face,index)=>({
+   id:'archive-'+index+'-'+Date.now(),source:'archive',blob:face.photoBlob,
+   landmarks:face.landmarks,headRing:face.headRing,
+   pose:face.pose||derivePose(face.landmarks,state.faceOval),
+   photometry:face.photometry,quality:face.quality,sharpness:face.sharpness
+  }));
+  if(!chooseMatchedPair([candidates[0]],[candidates[1]],{maxPoseGap:.34}))
+   throw new Error('Les perspectives archivées ne sont pas compatibles avec le contrôle actuel.');
+  cancelPendingOperations();stopAnimation({render:false});stopCamera();
+  state.sessions=[[candidates[0]],[candidates[1]]];state.step=1;state.selectedPair=null;
+  showStage('captureStage');updateScanUI();
+  status.textContent='Deux scans retrouvés, reconstruction du morphing sans nouvelle capture…';
+  await applyMatchedView();
+  if(state.selectedPair?.first===candidates[0]&&state.selectedPair?.second===candidates[1]){
+   $('archiveStatus').textContent='Scans restaurés depuis le ZIP privé : mêmes images, mêmes repères et mêmes contours ; tu peux comparer les moteurs.';
+   $('alignStatus').textContent+=' · scans restaurés depuis ton archive privée.';
+  }
+ }catch(error){console.error('Import des scans',error);status.textContent='Archive non restaurée : '+(error?.message||error)}
+}
+$('exportScanArchive').addEventListener('click',exportCurrentScans);
+$('importScanArchive').addEventListener('change',async event=>{
+ const input=event.currentTarget,file=input.files?.[0];
+ try{await restoreSavedScans(file)}finally{input.value=''}
+});
 $('startCamera').onclick=startCamera;$('capture').onclick=startMultiviewScan;$('stopScan').onclick=()=>{stopMultiviewScan();finalizeCurrentSession()};$('quickPhoto').onclick=singlePhoto;for(const id of ['importPhotos','nativePhoto'])$(id).addEventListener('click',()=>{if(state.cameraPending||state.stream)stopCamera()});$('importPhotos').addEventListener('change',async event=>{const input=event.currentTarget;await importPhotoFiles(input.files);input.value=''});$('nativePhoto').addEventListener('change',async event=>{const input=event.currentTarget;await importPhotoFiles(input.files,{append:true,finalize:false});input.value=''});$('switchCamera').onclick=()=>{stopMultiviewScan();state.facing=state.facing==='user'?'environment':'user';startCamera()};$('resetAll').onclick=()=>resetAll(false);
 $('viewpoint').addEventListener('input',()=>{const label=angleLabel(viewpointTarget());$('viewpointVal').textContent=label;$('viewpoint').setAttribute('aria-valuetext',`Perspective ${label}`)});document.querySelectorAll('[data-viewpoint]').forEach(button=>button.addEventListener('click',()=>{$('viewpoint').value=button.dataset.viewpoint;$('viewpoint').dispatchEvent(new Event('input'))}));$('applyViewpoint').onclick=()=>applyMatchedView(viewpointTarget());
 $('backCapture').onclick=()=>resetAll(true);$('retakePhoto2').onclick=retakePhoto2;$('autoAlign').onclick=()=>autoAlign();$('makePuzzle').onclick=buildPuzzle;$('shuffle').onclick=()=>shuffle(180);$('showSolution').onclick=showSolution;
