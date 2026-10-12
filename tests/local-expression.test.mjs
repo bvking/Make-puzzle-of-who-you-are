@@ -14,19 +14,20 @@ function face(){
 
 test('local expression weights preserve glasses by omitting eyes when protection enabled',()=>{
  const points=face(),fields=localMaskFeatures(points,true);
- assert.deepEqual(fields.map(f=>f.name),['mouth','nose']);
+ assert.deepEqual(fields.map(f=>f.name),['mouth','lowerFace','nose']);
  assert.equal(fields[0].opacity,.98);
- assert.ok(fields[1].opacity<.3);
+ assert.ok(fields[1].opacity<fields[0].opacity);
+ assert.ok(fields[2].opacity<.3);
  assert.ok(fields.every(f=>f.rx>0&&f.ry>0&&f.opacity>=0&&f.opacity<=1));
 });
 
 test('unprotected mode can morph eyes while retaining mouth priority',()=>{
  const p=face();
  const protectedFields=localMaskFeatures(p,true),unprotected=localMaskFeatures(p,false);
- assert.deepEqual(unprotected.map(f=>f.name),['mouth','nose','leftEye','rightEye']);
+ assert.deepEqual(unprotected.map(f=>f.name),['mouth','lowerFace','nose','leftEye','rightEye']);
  assert.equal(unprotected[0].opacity,protectedFields[0].opacity);
- assert.ok(unprotected[2].opacity<unprotected[0].opacity);
  assert.ok(unprotected[3].opacity<unprotected[0].opacity);
+ assert.ok(unprotected[4].opacity<unprotected[0].opacity);
 });
 
 test('missing landmarks are rejected and source landmarks are never modified',()=>{
@@ -38,11 +39,29 @@ test('missing landmarks are rejected and source landmarks are never modified',()
  assert.equal(localMaskFeatures(null),null);
 });
 
+
+test('mask covers both A and aligned B mouth opening, not just the current frame',()=>{
+ const a=face(),b=face(),mid=face();
+ b[14]={...b[14],y:660}; b[152]={...b[152],y:705};
+ mid[14]={...mid[14],y:570};
+ const current=localMaskFeatures(mid,true);
+ const union=localMaskFeatures(mid,true,a,b);
+ assert.ok(union[0].ry>current[0].ry,'mouth mask must contain B even when current lips are only half open');
+ assert.ok(union[1].ry>0&&union[1].opacity<union[0].opacity,'jaw moves softly with the expression');
+ assert.deepEqual(a,face(),'source A must stay unchanged');
+ assert.equal(b[14].y,660,'aligned B source must stay unchanged');
+});
+
+test('bad extra capture is ignored rather than invalidating a valid face',()=>{
+ const p=face();
+ assert.deepEqual(localMaskFeatures(p,true,p,null),localMaskFeatures(p,true,p,[]));
+});
+
 test('local renderer composites warped expression layer on unmodified photo A',()=>{
  assert.match(PAGE,/data-mode="local"/);
  assert.match(PAGE,/function renderLocalExpressions\(canvas,v\)/);
  assert.match(PAGE,/const geometry=stabilizedGeometry\(v\),ctx=drawBackground\(canvas\)/);
- assert.match(PAGE,/localExpressionMask\(canvas\.width,geometry\.target,protect\)/);
+ assert.match(PAGE,/localExpressionMask\(canvas\.width,geometry\.target,protect,geometry\.raw1,geometry\.alignedSecond\)/);
  assert.match(PAGE,/mctx\.globalCompositeOperation='destination-in';mctx\.drawImage\(mask,0,0\)/);
  assert.match(PAGE,/ctx\.drawImage\(masked,0,0\)/);
  assert.match(PAGE,/id="localProtectGlasses" type="checkbox" checked/);
