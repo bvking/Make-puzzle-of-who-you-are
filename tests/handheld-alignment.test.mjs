@@ -71,7 +71,7 @@ test('stabilized mode warps UV from unmodified captured B, with original A as un
  assert.match(page,/const geometry=stabilizedGeometry\(v\),ctx=drawBackground\(canvas\)/);
  assert.match(page,/mctx\.globalCompositeOperation='destination-in'/);
  assert.match(page,/ctx\.drawImage\(masked,0,0\)/);
- assert.match(page,/state\.mode==='stabilized'\?stabilizedGeometry\(v\)/);
+ assert.match(page,/geometry=localized\?stabilizedGeometry\(v\)/);
  for(const fraction of [25,50,75])assert.match(page,new RegExp('id="diagnostic'+fraction+'"'));
 });
 
@@ -88,6 +88,6 @@ test('stabilized animation keeps its own mode instead of switching to regions',(
  assert.equal(frame.mode,'stabilized');
  assert.equal(frame.regions,null);
  assert.ok(frame.values.a>0&&frame.values.a<1);
- assert.match(page,/state\.mode==='stabilized'&&!!stabilizedGeometry/);
- assert.match(page,/state\.mode==='stabilized'\?\(state\.webgl\?\.failed\?1000\/8:1000\/15\)/);
+ assert.match(page,/\['stabilized','local'\]\.includes\(state\.mode\)&&!!stabilizedGeometry/);
+ assert.match(page,/\['stabilized','local'\]\.includes\(state\.mode\)\?\(state\.webgl\?\.failed\?1000\/8:1000\/15\)/);
 });
