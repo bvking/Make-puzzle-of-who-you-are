@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [main, improve-morph-blending, browser-morph-v16, morph-scan-diagnostics-2026-10-10, morph-face-isolation-2026-10-10, morph-robust-handheld-2026-10-10]
+    branches: [main, improve-morph-blending, browser-morph-v16, morph-scan-diagnostics-2026-10-10, morph-face-isolation-2026-10-10, morph-robust-handheld-2026-10-10, morph-local-expressions-2026-10-12]
   pull_request:
 
 permissions:
