@@ -55,7 +55,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 .diagnostic-isolation-label{font-size:13px;font-weight:750;color:#9fe7ff;margin:14px 0 6px}
 .diagnostic-isolation-option{display:flex;gap:9px;align-items:center;background:#0c222a;border:1px solid #356073;border-radius:9px;padding:10px;margin:8px 0}
 .diagnostic-isolation-option input{width:22px;height:22px;flex:none}
-#localExpressionOptions[hidden]{display:none}
+#localExpressionOptions[hidden],#diagnosticNeutralChoice[hidden]{display:none}
 .diagnostic-isolation-option span{flex:1;font-size:12px;line-height:1.4}
 .diagnostic-isolation-note{font-size:11px;color:#b3c7cc;line-height:1.4;margin:6px 0}
 .diagnostic-grid canvas{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:#000;border:1px solid #35464f;border-radius:9px}
@@ -133,23 +133,23 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 </select>
 <button id="diagnosticCapture" type="button" class="secondary">Vérifier 25 · 50 · 75 %</button>
 </div>
-<label class="diagnostic-isolation-option"><input id="diagnosticNeutralEnabled" type="checkbox" checked><span><strong>Comparer aussi le visage sur fond neutre</strong> — la même géométrie, sans le décor.</span></label>
+<label id="diagnosticNeutralChoice" class="diagnostic-isolation-option"><input id="diagnosticNeutralEnabled" type="checkbox" checked><span><strong>Comparer aussi le visage sur fond neutre</strong> — la même géométrie, sans le décor.</span></label>
 <div id="diagnosticStatus" class="status" role="status" aria-live="polite">Après les scans, lance le test des trois positions.</div>
 <p>Les deux séries sont calculées avec le moteur de morphing sélectionné, et non un fondu de présentation.</p>
-<p class="diagnostic-isolation-label">A · Morphing complet (référence)</p>
+<p id="diagnosticPrimaryTitle" class="diagnostic-isolation-label">A · Morphing complet (référence)</p>
 <div class="diagnostic-triptych" role="group" aria-label="Morphing complet à 25, 50 et 75 pour cent">
 <figure><canvas id="diagnostic25" aria-label="Morphing complet à 25 pour cent"></canvas><figcaption>25 %</figcaption></figure>
 <figure><canvas id="diagnostic50" aria-label="Morphing complet à 50 pour cent"></canvas><figcaption>50 %</figcaption></figure>
 <figure><canvas id="diagnostic75" aria-label="Morphing complet à 75 pour cent"></canvas><figcaption>75 %</figcaption></figure>
 </div>
 <div id="diagnosticNeutralBlock">
-<p class="diagnostic-isolation-label">B · Visage isolé / fond neutre (même maillage)</p>
+<p id="diagnosticSecondaryTitle" class="diagnostic-isolation-label">B · Visage isolé / fond neutre (même maillage)</p>
 <div class="diagnostic-triptych" role="group" aria-label="Morphing isolé à 25, 50 et 75 pour cent">
 <figure><canvas id="diagnosticNeutral25" aria-label="Visage isolé à 25 pour cent"></canvas><figcaption>25 %</figcaption></figure>
 <figure><canvas id="diagnosticNeutral50" aria-label="Visage isolé à 50 pour cent"></canvas><figcaption>50 %</figcaption></figure>
 <figure><canvas id="diagnosticNeutral75" aria-label="Visage isolé à 75 pour cent"></canvas><figcaption>75 %</figcaption></figure>
 </div>
-<p class="diagnostic-isolation-note">Le contour tête/cheveux est approximatif : un bord coupé par ce masque n’est pas forcément un défaut du morphing.</p>
+<p id="diagnosticSecondaryNote" class="diagnostic-isolation-note">Le contour tête/cheveux est approximatif : un bord coupé par ce masque n’est pas forcément un défaut du morphing.</p>
 </div>
 <div class="diagnostic-grid" role="group" aria-label="Sources déformées et résultat">
 <figure><canvas id="diagnosticWarpA" aria-label="Portrait A déformé"></canvas><figcaption>Source A déformée</figcaption></figure>
@@ -1084,9 +1084,14 @@ function captureMorphDiagnostic(){
  if(!Number.isFinite(percent)){report.textContent='Position de diagnostic non reconnue.';return}
  $('blend').value=String(percent);
  const controls=readControls();
- const localized=['stabilized','local'].includes(state.mode),size=Math.min(320,PREVIEW_SIZE),withNeutral=!localized&&$('diagnosticNeutralEnabled').checked;
+ const localized=['stabilized','local'].includes(state.mode),size=Math.min(320,PREVIEW_SIZE),
+  compareLegacy=state.mode==='local',withNeutral=!localized&&$('diagnosticNeutralEnabled').checked;
  $('diagnosticNeutralEnabled').disabled=localized;
- $('diagnosticNeutralBlock').hidden=!withNeutral;
+ $('diagnosticNeutralChoice').hidden=localized;
+ $('diagnosticNeutralBlock').hidden=!(withNeutral||compareLegacy);
+ $('diagnosticPrimaryTitle').textContent=compareLegacy?'A · Expressions locales (nouvelle méthode)':state.mode==='stabilized'?'A · Visage stabilisé (ancien mode)':'A · Morphing complet (référence)';
+ $('diagnosticSecondaryTitle').textContent=compareLegacy?'B · Visage stabilisé (ancien masque), mêmes scans':'B · Visage isolé / fond neutre (même maillage)';
+ $('diagnosticSecondaryNote').textContent=compareLegacy?'Même paire de photos, même maillage stabilisé, même pourcentage. Seul le masque de composition change.':'Le contour tête/cheveux est approximatif : un bord coupé n’est pas forcément un défaut du morphing.';
  const copy=(id,source)=>{const target=$(id);target.width=target.height=size;target.getContext('2d').drawImage(source,0,0,size,size);return target};
  try{
   const frames=[],engines=[],problems=[];let neutralSources=null;
@@ -1106,11 +1111,12 @@ function captureMorphDiagnostic(){
    frames.push(copy('diagnostic'+position,alignCanvas));
    engines.push(engine);
    if(state.mode==='webgl'&&engine!=='webgl')problems.push(position+' % rendu par Canvas 2D (WebGL indisponible)');
-   if(withNeutral){
-    if(!neutralSources)neutralSources=diagnosticNeutralSources(geometry);
-    const isolated=renderSelected(alignCanvas,{updateUI:false,values:v,mode:state.mode,sourceOverrides:neutralSources});
+   if(withNeutral||compareLegacy){
+    if(withNeutral&&!neutralSources)neutralSources=diagnosticNeutralSources(geometry);
+    const isolated=compareLegacy?renderSelected(alignCanvas,{updateUI:false,values:v,mode:'stabilized'}):
+      renderSelected(alignCanvas,{updateUI:false,values:v,mode:state.mode,sourceOverrides:neutralSources});
     const engineNeutral=diagnosticMorphEngine(isolated);
-    if(engineNeutral==='fallback'||engineNeutral==='inconnu')throw new Error('Rendu isolé non triangulaire à '+position+' %.');
+    if(engineNeutral==='fallback'||engineNeutral==='inconnu')throw new Error('Comparaison impossible à '+position+' %.');
     copy('diagnosticNeutral'+position,alignCanvas);
     if(state.mode==='webgl'&&engineNeutral!=='webgl')problems.push(position+' % isolé calculé en Canvas 2D (WebGL indisponible)');
    }
@@ -1127,7 +1133,7 @@ function captureMorphDiagnostic(){
   if(['fallback','inconnu'].includes(diagnosticMorphEngine(info)))throw new Error('Rendu du contrôle sélectionné non triangulaire.');
   copy('diagnosticMixed',alignCanvas);
   const enginesSummary=[...new Set(engines)].join(' / ');
-  report.textContent=`Morphing 25 / 50 / 75 % réalisé ${state.mode==='local'?'avec expressions locales, lunettes protégées et fond A fixe':state.mode==='stabilized'?'avec visage stabilisé et fond A fixe':withNeutral?'avec et sans décor':'avec décor'} · positions exactes 0,25 / 0,50 / 0,75 · moteur : ${enginesSummary} · écarts des portraits complets : ${delta25_50.toFixed(2)} et ${delta50_75.toFixed(2)} niveaux RGB. ${problems.length?'Attention : '+problems.join(' ; '):'Les trois rendus complets sont distincts.'} Contour isolé approximatif.`;
+  report.textContent=`Morphing 25 / 50 / 75 % réalisé ${state.mode==='local'?'en comparaison directe Expressions locales / Visage stabilisé, mêmes scans':state.mode==='stabilized'?'avec visage stabilisé et fond A fixe':withNeutral?'avec et sans décor':'avec décor'} · positions exactes 0,25 / 0,50 / 0,75 · moteur : ${enginesSummary} · écarts des portraits complets : ${delta25_50.toFixed(2)} et ${delta50_75.toFixed(2)} niveaux RGB. ${problems.length?'Attention : '+problems.join(' ; '):'Les trois rendus complets sont distincts.'} Contour isolé approximatif.`;
  }catch(error){
   console.error('Diagnostic du morphing',error);
   for(const id of ['diagnostic25','diagnostic50','diagnostic75','diagnosticNeutral25','diagnosticNeutral50','diagnosticNeutral75','diagnosticWarpA','diagnosticWarpB','diagnosticMixed']){
