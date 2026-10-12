@@ -1133,7 +1133,7 @@ function captureMorphDiagnostic(){
   if(['fallback','inconnu'].includes(diagnosticMorphEngine(info)))throw new Error('Rendu du contrôle sélectionné non triangulaire.');
   copy('diagnosticMixed',alignCanvas);
   const enginesSummary=[...new Set(engines)].join(' / ');
-  report.textContent=`Morphing 25 / 50 / 75 % réalisé ${state.mode==='local'?'en comparaison directe Expressions locales / Visage stabilisé, mêmes scans':state.mode==='stabilized'?'avec visage stabilisé et fond A fixe':withNeutral?'avec et sans décor':'avec décor'} · positions exactes 0,25 / 0,50 / 0,75 · moteur : ${enginesSummary} · écarts des portraits complets : ${delta25_50.toFixed(2)} et ${delta50_75.toFixed(2)} niveaux RGB. ${problems.length?'Attention : '+problems.join(' ; '):'Les trois rendus complets sont distincts.'} Contour isolé approximatif.`;
+  report.textContent=`Morphing 25 / 50 / 75 % réalisé ${state.mode==='local'?'en comparaison directe Expressions locales / Visage stabilisé, mêmes scans':state.mode==='stabilized'?'avec visage stabilisé et fond A fixe':withNeutral?'avec et sans décor':'avec décor'} · positions exactes 0,25 / 0,50 / 0,75 · moteur : ${enginesSummary} · écarts des portraits complets : ${delta25_50.toFixed(2)} et ${delta50_75.toFixed(2)} niveaux RGB. ${problems.length?'Attention : '+problems.join(' ; '):'Les trois rendus complets sont distincts.'} ${compareLegacy?'Comparaison directe des deux masques.':withNeutral?'Contour isolé approximatif.':''}`;
  }catch(error){
   console.error('Diagnostic du morphing',error);
   for(const id of ['diagnostic25','diagnostic50','diagnostic75','diagnosticNeutral25','diagnosticNeutral50','diagnosticNeutral75','diagnosticWarpA','diagnosticWarpB','diagnosticMixed']){
