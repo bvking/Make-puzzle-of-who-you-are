@@ -60,7 +60,7 @@ test('v15 defaults to localized expression morph while preserving stabilized and
   assert.match(page, /const desiredMode=wasAlign&&\['canvas','webgl','regions','stabilized','local'\]\.includes\(previousMode\)\?previousMode:'local'/);
   assert.match(page, /data-mode="local"/);
   assert.match(page, /function renderLocalExpressions\(/);
-  assert.match(page, /localMaskFeatures\(points,protectGlasses\)/);
+  assert.match(page, /localMaskFeatures\(points,protectGlasses,referencePoints,alignedPoints\)/);
   assert.match(page, /data-mode="stabilized"/);
   assert.match(page, /function renderStabilizedFace\(/);
   assert.match(page, /const key=state\.photoVersion\+'\|'\+state\.morphTopologyVersion/);
