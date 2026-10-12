@@ -57,3 +57,14 @@ test('local mode animation samples requested transition rather than Regions effe
  assert.match(PAGE,/\['stabilized','local'\]\.includes\(state\.mode\)&&!!stabilizedGeometry/);
  assert.match(PAGE,/state\.mode==='local'\?\x60Animation expressions locales active/);
 });
+
+test('single diagnostic click compares 25, 50, 75 in local and stabilized modes',()=>{
+ assert.match(PAGE,/compareLegacy=state\.mode==='local'/);
+ assert.match(PAGE,/\$\('diagnosticNeutralBlock'\)\.hidden=!\(withNeutral\|\|compareLegacy\)/);
+ assert.match(PAGE,/for\(const position of \[25,50,75\]\)/);
+ assert.match(PAGE,/const isolated=compareLegacy\?renderSelected\(alignCanvas,\{updateUI:false,values:v,mode:'stabilized'\}\)/);
+ assert.match(PAGE,/copy\('diagnosticNeutral'\+position,alignCanvas\)/);
+ for(const id of ['diagnosticNeutral25','diagnosticNeutral50','diagnosticNeutral75','diagnosticPrimaryTitle','diagnosticSecondaryTitle']){
+  assert.match(PAGE,new RegExp('id="'+id+'"'));
+ }
+});
