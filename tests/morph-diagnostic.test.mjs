@@ -28,7 +28,7 @@ test('actual renderer is distinguished from fallback and failed WebGL',()=>{
  assert.equal(diagnosticMorphEngine({fallback:true,renderer:'canvas'}),'fallback');
  assert.equal(diagnosticMorphEngine(null),'inconnu');
  assert.match(page,/if\(engine==='fallback'\|\|engine==='inconnu'\)/);
- assert.match(page,/if\(engine!==state\.mode\)problems\.push/);
+ assert.match(page,/if\(state\.mode==='webgl'&&engine!=='webgl'\)problems\.push/);
 });
 
 test('diagnostic checks three real intermediate frames and rejects invalid geometry',()=>{
