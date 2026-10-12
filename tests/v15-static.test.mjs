@@ -56,8 +56,11 @@ test('v15 states the requested goal and the unresolved perspective limitation', 
   assert.match(page, /ne valide pas le pilote WebGL de l’iPhone/);
 });
 
-test('v15 offers camera-stabilized faces by default while keeping legacy full-frame modes', () => {
-  assert.match(page, /const desiredMode=wasAlign&&\['canvas','webgl','regions','stabilized'\]\.includes\(previousMode\)\?previousMode:'stabilized'/);
+test('v15 defaults to localized expression morph while preserving stabilized and full-frame modes', () => {
+  assert.match(page, /const desiredMode=wasAlign&&\['canvas','webgl','regions','stabilized','local'\]\.includes\(previousMode\)\?previousMode:'local'/);
+  assert.match(page, /data-mode="local"/);
+  assert.match(page, /function renderLocalExpressions\(/);
+  assert.match(page, /localMaskFeatures\(points,protectGlasses\)/);
   assert.match(page, /data-mode="stabilized"/);
   assert.match(page, /function renderStabilizedFace\(/);
   assert.match(page, /const key=state\.photoVersion\+'\|'\+state\.morphTopologyVersion/);
