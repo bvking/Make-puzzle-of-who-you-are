@@ -13,7 +13,7 @@ Les captures iPhone transmises montrent une transition du sourire à 25 %, 50 % 
 - Le résultat est *composé* sur la photo A intacte. Le mode local calcule un masque alpha doux à partir des repères de bouche, du menton, du nez, et éventuellement des yeux. La bouche est prioritaire (opacité centrale élevée), le nez reste discret et la périphérie de la tête, les cheveux, les vêtements et le décor proviennent de A.
 - Case **« Garder les lunettes, les sourcils et le haut du visage de la photo A »** cochée par défaut. Quand elle est cochée, aucune zone dédiée aux yeux n'est intégrée au masque, ce qui protège mieux les branches de lunettes et les sourcils. Ce n'est **pas** une détection automatique d'objets : certaines sections proches du nez peuvent encore changer.
 - Quand la case est décochée, l'interpolation des deux régions oculaires reprend avec une opacité modérée, au risque d'apparition de doubles montures si les deux photos comportent des lunettes.
-- Le diagnostic 25/50/75 affiche le moteur du mode choisi, et le mode local peut être directement comparé au précédent « Visage stabilisé ». La comparaison de fond neutre ne sert pas dans ces deux modes, puisqu'ils figent déjà le décor.
+- Le diagnostic 25/50/75 affiche maintenant **deux rangées automatiquement** lorsque « Expressions locales » est actif : **A — Expressions locales** et **B — Visage stabilisé (ancien masque)**, à 25 %, 50 % et 75 %, avec les **mêmes photos, mêmes repères, même topologie et mêmes taux**. Un seul appui suffit, sans changement de mode ni deuxième scan. La comparaison de fond neutre reste réservée aux modes plein cadre.
 
 ## Compromis visuels
 
@@ -29,4 +29,4 @@ L'apparence sur Safari iPhone, les performances réelles et les scans ayant prod
 
 ## Validation demandée
 
-Ouvrir le lien de la branche sur l'iPhone ; effectuer une paire de scans, sélectionner « Expressions locales » et capturer les trois résultats à 25/50/75. **Avec cette même paire**, sélectionner « Visage stabilisé » et capturer les mêmes pourcentages, puis éventuellement décocher la protection des lunettes dans « Expressions locales » pour observer la différence. Comparer séparément la bouche, les yeux, les montures, le front et les bords du masque. En cas d'amélioration insuffisante, laisser intactes les versions précédentes.
+Ouvrir le lien de la branche sur l'iPhone ; effectuer une paire de scans, laisser « Expressions locales » sélectionné, appuyer sur **« Ouvrir le diagnostic 25 / 50 / 75 % »** puis capturer les **deux rangées A/B de trois images**. Le logiciel compare automatiquement l'ancien masque et le nouveau à partir de la même paire, sans deuxième manipulation. Décocher éventuellement la protection des lunettes puis refaire le diagnostic (sans rescanner) pour observer la différence. Comparer séparément la bouche, les yeux, les montures, le front et les bords du masque. En cas d'amélioration insuffisante, laisser intactes les versions précédentes.
