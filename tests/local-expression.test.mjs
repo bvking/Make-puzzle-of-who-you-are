@@ -46,7 +46,7 @@ test('local renderer composites warped expression layer on unmodified photo A',(
  assert.match(PAGE,/mctx\.globalCompositeOperation='destination-in';mctx\.drawImage\(mask,0,0\)/);
  assert.match(PAGE,/ctx\.drawImage\(masked,0,0\)/);
  assert.match(PAGE,/id="localProtectGlasses" type="checkbox" checked/);
- assert.match(PAGE,/#localExpressionOptions\[hidden\]\{display:none\}/);
+ assert.match(PAGE,/#localExpressionOptions\[hidden\],#diagnosticNeutralChoice\[hidden\]\{display:none\}/);
  assert.match(PAGE,/if\(mode==='local'\)info=renderLocalExpressions\(canvas,v\)/);
  assert.match(PAGE,/const localized=\['stabilized','local'\]\.includes\(state\.mode\)/);
  assert.match(PAGE,/state\.mode==='webgl'&&engine!=='webgl'/);
