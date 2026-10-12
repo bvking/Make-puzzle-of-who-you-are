@@ -780,8 +780,8 @@ function renderStabilizedFace(canvas,v){
 }
 // Lightweight anatomical alpha fields, regenerated only in 2D Canvas as needed.
 // No automatic glasses recognition is claimed or performed.
-function localExpressionMask(size,points,protectGlasses=true){
- const fields=localMaskFeatures(points,protectGlasses);
+function localExpressionMask(size,points,protectGlasses=true,referencePoints=null,alignedPoints=null){
+ const fields=localMaskFeatures(points,protectGlasses,referencePoints,alignedPoints);
  if(!fields)return null;
  const mask=getBuffer('local-expression-mask',size),ctx=mask.getContext('2d'),q=size/SIZE;
  for(const f of fields){
@@ -809,12 +809,12 @@ function renderLocalExpressions(canvas,v){
   console.warn('Expressions locales, repli Canvas 2D',error);
   const result=renderCanvasMorph(layer,v,geometry);if(result.fallback)return result;
  }
- const protect=$('localProtectGlasses').checked,mask=localExpressionMask(canvas.width,geometry.target,protect);
+ const protect=$('localProtectGlasses').checked,mask=localExpressionMask(canvas.width,geometry.target,protect,geometry.raw1,geometry.alignedSecond);
  if(!mask)return{fallback:true,message:'Repères insuffisants pour le masque anatomique local.'};
  const masked=getBuffer('local-expression-masked',canvas.width),mctx=masked.getContext('2d');
  mctx.drawImage(layer,0,0);mctx.globalCompositeOperation='destination-in';mctx.drawImage(mask,0,0);mctx.globalCompositeOperation='source-over';
  ctx.drawImage(masked,0,0);
- return{fallback:false,renderer,message:'Expressions locales · bouche prioritaire · '+(protect?'haut du visage et lunettes préservés':'yeux inclus')+' · fond fixe · '+(geometry.warning||'géométrie recalée')};
+ return{fallback:false,renderer,message:'Expressions locales · lèvres et mâchoire coordonnées · '+(protect?'haut du visage et lunettes préservés':'yeux inclus')+' · fond fixe · '+(geometry.warning||'géométrie recalée')};
 }
 function morphTrianglesForGeometry(geometry){const semantic=state.morphTriangles.length?state.morphTriangles:state.meshTriangles;return semantic.concat(geometry.eyeTriangles||[],geometry.mouthTriangles||[])}
 function manualGeometryIsSafe(v){if(!hasLandmarkPair()||!state.morphTriangles.length)return false;const first=landmarkPoints(0).slice(0,468),second=landmarkPoints(1).slice(0,468).map(point=>mapPoint(photo2Matrix(v),point)),metrics=assessMorphTopology(first,second,state.morphTriangles,'réglage manuel'),cropA=faceOvalCrop(first),cropB=faceOvalCrop(second),outsideArea=Math.max(cropA.outsideArea,cropB.outsideArea),maxOverflow=Math.max(cropA.maxOverflow,cropB.maxOverflow);return!topologyTechnicallyUnusable(metrics,outsideArea,maxOverflow)}
