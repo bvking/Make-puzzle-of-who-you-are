@@ -1104,14 +1104,14 @@ function captureMorphDiagnostic(){
    }
    frames.push(copy('diagnostic'+position,alignCanvas));
    engines.push(engine);
-   if(engine!==state.mode)problems.push(position+' % rendu par Canvas 2D (WebGL indisponible)');
+   if(state.mode==='webgl'&&engine!=='webgl')problems.push(position+' % rendu par Canvas 2D (WebGL indisponible)');
    if(withNeutral){
     if(!neutralSources)neutralSources=diagnosticNeutralSources(geometry);
     const isolated=renderSelected(alignCanvas,{updateUI:false,values:v,mode:state.mode,sourceOverrides:neutralSources});
     const engineNeutral=diagnosticMorphEngine(isolated);
     if(engineNeutral==='fallback'||engineNeutral==='inconnu')throw new Error('Rendu isolé non triangulaire à '+position+' %.');
     copy('diagnosticNeutral'+position,alignCanvas);
-    if(engineNeutral!==state.mode)problems.push(position+' % isolé calculé en Canvas 2D (WebGL indisponible)');
+    if(state.mode==='webgl'&&engineNeutral!=='webgl')problems.push(position+' % isolé calculé en Canvas 2D (WebGL indisponible)');
    }
   }
   const delta25_50=diagnosticFrameDifference(frames[0],frames[1]),delta50_75=diagnosticFrameDifference(frames[1],frames[2]);
