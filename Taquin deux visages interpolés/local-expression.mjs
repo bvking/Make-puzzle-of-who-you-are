@@ -39,3 +39,33 @@ export function localMaskFeatures(points,protectGlasses=true,referencePoints=nul
  }
  return fields;
 }
+
+// Morph geometry and appearance need not use the same interpolation amount.
+// With very different mouth openings, a literal 50/50 texture mix produces
+// double lips and phantom teeth even when the triangles move correctly.
+// A gentle monotone bias favors the *visible* mouth interior after it opens,
+// while preserving exact geometry percentages and both endpoints.
+export function mouthOpeningRatio(points){
+ if(!valid(points))return null;
+ const width=distance(points[61],points[291]),height=distance(points[13],points[14]);
+ return width>1e-6?height/width:null;
+}
+const clamp01=x=>Math.max(0,Math.min(1,x));
+const smooth01=x=>{const t=clamp01(x);return t*t*(3-2*t)};
+function preferOpenedTexture(t,strength){
+ // The early 0-10% transition remains largely unchanged. Derivative stays
+ // non-negative for strength <= .80 and the exact 0/1 endpoints are retained.
+ const bias=smooth01((t-.10)/.40);
+ return t+strength*t*(1-t)*bias;
+}
+export function localAppearanceMix(progress,referencePoints,alignedPoints){
+ const t=clamp01(Number(progress));
+ if(!Number.isFinite(t))return 0;
+ if(t===0||t===1)return t;
+ const openA=mouthOpeningRatio(referencePoints),openB=mouthOpeningRatio(alignedPoints);
+ if(openA===null||openB===null)return t;
+ const gap=openB-openA,weight=.8*smooth01((Math.abs(gap)-.08)/.25);
+ if(weight<1e-6)return t;
+ return clamp01(gap>0?preferOpenedTexture(t,weight):
+  1-preferOpenedTexture(1-t,weight));
+}

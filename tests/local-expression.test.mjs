@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {localMaskFeatures} from '../Taquin deux visages interpolés/local-expression.mjs';
+import {localMaskFeatures,localAppearanceMix,mouthOpeningRatio} from '../Taquin deux visages interpolés/local-expression.mjs';
 
 const PAGE=readFileSync(new URL('../Taquin deux visages interpolés/v15-multiview.html',import.meta.url),'utf8');
 function face(){
@@ -86,4 +86,43 @@ test('single diagnostic click compares 25, 50, 75 in local and stabilized modes'
  for(const id of ['diagnosticNeutral25','diagnosticNeutral50','diagnosticNeutral75','diagnosticPrimaryTitle','diagnosticSecondaryTitle']){
   assert.match(PAGE,new RegExp('id="'+id+'"'));
  }
+});
+
+test('mouth-specific appearance remains monotone with exact 25/50/75 geometry',()=>{
+ const a=face(),b=face();
+ a[13]={x:377,y:518};a[14]={x:377,y:520}; // closed 2px
+ b[13]={x:377,y:480};b[14]={x:377,y:650}; // strongly open 170px
+ assert.ok(mouthOpeningRatio(b)>mouthOpeningRatio(a)+.5);
+ const progress=[0,.25,.5,.75,1];
+ const appearance=progress.map(t=>localAppearanceMix(t,a,b));
+ assert.equal(appearance[0],0);assert.equal(appearance.at(-1),1);
+ assert.ok(appearance[1]>=.25&&appearance[1]<.4);
+ assert.ok(appearance[2]>.65&&appearance[3]>.87);
+ for(let i=0;i<=100;i++){
+  const t=i/100,prev=Math.max(0,t-.01);
+  assert.ok(localAppearanceMix(t,a,b)>=localAppearanceMix(prev,a,b)-1e-9,
+   'appearance must not reverse at '+t);
+ }
+ // Closing the mouth should be time reversal of opening it.
+ for(const t of progress)assert.ok(Math.abs(localAppearanceMix(t,b,a)-
+   (1-localAppearanceMix(1-t,a,b)))<1e-9);
+});
+
+test('similar expressions and missing data preserve ordinary interpolation',()=>{
+ const a=face(),b=face();
+ for(const t of [0,.25,.5,.75,1]){
+  assert.equal(localAppearanceMix(t,a,b),t);
+  assert.equal(localAppearanceMix(t,null,b),t);
+ }
+});
+
+test('local renderer separates appearance and exact mesh geometry in WebGL and Canvas',()=>{
+ assert.match(PAGE,/const textureMix=localAppearanceMix\(v\.a,geometry\.raw1,geometry\.alignedSecond\)/);
+ assert.match(PAGE,/const texturedGeometry=\{\.\.\.geometry,textureMix\}/);
+ assert.match(PAGE,/renderWebGLFace\(canvas\.width,texturedGeometry\)/);
+ assert.match(PAGE,/renderCanvasMorph\(layer,v,texturedGeometry\)/);
+ assert.match(PAGE,/blendMorphPixels\(pixelsA\.data,pixelsB\.data,geometry\.textureMix\?\?geometry\.t,pixelsA\.data\)/);
+ assert.match(PAGE,/gl\.uniform1f\(r\.locations\.mix,geometry\.textureMix\?\?geometry\.t\)/);
+ assert.match(PAGE,/geometry=localized\?stabilizedGeometry\(v\)/);
+ assert.match(PAGE,/Math\.abs\(geometry\.t-position\/100\)>1e-8/);
 });

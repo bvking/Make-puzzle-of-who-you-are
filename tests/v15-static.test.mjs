@@ -121,8 +121,8 @@ test('v15 diagnostic generates actual 25, 50, and 75 percent renderer snapshots'
   assert.match(page, /info\?\.renderer==='webgl'/);
   assert.match(page, /renderer:'canvas'/);
   assert.match(page, /renderer:'webgl'/);
-  assert.match(page, /uniform1f\(r\.locations\.mix,geometry\.t\)/);
-  assert.match(page, /blendMorphPixels\(pixelsA\.data,pixelsB\.data,geometry\.t,pixelsA\.data\)/);
+  assert.match(page, /uniform1f\(r\.locations\.mix,geometry\.textureMix\?\?geometry\.t\)/);
+  assert.match(page, /blendMorphPixels\(pixelsA\.data,pixelsB\.data,geometry\.textureMix\?\?geometry\.t,pixelsA\.data\)/);
 });
 
 test('v15 does not confuse MediaPipe import errors with no face detected', () => {
