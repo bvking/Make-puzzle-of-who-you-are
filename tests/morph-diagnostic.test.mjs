@@ -33,7 +33,7 @@ test('actual renderer is distinguished from fallback and failed WebGL',()=>{
 
 test('diagnostic checks three real intermediate frames and rejects invalid geometry',()=>{
  assert.match(page,/for\(const position of \[25,50,75\]\)/);
- assert.match(page,/Math\.abs\(geometry\.textureMix\?\?geometry\.t-position\/100\)>1e-8/);
+ assert.match(page,/Math\.abs\(geometry\.t-position\/100\)>1e-8/);
  assert.match(page,/renderSelected\(alignCanvas,\{updateUI:false,values:v,mode:state\.mode\}\)/);
  assert.match(page,/copy\('diagnostic'\+position,alignCanvas\)/);
  assert.match(page,/gl\.uniform1f\(r\.locations\.mix,geometry\.textureMix\?\?geometry\.t\)/);
