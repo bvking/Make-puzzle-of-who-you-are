@@ -115,8 +115,8 @@ test('v15 diagnostic generates actual 25, 50, and 75 percent renderer snapshots'
   assert.match(page, /for\(const position of \[25,50,75\]\)/);
   assert.match(page, /diagnosticMorphValue\(controls,position\)/);
   assert.match(page, /renderSelected\(alignCanvas,\{updateUI:false,values:v,mode:state\.mode\}\)/);
-  assert.match(page, /geometry\.raw1,geometry\.textureMix\?\?geometry\.target,geometry\.textureMix\?\?geometry\.triangles/);
-  assert.match(page, /geometry\.raw2,geometry\.textureMix\?\?geometry\.target,geometry\.textureMix\?\?geometry\.triangles/);
+  assert.match(page, /geometry\.raw1,geometry\.target,geometry\.triangles/);
+  assert.match(page, /geometry\.raw2,geometry\.target,geometry\.triangles/);
   assert.match(page, /renderSelected\(alignCanvas,\{values:v,mode:state\.mode\}\)/);
   assert.match(page, /info\?\.renderer==='webgl'/);
   assert.match(page, /renderer:'canvas'/);
