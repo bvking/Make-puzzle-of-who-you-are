@@ -20,3 +20,11 @@ test('invalid landmarks do not yield a chin bridge',()=>{
  assert.equal(chinTransition([]),null);
  assert.equal(chinTransition(null),null);
 });
+
+test('renderer wires chin bridge only into local mask',async()=>{
+ const fs=await import('node:fs');
+ const page=fs.readFileSync(new URL('../Taquin deux visages interpolés/v15-multiview.html',import.meta.url),'utf8');
+ assert.match(page,/import \{chinTransition\} from '\.\/chin-transition\.mjs'/);
+ assert.match(page,/const bridge=chinTransition\(points,referencePoints,alignedPoints\)/);
+ assert.match(page,/const seam=outerLipEnvelope\(points,referencePoints,alignedPoints\)/);
+});
