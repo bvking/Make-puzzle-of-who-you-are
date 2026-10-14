@@ -85,5 +85,5 @@ export function outerLipEnvelope(points,referencePoints=null,alignedPoints=null)
  const minY=Math.min(...all.map(p=>p.y)),maxY=Math.max(...all.map(p=>p.y));
  const gap=Math.max(8,(maxX-minX)*.065);
  return {x:(minX+maxX)/2,y:(minY+maxY)/2,
-  rx:Math.max(6,(maxX-minX)/2+gap),ry:Math.max(6,(maxY-minY)/2+gap*.80)};
+  rx:Math.max(6,(maxX-minX)*.74+gap),ry:Math.max(6,(maxY-minY)*.74+gap*.80)};
 }
