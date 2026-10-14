@@ -216,7 +216,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <script type="module">
 import {analyzePhotometry,automaticHarmony,captureQuality,chooseMatchedPair,commonYawRange,derivePose,laplacianVariance,pairCost,POSE_BINS,retainBestByPose,sessionCoverage} from './multiview-core.mjs';
 import {applySimilarity,robustStableAlignment} from './handheld-alignment.mjs';
-import {localMaskFeatures,localAppearanceMix,mouthOpeningRatio} from './local-expression.mjs';
+import {localMaskFeatures,localAppearanceMix,mouthOpeningRatio,outerLipEnvelope} from './local-expression.mjs';
 import {createScanArchive,readScanArchive} from './scan-archive.mjs';
 const MEDIAPIPE_MODULE="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs";
 const MEDIAPIPE_WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm";
@@ -803,6 +803,19 @@ function localExpressionMask(size,points,protectGlasses=true,referencePoints=nul
   gradient.addColorStop(.70,'rgba(255,255,255,'+(f.opacity*.45)+')');
   gradient.addColorStop(1,'rgba(255,255,255,0)');
   ctx.fillStyle=gradient;ctx.beginPath();ctx.arc(0,0,1,0,Math.PI*2);ctx.fill();ctx.restore();
+ }
+ // Complete the mouth opening before fading into the surrounding cheeks:
+ // guarantee that the lip pixels of A cannot leak through moving lips of B.
+ // Ellipse uses the union of the outer-lip landmarks across both sources.
+ const seam=outerLipEnvelope(points,referencePoints,alignedPoints);
+ if(seam){
+  ctx.save();ctx.translate(seam.x*q,seam.y*q);
+  ctx.scale(Math.max(1,seam.rx*q),Math.max(1,seam.ry*q));
+  const seal=ctx.createRadialGradient(0,0,.38,0,0,1);
+  seal.addColorStop(0,'rgba(255,255,255,1)');
+  seal.addColorStop(.72,'rgba(255,255,255,1)');
+  seal.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=seal;ctx.beginPath();ctx.arc(0,0,1,0,Math.PI*2);ctx.fill();ctx.restore();
  }
  return mask;
 }

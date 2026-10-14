@@ -69,3 +69,21 @@ export function localAppearanceMix(progress,referencePoints,alignedPoints){
  return clamp01(gap>0?preferOpenedTexture(t,weight):
   1-preferOpenedTexture(1-t,weight));
 }
+
+// The actual outer lip contour is a better hard-preservation region than a
+// broad oval: preserve the entire moving aperture without mixing it with
+// the unwarped lips of A underneath. Only numeric geometry is handled here.
+export const OUTER_LIP_CONTOUR=[61,40,37,0,267,270,291,321,314,17,84,91];
+export function outerLipEnvelope(points,referencePoints=null,alignedPoints=null){
+ if(!valid(points))return null;
+ const samples=[points,referencePoints,alignedPoints].filter(valid);
+ const all=samples.flatMap(p=>OUTER_LIP_CONTOUR.map(id=>p[id]).filter(finite));
+ if(all.length<OUTER_LIP_CONTOUR.length)return null;
+ // Union of A, B and the intermediate pose, expanded to avoid exposed
+ // original-image lip pixels at the mask boundary.
+ const minX=Math.min(...all.map(p=>p.x)),maxX=Math.max(...all.map(p=>p.x));
+ const minY=Math.min(...all.map(p=>p.y)),maxY=Math.max(...all.map(p=>p.y));
+ const gap=Math.max(8,(maxX-minX)*.065);
+ return {x:(minX+maxX)/2,y:(minY+maxY)/2,
+  rx:Math.max(6,(maxX-minX)*.74+gap),ry:Math.max(6,(maxY-minY)*.74+gap*.80)};
+}

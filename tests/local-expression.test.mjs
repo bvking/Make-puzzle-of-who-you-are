@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {localMaskFeatures,localAppearanceMix,mouthOpeningRatio} from '../Taquin deux visages interpolés/local-expression.mjs';
+import {localMaskFeatures,localAppearanceMix,mouthOpeningRatio,outerLipEnvelope,OUTER_LIP_CONTOUR} from '../Taquin deux visages interpolés/local-expression.mjs';
 
 const PAGE=readFileSync(new URL('../Taquin deux visages interpolés/v15-multiview.html',import.meta.url),'utf8');
 function face(){
@@ -125,4 +125,25 @@ test('local renderer separates appearance and exact mesh geometry in WebGL and C
  assert.match(PAGE,/gl\.uniform1f\(r\.locations\.mix,geometry\.textureMix\?\?geometry\.t\)/);
  assert.match(PAGE,/geometry=localized\?stabilizedGeometry\(v\)/);
  assert.match(PAGE,/Math\.abs\(geometry\.t-position\/100\)>1e-8/);
+});
+
+test('outer lip envelope includes both source and target contours, even for extreme mouth openings',()=>{
+ const A=face(),B=face(),middle=face();
+ // Simulate moving upper/lower lips, chin, camera translation, and asymmetric smile.
+ for(const id of OUTER_LIP_CONTOUR){
+  A[id]={x:350+(id%11)*3,y:500+(id%7)*4};
+  B[id]={x:370+(id%13)*4,y:480+(id%17)*9};
+ }
+ const envelope=outerLipEnvelope(middle,A,B);
+ assert.ok(envelope&&envelope.rx>0&&envelope.ry>0);
+ for(const p of [middle,A,B])for(const id of OUTER_LIP_CONTOUR){
+  const pt=p[id],nx=(pt.x-envelope.x)/envelope.rx,ny=(pt.y-envelope.y)/envelope.ry;
+  assert.ok(nx*nx+ny*ny<=1+1e-9,'lip must stay under seam-safe overlay');
+ }
+});
+
+test('seam overlay stays in the local mask, not in legacy modes',()=>{
+ assert.match(PAGE,/const seam=outerLipEnvelope\(points,referencePoints,alignedPoints\)/);
+ assert.match(PAGE,/seal\.addColorStop\(\.72,'rgba\(255,255,255,1\)'\)/);
+ assert.match(PAGE,/const mask=getBuffer\('local-expression-mask'/);
 });
