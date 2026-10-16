@@ -28,3 +28,18 @@ test('renderer wires chin bridge only into local mask',async()=>{
  assert.match(page,/const bridge=chinTransition\(points,referencePoints,alignedPoints\)/);
  assert.match(page,/const seam=outerLipEnvelope\(points,referencePoints,alignedPoints\)/);
 });
+
+test('degenerate facial proportions do not generate an artificial chin patch',()=>{
+ const a=face();
+ a[61]={x:380,y:500};a[291]={x:380,y:500};
+ assert.equal(chinTransition(a),null);
+ const b=face();
+ b[152]={...b[17]};
+ assert.equal(chinTransition(b),null);
+});
+test('missing or invalid auxiliary capture does not break valid current geometry',()=>{
+ const a=face(40),bad=face();
+ bad[61]={x:NaN,y:500};
+ const result=chinTransition(a,bad,null);
+ assert.ok(result&&Number.isFinite(result.x)&&Number.isFinite(result.y));
+});
