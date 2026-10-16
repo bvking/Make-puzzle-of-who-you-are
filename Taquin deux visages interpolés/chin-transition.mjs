@@ -9,7 +9,12 @@ export function chinTransition(points,source=null,target=null){
  const mouthWidth=Math.max(...samples.map(p=>dist(p[61],p[291])));
  if(mouthWidth<1e-4)return null;
  const opening=Math.max(...samples.map(p=>dist(p[13],p[14])/Math.max(1,dist(p[61],p[291]))));
- const openness=clamp((opening-.10)/.45);
+ const currentOpening=dist(points[13],points[14])/Math.max(1,dist(points[61],points[291]));
+ // Local bridge strength follows the CURRENT geometry, not the maximum
+ // opening across A and B: closed-mouth frames should not receive an
+ // oversized jaw patch merely because the other photograph is open.
+ const openness=clamp((currentOpening-.10)/.45);
+ const maximumOpenness=clamp((opening-.10)/.45);
  const lower=points[17],chin=points[152];
  const x=lower.x+(chin.x-lower.x)*.27;
  const y=lower.y+(chin.y-lower.y)*(.30+.12*openness);
@@ -17,5 +22,6 @@ export function chinTransition(points,source=null,target=null){
  if(travel<1e-4)return null;
  return {name:'chinBridge',x,y,rx:mouthWidth*(.43+.05*openness),
   ry:Math.max(10,Math.min(travel*.70,mouthWidth*(.27+.14*openness))),
-  opacity:.30+.14*openness};
+  opacity:.30+.14*openness,
+  maxOpening:maximumOpenness};
 }
