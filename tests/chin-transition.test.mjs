@@ -43,3 +43,12 @@ test('missing or invalid auxiliary capture does not break valid current geometry
  const result=chinTransition(a,bad,null);
  assert.ok(result&&Number.isFinite(result.x)&&Number.isFinite(result.y));
 });
+
+test('closed current mouth stays subtle even if target has a wide-open mouth',()=>{
+ const closed=face(2),open=face(70);
+ const closedBridge=chinTransition(closed,closed,open);
+ const openBridge=chinTransition(open,closed,open);
+ assert.ok(closedBridge.opacity<openBridge.opacity);
+ assert.ok(closedBridge.ry<openBridge.ry);
+ assert.equal(closedBridge.maxOpening,openBridge.maxOpening);
+});
