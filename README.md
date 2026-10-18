@@ -11,6 +11,8 @@ Prendre 1 photo par seconde avec l’iPhone et les afficher.
 La [mission de développement pour une autre IA](MORPHING_OBJECTIVE.md) précise
 le résultat attendu, les critères de validation et les règles de confidentialité.
 Le mode expérimental « Expressions locales » ne réalise pas encore cet objectif.
+Le [choix des méthodes et sa justification](MORPHING_METHODS.md) définit l'ordre
+de développement ; ces méthodes ne sont pas encore intégrées au moteur final.
 
 ### Référence historique
 
