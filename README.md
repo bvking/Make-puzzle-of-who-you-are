@@ -6,6 +6,14 @@ Prendre 1 photo par seconde avec l’iPhone et les afficher.
 
 ## Morphing facial — état actuel
 
+**Objectif de référence : deux personnes différentes avec des expressions
+éventuellement totalement différentes, de A à 0 % à B à 100 %.**
+La [mission de développement pour une autre IA](MORPHING_OBJECTIVE.md) précise
+le résultat attendu, les critères de validation et les règles de confidentialité.
+Le mode expérimental « Expressions locales » ne réalise pas encore cet objectif.
+
+### Référence historique
+
 La branche `browser-morph-v16` reste une version candidate. Le passage entre
 deux expressions fonctionne avec des perspectives proches, mais des contours
 dédoublés subsistent sur le cou et l’arrière-plan.
