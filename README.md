@@ -12,7 +12,11 @@ La [mission de développement pour une autre IA](MORPHING_OBJECTIVE.md) précise
 le résultat attendu, les critères de validation et les règles de confidentialité.
 Le mode expérimental « Expressions locales » ne réalise pas encore cet objectif.
 Le [choix des méthodes et sa justification](MORPHING_METHODS.md) définit l'ordre
-de développement ; ces méthodes ne sont pas encore intégrées au moteur final.
+de développement. Un premier mode **Morphing complet · nouveau** est maintenant
+intégré : tous les traits et le contour évoluent vers B, avec des extrémités A/B
+exactes. Le [bilan du premier jalon](Taquin%20deux%20visages%20interpol%C3%A9s/qa/full-face-engine-2026-10-18.md)
+détaille les tests et les limites, notamment les expressions extrêmes encore
+non validées entre deux identités différentes.
 
 ### Référence historique
 

@@ -2,8 +2,12 @@
 
 Décision de conception du 18 octobre 2026. Lire d'abord
 [la mission et les critères de réussite](MORPHING_OBJECTIVE.md).
-Les choix ci-dessous sont un programme de développement : ils ne sont pas encore
-implémentés ou validés sur l'ensemble des cas demandés.
+Les choix ci-dessous sont un programme de développement. Un premier jalon est
+implémenté : géométrie commune du portrait complet, ouvertures ordonnées,
+régularisation MLS avec garde-fous et extrémités A/B exactes. Le traitement de
+visibilité, la fusion multirésolution et le guidage 3D restent à développer.
+Voir le [bilan du nouveau moteur](Taquin%20deux%20visages%20interpol%C3%A9s/qa/full-face-engine-2026-10-18.md)
+pour les vérifications réelles et les limites ; l'ensemble du but n'est pas validé.
 
 ## Commentaire sur le choix des méthodes
 

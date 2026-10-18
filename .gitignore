@@ -1,0 +1,4 @@
+# Local experiments and any private regression inputs stay outside Git history.
+/work/
+/private-scans/
+/qa-private/
