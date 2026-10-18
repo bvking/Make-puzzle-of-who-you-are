@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {similarityMLS,contourStrip,createFullFaceMorph,assessSampledMorphPath,MOUTH_UPPER,MOUTH_LOWER,EYE_UPPER,EYE_LOWER} from '../Taquin deux visages interpolés/full-face-morph.mjs';
+import {similarityMLS,contourStrip,irisFan,createFullFaceMorph,assessSampledMorphPath,MOUTH_UPPER,MOUTH_LOWER,EYE_UPPER,EYE_LOWER} from '../Taquin deux visages interpolés/full-face-morph.mjs';
 
 // Existing public demo fixture, not a user capture.
 const fixture=JSON.parse(readFileSync(new URL('../Taquin deux visages interpolés/qa/portrait-landmarks.json',import.meta.url),'utf8'));
@@ -35,6 +35,63 @@ test('ordered aperture strips cover the opening without crossing the lip or eyel
   const area=Math.abs(contour.reduce((s,p,i)=>{const next=contour[(i+1)%contour.length];return s+p.x*next.y-p.y*next.x},0))/2;
   close(total,area);
  }
+});
+
+test('an iris fan covers a valid visible eye exactly and rejects a slit, external centre or invalid polygon',()=>{
+ const upper=EYE_UPPER[0],lower=EYE_LOWER[0],points=structuredClone(faces[0]);
+ upper.forEach((id,i)=>{points[id]={x:i,y:-Math.sin(Math.PI*i/(upper.length-1))}});
+ lower.forEach((id,i)=>{points[id]={x:i,y:Math.sin(Math.PI*i/(lower.length-1))}});
+ points[468]={x:4,y:0};
+ const before=structuredClone(points),fan=irisFan(points,upper,lower,468),boundary=[...upper,...lower.slice(1,-1).reverse()];
+ assert.equal(fan.length,boundary.length);assert.ok(fan.every(ids=>ids.includes(468)));
+ const summed=fan.reduce((sum,ids)=>{const value=cross(...ids.map(id=>points[id]));assert.ok(value<0);return sum-value/2},0);
+ const expected=Math.abs(boundary.reduce((sum,id,i)=>{const p=points[id],q=points[boundary[(i+1)%boundary.length]];return sum+p.x*q.y-p.y*q.x},0))/2;
+ close(summed,expected);assert.deepEqual(points,before);
+ const outside=structuredClone(points);outside[468]={x:4,y:2};assert.equal(irisFan(outside,upper,lower,468),null);
+ const onEdge=structuredClone(points);onEdge[468]={...points[159]};assert.equal(irisFan(onEdge,upper,lower,468),null);
+ const closed=points.map(p=>({...p,y:p.y*.001}));assert.equal(irisFan(closed,upper,lower,468),null);
+ const crossed=structuredClone(points);[crossed[upper[2]],crossed[upper[6]]]=[crossed[upper[6]],crossed[upper[2]]];
+ assert.equal(irisFan(crossed,upper,lower,468),null);
+});
+
+test('public open eyes use fixed iris-anchored topology with exact controls and reversible geometry',()=>{
+ const [a,b]=faces,model=createFullFaceMorph(a,b,skin,oval),reverse=createFullFaceMorph(b,a,skin,oval),baseline=createFullFaceMorph(a,b,skin,oval,{strength:0});
+ assert.deepEqual(model.eyeTopology,['iris-fan','iris-fan']);assert.deepEqual(model.irisAnchors,[468,473]);
+ for(const id of model.irisAnchors){assert.ok(model.controls.includes(id));assert.ok(model.triangles.some(ids=>ids.includes(id)))}
+ const topology=model.triangles;
+ for(const t of [0,.01,.25,.5,.75,.99,1]){
+  const sample=model.sample(t),opposite=reverse.sample(1-t),unregularized=baseline.sample(t);
+  assert.equal(sample.triangles,topology);assert.equal(sample.eyeTopology,model.eyeTopology);
+  for(const id of [468,473]){
+   close(sample.target[id].x,unregularized.target[id].x);close(sample.target[id].y,unregularized.target[id].y);
+   close(sample.target[id].x,opposite.target[id].x);close(sample.target[id].y,opposite.target[id].y);
+  }
+ }
+ assert.deepEqual(model.sample(0).target,a);assert.deepEqual(model.sample(1).target,b);
+ assert.throws(()=>{model.eyeTopology[0]='strip'},TypeError);assert.throws(()=>{model.irisAnchors[0]=0},TypeError);
+});
+
+test('closed, unavailable and unsafe intermediate iris geometry keeps the original strip for the whole pair',()=>{
+ const [a,b]=structuredClone(faces),closed=structuredClone(b);
+ EYE_LOWER[0].forEach((id,i)=>{closed[id]={...closed[EYE_UPPER[0][i]]}});
+ const closedModel=createFullFaceMorph(a,closed,skin,oval);
+ assert.deepEqual(closedModel.eyeTopology,['strip','iris-fan']);assert.ok(!closedModel.triangles.some(ids=>ids.includes(468)));
+ const outside=structuredClone(b);outside[468]={x:b[33].x-300,y:b[33].y};
+ assert.equal(createFullFaceMorph(a,outside,skin,oval).eyeTopology[0],'strip');
+ assert.deepEqual(createFullFaceMorph(a.slice(0,468),b.slice(0,468),skin,oval).eyeTopology,['strip','strip']);
+ const disabled=createFullFaceMorph(a,b,skin,oval,{irisAlignment:false});
+ assert.deepEqual(disabled.eyeTopology,['strip','strip']);assert.deepEqual(disabled.irisAnchors,[]);
+ // Both endpoint polygons individually support a fan, but reversing the
+ // vertical ordering makes the midpoint collapse. Its fan must stay disabled.
+ const upper=EYE_UPPER[0],lower=EYE_LOWER[0],first=structuredClone(a),second=structuredClone(a);
+ for(const [contour,sign] of [[upper,-1],[lower,1]])contour.forEach((id,i)=>{
+  first[id]={x:200+i*10,y:300+sign*10*Math.sin(Math.PI*i/(contour.length-1))};
+  second[id]={x:first[id].x,y:600-first[id].y};
+ });
+ first[468]=second[468]={x:240,y:300};
+ assert.ok(irisFan(first,upper,lower,468));assert.ok(irisFan(second,upper,lower,468));
+ const model=createFullFaceMorph(first,second,skin,oval,{poseNormalization:false});
+ assert.equal(model.eyeTopology[0],'strip');assert.ok(!model.controls.includes(468));
 });
 
 test('full-face geometry preserves both endpoints and moves semantic controls in the common face frame',()=>{
@@ -92,7 +149,7 @@ test('a change of scale and camera roll preserves facial shape instead of collap
 });
 
 test('the diagnostic baseline can reproduce direct pixel interpolation without pose normalization or MLS',()=>{
- const [a,b]=faces,model=createFullFaceMorph(a,b,skin,oval,{strength:0,poseNormalization:false});
+ const [a,b]=faces,model=createFullFaceMorph(a,b,skin,oval,{strength:0,poseNormalization:false,irisAlignment:false});
  assert.ok(model);
  for(const t of [0,.25,.5,.75,1]){
   const target=model.sample(t).target;
@@ -189,4 +246,5 @@ test('incomplete, degenerate or invalid inputs are refused without throwing',()=
  assert.equal(createFullFaceMorph(...faces,skin,[999,...oval]),null);
  assert.equal(createFullFaceMorph(...faces,skin,oval,{strength:NaN}),null);
  assert.equal(createFullFaceMorph(...faces,skin,oval,{poseNormalization:'false'}),null);
+ assert.equal(createFullFaceMorph(...faces,skin,oval,{irisAlignment:'false'}),null);
 });

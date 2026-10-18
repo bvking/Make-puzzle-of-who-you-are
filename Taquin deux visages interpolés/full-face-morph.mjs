@@ -50,6 +50,39 @@ export function contourStrip(upper,lower){
  return out;
 }
 
+// An iris anchor aligns the two pupils only when both visible eye cavities
+// support it. A fan is safe only for a simple contour whose kernel contains
+// the centre strictly: merely being inside a concave polygon is insufficient.
+export function irisFan(points,upper,lower,centerId){
+ if(!Array.isArray(points)||!Array.isArray(upper)||!Array.isArray(lower)||upper.length!==lower.length||upper.length<3||
+  upper[0]!==lower[0]||upper.at(-1)!==lower.at(-1)||!Number.isInteger(centerId))return null;
+ const boundary=[...upper,...lower.slice(1,-1).reverse()];
+ if(new Set(boundary).size!==boundary.length||boundary.includes(centerId)||
+  ![...boundary,centerId].every(id=>Number.isInteger(id)&&id>=0&&finite(points[id])))return null;
+ const origin=points[upper[0]],last=points[upper.at(-1)],width=Math.hypot(last.x-origin.x,last.y-origin.y);
+ if(!Number.isFinite(width)||width<=0)return null;
+ const normalize=p=>({x:(p.x-origin.x)/width,y:(p.y-origin.y)/width});
+ const polygon=boundary.map(id=>normalize(points[id])),center=normalize(points[centerId]),epsilon=1e-9;
+ if(![...polygon,center].every(finite))return null;
+ const signed=polygon.reduce((sum,p,i)=>{const q=polygon[(i+1)%polygon.length];return sum+p.x*q.y-p.y*q.x},0);
+ // Treat a slit as a closed eye even if the detector still estimates an iris.
+ if(!Number.isFinite(signed)||Math.abs(signed)<.02)return null;
+ const orientation=Math.sign(signed);
+ if(polygon.some((p,i)=>area(p,polygon[(i+1)%polygon.length],center)*orientation<=epsilon))return null;
+ const onSegment=(a,b,p)=>p.x>=Math.min(a.x,b.x)-epsilon&&p.x<=Math.max(a.x,b.x)+epsilon&&
+  p.y>=Math.min(a.y,b.y)-epsilon&&p.y<=Math.max(a.y,b.y)+epsilon;
+ const intersects=(a,b,c,d)=>{
+  const ac=area(a,b,c),ad=area(a,b,d),ca=area(c,d,a),cb=area(c,d,b);
+  return (ac*ad<0&&ca*cb<0)||Math.abs(ac)<=epsilon&&onSegment(a,b,c)||
+   Math.abs(ad)<=epsilon&&onSegment(a,b,d)||Math.abs(ca)<=epsilon&&onSegment(c,d,a)||Math.abs(cb)<=epsilon&&onSegment(c,d,b);
+ };
+ for(let i=0;i<polygon.length;i++)for(let j=i+1;j<polygon.length;j++){
+  if(j===i+1||i===0&&j===polygon.length-1)continue;
+  if(intersects(polygon[i],polygon[(i+1)%polygon.length],polygon[j],polygon[(j+1)%polygon.length]))return null;
+ }
+ return boundary.map((id,i)=>[id,centerId,boundary[(i+1)%boundary.length]]);
+}
+
 // Similarity Moving Least Squares (Schaefer et al., 2006). Weights are
 // normalized and computed in local coordinates for scale/translation stability.
 export function similarityMLS(point,source,target){
@@ -119,10 +152,10 @@ export function assessSampledMorphPath(first,second,triangles,targetAt,{steps=32
  return {valid:true,flipArea:flipped/total,collapseArea:collapsed/total,triangles:entries.length,samples:steps+1};
 }
 
-export function createFullFaceMorph(first,second,skinTriangles,faceOval,{strength=.35,poseNormalization=true}={}){
+export function createFullFaceMorph(first,second,skinTriangles,faceOval,{strength=.35,poseNormalization=true,irisAlignment=true}={}){
  if(!Array.isArray(first)||!Array.isArray(second)||first.length<468||second.length<468||
   !Array.isArray(faceOval)||faceOval.length<20||!Array.isArray(skinTriangles)||!skinTriangles.length||
-  !Number.isFinite(strength)||strength<0||strength>1||typeof poseNormalization!=='boolean')return null;
+  !Number.isFinite(strength)||strength<0||strength>1||typeof poseNormalization!=='boolean'||typeof irisAlignment!=='boolean')return null;
  const count=Math.min(first.length,second.length,478);
  if(!Array.from({length:count},(_,i)=>finite(first[i])&&finite(second[i])).every(Boolean))return null;
  const a=clone(first.slice(0,count)),b=clone(second.slice(0,count));
@@ -133,8 +166,24 @@ export function createFullFaceMorph(first,second,skinTriangles,faceOval,{strengt
  if(poseNormalization&&(!frameA||!frameB))return null;
  const shapeA=poseNormalization?normalizeFace(a,frameA):a,shapeB=poseNormalization?normalizeFace(b,frameB):b;
  const middle=shapeA.map((p,i)=>lerp(p,shapeB[i],.5));
+ const unregularizedAt=t=>{
+  if(t===0)return clone(a);if(t===1)return clone(b);
+  const frame=poseNormalization?interpolateFrame(frameA,frameB,t):null;
+  return shapeA.map((p,i)=>{const shape=lerp(p,shapeB[i],t);return frame?placeFace(shape,frame):shape});
+ };
+ const eyePath=irisAlignment&&count>=478?Array.from({length:33},(_,i)=>unregularizedAt(i/32)):null;
+ const eyeFans=EYE_UPPER.map((upper,eye)=>{
+  if(!eyePath)return null;
+  const centerId=468+eye*5,lower=EYE_LOWER[eye];
+  // Iris and eyelid contours will be exact controls; MLS cannot move the fan
+  // away from this checked trajectory. The topology then stays fixed in time.
+  if(!eyePath.every(points=>irisFan(points,upper,lower,centerId)))return null;
+  return irisFan(a,upper,lower,centerId);
+ });
+ const irisAnchors=Object.freeze(eyeFans.flatMap((fan,eye)=>fan?[468+eye*5]:[]));
+ const eyeTopology=Object.freeze(eyeFans.map(fan=>fan?'iris-fan':'strip'));
  const controls=[...new Set([...faceOval,...MOUTH_UPPER,...MOUTH_LOWER,...OUTER_LIPS,
-  ...EYE_UPPER.flat(),...EYE_LOWER.flat(),...BROWS,...NOSE,...CHEEKS])].filter(id=>id<count);
+  ...EYE_UPPER.flat(),...EYE_LOWER.flat(),...irisAnchors,...BROWS,...NOSE,...CHEEKS])].filter(id=>id<count);
  const source=controls.map(id=>middle[id]),destA=controls.map(id=>shapeA[id]),destB=controls.map(id=>shapeB[id]);
  // Precompute on the shared middle template, not per frame. Exact contours
  // remain controls; only the surrounding skin receives the smooth MLS field.
@@ -149,10 +198,11 @@ export function createFullFaceMorph(first,second,skinTriangles,faceOval,{strengt
   const key=ids.slice().sort((x,y)=>x-y).join('-');
   if(!seen.has(key)){seen.add(key);skin.push(ids.slice())}
  }
- const openings=[...EYE_UPPER.map((upper,i)=>contourStrip(upper,EYE_LOWER[i])),contourStrip(MOUTH_UPPER,MOUTH_LOWER)];
+ const openings=[...EYE_UPPER.map((upper,i)=>eyeFans[i]||contourStrip(upper,EYE_LOWER[i])),contourStrip(MOUTH_UPPER,MOUTH_LOWER)];
  const triangles=Object.freeze(skin.concat(...openings).map(ids=>Object.freeze(ids)));
  const targetAt=(t,amount)=>{
   if(t===0)return clone(a);if(t===1)return clone(b);
+  if(amount===0)return unregularizedAt(t);
   const frame=poseNormalization?interpolateFrame(frameA,frameB,t):null;
   return shapeA.map((p,i)=>{
    const raw=lerp(p,shapeB[i],t);
@@ -176,7 +226,7 @@ export function createFullFaceMorph(first,second,skinTriangles,faceOval,{strengt
  while(regularization>1e-4&&!safe(regularization))regularization/=2;
  if(regularization<=1e-4)regularization=0;
  const quality=Object.freeze(assessSampledMorphPath(a,b,skin,t=>targetAt(t,regularization)));
- return {regularization,controls:controls.slice(),triangles,quality,
+ return {regularization,controls:controls.slice(),triangles,quality,irisAnchors,eyeTopology,
   // Hair/head boundary points need the same pose path as the face. The outer
   // image boundary remains the renderer's fixed frame and must not use this.
   interpolateContext(firstContext,secondContext,progress){
@@ -192,6 +242,6 @@ export function createFullFaceMorph(first,second,skinTriangles,faceOval,{strengt
    if(!Number.isFinite(progress))return null;
    const t=Math.max(0,Math.min(1,progress));
    return {raw1:clone(a),raw2:clone(b),target:targetAt(t,regularization),
-    triangles,t,textureMix:t,faceCount:count,regularization};
+    triangles,t,textureMix:t,faceCount:count,regularization,irisAnchors,eyeTopology};
   }};
 }
