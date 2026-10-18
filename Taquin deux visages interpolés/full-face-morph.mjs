@@ -14,6 +14,31 @@ const BROWS=[70,63,105,66,107,55,65,52,53,46,300,293,334,296,336,285,295,282,283
 const NOSE=[168,6,197,195,5,4,1,2,98,327];
 const CHEEKS=[50,101,205,206,207,187,123,280,330,425,426,427,411,352];
 
+// Separate a camera's 2D scale/roll from facial shape before interpolating it.
+// Eye corners are used rather than the iris/eyelid centres: a blink or an open
+// mouth must not change the frame. This does not estimate 3D camera perspective.
+function faceFrame(points){
+ const left=lerp(points[33],points[133],.5),right=lerp(points[362],points[263],.5);
+ const x=right.x-left.x,y=right.y-left.y,scale=Math.hypot(x,y);
+ if(!Number.isFinite(scale)||scale<1e-4)return null;
+ return {center:lerp(left,right,.5),scale,angle:Math.atan2(y,x)};
+}
+function normalizeFace(points,frame){
+ const c=Math.cos(frame.angle),s=Math.sin(frame.angle);
+ return points.map(p=>{const x=(p.x-frame.center.x)/frame.scale,y=(p.y-frame.center.y)/frame.scale;
+  return {x:c*x+s*y,y:-s*x+c*y};
+ });
+}
+function interpolateFrame(a,b,t){
+ const difference=b.angle-a.angle,turn=Math.atan2(Math.sin(difference),Math.cos(difference));
+ const angle=a.angle+t*turn,scale=Math.exp((1-t)*Math.log(a.scale)+t*Math.log(b.scale));
+ return {center:lerp(a.center,b.center,t),scale,c:Math.cos(angle),s:Math.sin(angle)};
+}
+function placeFace(point,frame){
+ return {x:frame.center.x+frame.scale*(frame.c*point.x-frame.s*point.y),
+  y:frame.center.y+frame.scale*(frame.s*point.x+frame.c*point.y)};
+}
+
 // Pair corresponding upper/lower contour segments. Unlike unconstrained
 // Delaunay, these strips cannot connect non-neighbouring parts of an opening.
 export function contourStrip(upper,lower){
@@ -50,25 +75,72 @@ export function similarityMLS(point,source,target){
  return finite(result)?result:null;
 }
 
-export function createFullFaceMorph(first,second,skinTriangles,faceOval,{strength=.35}={}){
+// Inspect the path actually rendered, including nonlinear pose/MLS motion.
+// Each triangle is weighted by the mean of its two endpoint areas, so a tiny
+// eyelid triangle cannot outweigh an entire cheek. Sampling cannot certify
+// what happens between positions; callers must keep that limitation visible.
+export function assessSampledMorphPath(first,second,triangles,targetAt,{steps=32}={}){
+ const invalid=()=>({valid:false,flipArea:1,collapseArea:1,triangles:0,samples:0});
+ if(!Array.isArray(first)||!Array.isArray(second)||!Array.isArray(triangles)||!triangles.length||
+  typeof targetAt!=='function'||!Number.isInteger(steps)||steps<1||steps>4096)return invalid();
+ const entries=[];let largestWeight=0;
+ for(const ids of triangles){
+  if(!Array.isArray(ids)||ids.length!==3||new Set(ids).size!==3||
+   !ids.every(id=>Number.isInteger(id)&&id>=0&&finite(first[id])&&finite(second[id])))return invalid();
+  const start=area(...ids.map(id=>first[id])),end=area(...ids.map(id=>second[id]));
+  if(!Number.isFinite(start)||!Number.isFinite(end))return invalid();
+  const maximum=Math.max(Math.abs(start),Math.abs(end)),weight=(Math.abs(start)/2+Math.abs(end)/2);
+  // An everywhere-degenerate mesh has no meaningful area weights and fails
+  // closed below. Zero-area pieces alongside usable triangles contribute zero.
+  if(weight===0)continue;
+  const orientation=Math.sign(Math.abs(start)>=Math.abs(end)?start:end);
+  entries.push({ids,weight,maximum,orientation,minArea:Math.min(Math.abs(start),Math.abs(end)),
+   flipped:start*orientation<0||end*orientation<0});
+  largestWeight=Math.max(largestWeight,weight);
+ }
+ if(!entries.length||!Number.isFinite(largestWeight)||largestWeight<=0)return invalid();
+ try{
+  for(let step=0;step<=steps;step++){
+   const target=targetAt(step/steps);if(!Array.isArray(target))return invalid();
+   for(const entry of entries){
+    const points=entry.ids.map(id=>target[id]);if(!points.every(finite))return invalid();
+    const value=area(...points);if(!Number.isFinite(value))return invalid();
+    entry.minArea=Math.min(entry.minArea,Math.abs(value));
+    entry.flipped ||= value*entry.orientation<0;
+   }
+  }
+ }catch{return invalid()}
+ let total=0,flipped=0,collapsed=0;
+ for(const entry of entries){
+  const weight=entry.weight/largestWeight;total+=weight;
+  if(entry.flipped)flipped+=weight;
+  else if(entry.minArea/entry.maximum<.025)collapsed+=weight;
+ }
+ return {valid:true,flipArea:flipped/total,collapseArea:collapsed/total,triangles:entries.length,samples:steps+1};
+}
+
+export function createFullFaceMorph(first,second,skinTriangles,faceOval,{strength=.35,poseNormalization=true}={}){
  if(!Array.isArray(first)||!Array.isArray(second)||first.length<468||second.length<468||
   !Array.isArray(faceOval)||faceOval.length<20||!Array.isArray(skinTriangles)||!skinTriangles.length||
-  !Number.isFinite(strength)||strength<0||strength>1)return null;
+  !Number.isFinite(strength)||strength<0||strength>1||typeof poseNormalization!=='boolean')return null;
  const count=Math.min(first.length,second.length,478);
  if(!Array.from({length:count},(_,i)=>finite(first[i])&&finite(second[i])).every(Boolean))return null;
  const a=clone(first.slice(0,count)),b=clone(second.slice(0,count));
  if(!a.every(finite)||!b.every(finite)||!faceOval.every(id=>Number.isInteger(id)&&id>=0&&id<count))return null;
  if([a,b].some(p=>Math.hypot(p[33].x-p[263].x,p[33].y-p[263].y)<1e-4||
   Math.hypot(p[61].x-p[291].x,p[61].y-p[291].y)<1e-4))return null;
- const middle=a.map((p,i)=>lerp(p,b[i],.5));
+ const frameA=poseNormalization?faceFrame(a):null,frameB=poseNormalization?faceFrame(b):null;
+ if(poseNormalization&&(!frameA||!frameB))return null;
+ const shapeA=poseNormalization?normalizeFace(a,frameA):a,shapeB=poseNormalization?normalizeFace(b,frameB):b;
+ const middle=shapeA.map((p,i)=>lerp(p,shapeB[i],.5));
  const controls=[...new Set([...faceOval,...MOUTH_UPPER,...MOUTH_LOWER,...OUTER_LIPS,
   ...EYE_UPPER.flat(),...EYE_LOWER.flat(),...BROWS,...NOSE,...CHEEKS])].filter(id=>id<count);
- const source=controls.map(id=>middle[id]),destA=controls.map(id=>a[id]),destB=controls.map(id=>b[id]);
+ const source=controls.map(id=>middle[id]),destA=controls.map(id=>shapeA[id]),destB=controls.map(id=>shapeB[id]);
  // Precompute on the shared middle template, not per frame. Exact contours
  // remain controls; only the surrounding skin receives the smooth MLS field.
  const fixed=new Set(controls);
- const smoothA=middle.map((p,i)=>fixed.has(i)?a[i]:similarityMLS(p,source,destA));
- const smoothB=middle.map((p,i)=>fixed.has(i)?b[i]:similarityMLS(p,source,destB));
+ const smoothA=middle.map((p,i)=>fixed.has(i)?shapeA[i]:similarityMLS(p,source,destA));
+ const smoothB=middle.map((p,i)=>fixed.has(i)?shapeB[i]:similarityMLS(p,source,destB));
  if(smoothA.some(p=>!p)||smoothB.some(p=>!p))return null;
  const skin=[],seen=new Set();
  for(const ids of skinTriangles){
@@ -79,12 +151,15 @@ export function createFullFaceMorph(first,second,skinTriangles,faceOval,{strengt
  }
  const openings=[...EYE_UPPER.map((upper,i)=>contourStrip(upper,EYE_LOWER[i])),contourStrip(MOUTH_UPPER,MOUTH_LOWER)];
  const triangles=Object.freeze(skin.concat(...openings).map(ids=>Object.freeze(ids)));
- const targetAt=(t,amount)=>t===0?clone(a):t===1?clone(b):a.map((p,i)=>{
-  const raw=lerp(p,b[i],t);
-  if(fixed.has(i)||amount===0||t===0||t===1)return raw;
-  const smooth=lerp(smoothA[i],smoothB[i],t);
-  return lerp(raw,smooth,4*t*(1-t)*amount);
- });
+ const targetAt=(t,amount)=>{
+  if(t===0)return clone(a);if(t===1)return clone(b);
+  const frame=poseNormalization?interpolateFrame(frameA,frameB,t):null;
+  return shapeA.map((p,i)=>{
+   const raw=lerp(p,shapeB[i],t);
+   const shape=fixed.has(i)||amount===0?raw:lerp(raw,lerp(smoothA[i],smoothB[i],t),4*t*(1-t)*amount);
+   return frame?placeFace(shape,frame):shape;
+  });
+ };
  // A sampled guard compares against the unregularized path. It bounds added
  // inversions/collapses, but is not a mathematical proof between sample times.
  const references=Array.from({length:33},(_,i)=>{
@@ -100,7 +175,19 @@ export function createFullFaceMorph(first,second,skinTriangles,faceOval,{strengt
  });
  while(regularization>1e-4&&!safe(regularization))regularization/=2;
  if(regularization<=1e-4)regularization=0;
- return {regularization,controls:controls.slice(),triangles,
+ const quality=Object.freeze(assessSampledMorphPath(a,b,skin,t=>targetAt(t,regularization)));
+ return {regularization,controls:controls.slice(),triangles,quality,
+  // Hair/head boundary points need the same pose path as the face. The outer
+  // image boundary remains the renderer's fixed frame and must not use this.
+  interpolateContext(firstContext,secondContext,progress){
+   if(!Number.isFinite(progress)||!Array.isArray(firstContext)||!Array.isArray(secondContext)||
+    firstContext.length!==secondContext.length||!firstContext.every(finite)||!secondContext.every(finite))return null;
+   const t=Math.max(0,Math.min(1,progress));
+   if(t===0)return clone(firstContext);if(t===1)return clone(secondContext);
+   if(!poseNormalization)return firstContext.map((p,i)=>lerp(p,secondContext[i],t));
+   const contextA=normalizeFace(firstContext,frameA),contextB=normalizeFace(secondContext,frameB),frame=interpolateFrame(frameA,frameB,t);
+   return contextA.map((p,i)=>placeFace(lerp(p,contextB[i],t),frame));
+  },
   sample(progress){
    if(!Number.isFinite(progress))return null;
    const t=Math.max(0,Math.min(1,progress));
