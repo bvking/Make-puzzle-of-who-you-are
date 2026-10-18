@@ -3,9 +3,11 @@
 Décision de conception du 18 octobre 2026. Lire d'abord
 [la mission et les critères de réussite](MORPHING_OBJECTIVE.md).
 Les choix ci-dessous sont un programme de développement. Un premier jalon est
-implémenté : géométrie commune du portrait complet, ouvertures ordonnées,
-régularisation MLS avec garde-fous et extrémités A/B exactes. Le traitement de
-visibilité, la fusion multirésolution et le guidage 3D restent à développer.
+implémenté : géométrie commune du portrait complet, repère de taille/rotation
+partagé, ouvertures ordonnées, régularisation MLS avec garde-fous, sélection
+locale de texture selon la visibilité et extrémités A/B exactes. La fusion
+multirésolution et le guidage 3D restent à développer. La visibilité actuelle
+est une heuristique 2D, sans reconstruction des surfaces cachées.
 Voir le [bilan du nouveau moteur](Taquin%20deux%20visages%20interpol%C3%A9s/qa/full-face-engine-2026-10-18.md)
 pour les vérifications réelles et les limites ; l'ensemble du but n'est pas validé.
 
@@ -162,3 +164,48 @@ d'abord être isolé et corrigé. Cette priorité n'exclut pas leur évaluation 
 Toutes les comparaisons privées restent locales. Aucun portrait privé, scan,
 repère facial ni capture d'écran privée ne doit accompagner ces documents,
 commits, commentaires GitHub ou artefacts de CI.
+
+## Jalon V18 : tailles différentes et ouvertures différentes
+
+Le moteur sépare maintenant le cadrage 2D de la forme : les quatre coins des
+yeux définissent un repère indépendant de l’ouverture des paupières, la taille
+évolue géométriquement et la rotation prend le chemin court. Le visage et le
+contour de tête suivent ce même repère ; le bord du cadre reste fixe. Cela
+évite le rétrécissement artificiel d’une interpolation de rotation en pixels.
+Cela ne rectifie pas la perspective 3D : les différences de proportions
+observées restent traitées par le maillage sémantique.
+
+La sélection de texture concerne exclusivement les cavités internes de bouche
+et d’yeux. Leur aire divisée par leur largeur au carré mesure l’ouverture sans
+dépendre de l’échelle. Des poids de fiabilité continus favorisent une source
+ouverte face à une source fermée. Une carte de poids 16 bits commune aux deux
+moteurs conserve le coefficient global sur les lèvres, paupières et la peau.
+Le choix est limité aux images réellement observées ; il ne crée ni dents ni
+iris absents des deux photos. Si les deux cavités sont ouvertes, leurs détails
+peuvent encore se dédoubler.
+
+Le contrôle de compatibilité distingue désormais les anciens modes, qui
+recentrent B sur A, et le moteur complet, qui conserve les cadres d’origine.
+Si le premier contrôle refuse une paire mais que les deux cadres bruts, la
+trajectoire faciale réelle et les anneaux de contexte sont valides, seul le
+mode complet est autorisé. Les autres modes restent désactivés. Les seuils
+anciens ne sont pas assouplis.
+
+Je n’ajoute pas une pyramide mélangée uniformément en espérant supprimer les
+images fantômes : avec les mêmes poids à tous les niveaux, la linéarité donne
+le même fondu. Les raccords multibandes seront évalués avec des masques spatiaux,
+après la correspondance géométrique et la visibilité. La V18 privilégie donc
+une correction locale vérifiable, sans altérer la couleur ou l’identité de
+l’ensemble du visage pour favoriser la bouche.
+
+Voir le [bilan V18](Taquin%20deux%20visages%20interpol%C3%A9s/qa/v18-visibility-2026-10-18.md)
+pour les comparaisons réelles et leurs limites.
+
+Les ouvertures oculaires reçoivent aussi un centre d’iris lorsque celui-ci est
+strictement intérieur à un contour simple et que tous les triangles radiaux
+restent orientés aux deux extrémités et aux 33 positions vérifiées. Les deux
+pupilles sont ainsi déformées vers une même position, au lieu de ne recaler que
+les paupières. Chaque œil peut revenir indépendamment aux bandes historiques
+si le centre est absent, l’œil fermé ou la géométrie ambiguë. Ce contrôle est
+basé sur les [repères du modèle MediaPipe](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker),
+pas sur une estimation de profondeur métrique ni une reconstruction de l’œil.
