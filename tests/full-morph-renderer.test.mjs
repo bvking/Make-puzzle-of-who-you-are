@@ -47,9 +47,9 @@ test('full morph uses the same geometry and raw pair through WebGL and Canvas wi
 test('Canvas respects a provided geometry at 100% instead of jumping to an unaligned endpoint',()=>{
  const d=setup(),warps=[];
  const render=new Function('renderPortraitEndpoint','meshGeometry','fullFrameGeometry','renderAlphaFallback',
-  'state','morphPhoto','warpImage','getBuffer','blendMorphPixels','lightingStatus',canvasSource+';return renderCanvasMorph')(
+  'state','morphPhoto','warpImage','getBuffer','blendMorphPixels','lightingStatus','openingMixMap',canvasSource+';return renderCanvasMorph')(
   ()=>{throw Error('Unexpected raw endpoint')},()=>null,()=>null,()=>({fallback:true}),{photos:d.photos},()=>d.photos[1],
-  (...args)=>{warps.push(args);return d.canvas},()=>d.canvas,()=>{},()=> 'test');
+  (...args)=>{warps.push(args);return d.canvas},()=>d.canvas,()=>{},()=> 'test',()=>null);
  const result=render(d.canvas,{a:1},d.geometry,d.photos);
  assert.equal(result.fallback,false);assert.equal(warps.length,2);
  assert.equal(warps[0][2],d.photos[0]);assert.equal(warps[1][2],d.photos[1]);
@@ -66,16 +66,15 @@ test('animation and diagnostics retain the complete identity morph mode',()=>{
  assert.match(page,/state\.mode==='full'\?fullMorphGeometry\(v\)/);
 });
 
-test('the new adapter validates the unaligned camera path before building its cached model',()=>{
- const source=between('function fullMorphGeometry(','function renderFullMorph(');
- for(const [flipArea,collapseArea,expected] of [[0,0,true],[.1,0,false],[0,.2,false]]){
+test('the full adapter gates the actual normalized path and caches accepted or refused pairs',()=>{
+ const source=between('function fullMorphGeometry(','// One target-space texture-weight map');
+ for(const [quality,expected] of [[{valid:true,flipArea:0,collapseArea:0},true],[{valid:true,flipArea:.1,collapseArea:0},false],[{valid:true,flipArea:0,collapseArea:.2},false],[{valid:false,flipArea:0,collapseArea:0},false],[undefined,false]]){
   const first=[],second=[],state={photoVersion:1,morphTopologyVersion:2,meshTriangles:[],faceOval:[],headRings:[[],[]]};
-  let built=0,assessed=0;
-  const get=new Function('canMeshMorph','state','landmarkPoints','assessMorphTopology','createFullFaceMorph','fallbackHeadRing','fullFrameGeometry',source+';return fullMorphGeometry')(
-   ()=>true,state,i=>i?second:first,(a,b)=>{assert.equal(a,first);assert.equal(b,second);assessed++;return{flipArea,collapseArea}},
-   ()=>{built++;return{sample:()=>({raw1:[],raw2:[],target:[],triangles:[],t:.5,regularization:.1})}},()=>[],
-   ()=>({contextTriangles:[],raw1:[],raw2:[],target:[]}));
+  let built=0,visibility=0;
+  const get=new Function('canMeshMorph','state','landmarkPoints','createFullFaceMorph','createOpeningVisibility','fallbackHeadRing','fullFrameGeometry',source+';return fullMorphGeometry')(
+   ()=>true,state,i=>i?second:first,(a,b)=>{assert.equal(a,first);assert.equal(b,second);built++;return{quality,sample:()=>({raw1:[],raw2:[],target:[],triangles:[],t:.5,regularization:.1})}},
+   ()=>{visibility++;return{sample:()=>({regions:[]})}},()=>[],()=>({contextTriangles:[],raw1:[],raw2:[],target:[]}));
   assert.equal(!!get({a:.5}),expected);assert.equal(!!get({a:.5}),expected);
-  assert.equal(assessed,1);assert.equal(built,expected?1:0);
+  assert.equal(built,1);assert.equal(visibility,expected?1:0);
  }
 });

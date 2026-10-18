@@ -37,7 +37,7 @@ test('diagnostic checks three real intermediate frames and rejects invalid geome
  assert.match(page,/renderSelected\(alignCanvas,\{updateUI:false,values:v,mode:state\.mode\}\)/);
  assert.match(page,/copy\('diagnostic'\+position,alignCanvas\)/);
  assert.match(page,/gl\.uniform1f\(r\.locations\.mix,geometry\.textureMix\?\?geometry\.t\)/);
- assert.match(page,/blendMorphPixels\(pixelsA\.data,pixelsB\.data,geometry\.textureMix\?\?geometry\.t,pixelsA\.data\)/);
+ assert.match(page,/blendMorphPixels\(pixelsA\.data,pixelsB\.data,geometry\.textureMix\?\?geometry\.t,pixelsA\.data,openingMixMap\(geometry,size\)\?\.weights\)/);
 });
 
 test('image delta check detects frozen frames independently of their engine',()=>{

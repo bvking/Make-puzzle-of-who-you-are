@@ -42,8 +42,8 @@ test('WebGL notices changed connectivity even with the same triangle count',()=>
  assert.equal(morphTopologyMatches(null,[[0,1,2]]),false);
 });
 test('WebGL uses the same alpha-weighted linear-light equation as Canvas',()=>{
- assert.match(page,/float weightA=a\.a\*\(1\.0-uMix\)/);
- assert.match(page,/float weightB=b\.a\*uMix/);
+ assert.match(page,/float weightA=a\.a\*\(1\.0-amount\)/);
+ assert.match(page,/float weightB=b\.a\*amount/);
  assert.match(page,/\(toLinear\(a\.rgb\)\*weightA\+toLinear\(b\.rgb\)\*weightB\)\/alpha/);
  assert.doesNotMatch(page,/mix\(toLinear\(a\.rgb\),toLinear\(b\.rgb\),uMix\)/);
 });
