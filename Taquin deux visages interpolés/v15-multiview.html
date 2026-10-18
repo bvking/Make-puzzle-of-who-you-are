@@ -218,6 +218,7 @@ import {analyzePhotometry,automaticHarmony,captureQuality,chooseMatchedPair,comm
 import {applySimilarity,robustStableAlignment} from './handheld-alignment.mjs';
 import {localMaskFeatures,localAppearanceMix,mouthOpeningRatio,outerLipEnvelope} from './local-expression.mjs';
 import {chinTransition} from './chin-transition.mjs';
+import {cheekTransitions} from './cheek-transition.mjs';
 import {createScanArchive,readScanArchive} from './scan-archive.mjs';
 const MEDIAPIPE_MODULE="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs";
 const MEDIAPIPE_WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm";
@@ -804,6 +805,17 @@ function localExpressionMask(size,points,protectGlasses=true,referencePoints=nul
   gradient.addColorStop(.70,'rgba(255,255,255,'+(f.opacity*.45)+')');
   gradient.addColorStop(1,'rgba(255,255,255,0)');
   ctx.fillStyle=gradient;ctx.beginPath();ctx.arc(0,0,1,0,Math.PI*2);ctx.fill();ctx.restore();
+ }
+ // Low-opacity lateral bridges follow the face roll. Their full ellipses
+ // stay below the protected eye band even when eye morphing is enabled.
+ for(const cheek of cheekTransitions(points,referencePoints,alignedPoints)){
+  ctx.save();ctx.translate(cheek.x*q,cheek.y*q);ctx.rotate(cheek.angle);
+  ctx.scale(cheek.rx*q,cheek.ry*q);
+  const feather=ctx.createRadialGradient(0,0,0,0,0,1);
+  feather.addColorStop(0,'rgba(255,255,255,'+cheek.opacity+')');
+  feather.addColorStop(.45,'rgba(255,255,255,'+(cheek.opacity*.65)+')');
+  feather.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=feather;ctx.beginPath();ctx.arc(0,0,1,0,Math.PI*2);ctx.fill();ctx.restore();
  }
  // Complete the mouth opening before fading into the surrounding cheeks:
  // guarantee that the lip pixels of A cannot leak through moving lips of B.
