@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#050505">
-<title>Taquin V16 · Expressions locales et lunettes protégées</title>
+<title>Taquin V17 · Morphing complet entre deux visages</title>
 <style>
 :root{color-scheme:dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -65,7 +65,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 </head>
 <body>
 <main>
-<span class="badge">V16 expérimental · Expressions locales / lunettes protégées</span>
+<span class="badge">V17 expérimental · Morphing complet A → B</span>
 <h1>Taquin — deux visages</h1>
 <p class="lead">Enregistre plusieurs angles de chaque visage. L’application retient les vues les plus nettes et recherche une perspective commune.</p>
 <aside class="limitation" role="note" aria-label="Objectif demandé et limite actuelle">
@@ -121,6 +121,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <span id="viewpointStatus" class="viewpoint-status"></span>
 </div>
 <div id="modePicker" class="mode-picker" role="group" aria-label="Mode de composition">
+<button type="button" class="secondary" data-mode="full" aria-pressed="false">Morphing complet · nouveau</button>
 <button type="button" class="secondary" data-mode="local" aria-pressed="false">Expressions locales</button>
 <button type="button" class="secondary" data-mode="stabilized" aria-pressed="false">Visage stabilisé</button>
 <button type="button" class="secondary is-active" data-mode="canvas" aria-pressed="true">Triangles 2D</button>
@@ -129,7 +130,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 </div>
 <div id="localExpressionOptions" class="diagnostic-isolation-option" hidden><label><input id="localProtectGlasses" type="checkbox" checked> Garder les lunettes, les sourcils et le haut du visage de la photo A (protection manuelle, sans détection automatique).</label></div>
 <label>Lumière visage <input id="regionHarmony" type="range" min="0" max="100" value="0"><span id="regionHarmonyVal" class="value">0%</span></label>
-<span class="region-title">« Expressions locales » conserve le décor, les cheveux et le haut du visage de A, et interpole surtout les expressions autour de la bouche. La géométrie suit le pourcentage demandé ; la texture de bouche est ajustée pour limiter les doubles lèvres et les dents fantômes. « Visage stabilisé » conserve l’ancien masque étendu pour la comparaison. Une autre perspective ne peut pas être reconstruite à partir de deux images 2D.</span><span class="region-title">Lumière : augmente ce réglage seulement si les deux photos ont des éclairages très différents.</span>
+<span class="region-title">« Morphing complet » transforme tous les traits et le contour de A vers B. Ce premier prototype utilise les couleurs originales ; l’harmonisation et le traitement des surfaces cachées restent à développer. « Expressions locales » conserve le décor, les cheveux et le haut du visage de A, et interpole surtout les expressions autour de la bouche. La géométrie suit le pourcentage demandé ; la texture de bouche est ajustée pour limiter les doubles lèvres et les dents fantômes. « Visage stabilisé » conserve l’ancien masque étendu pour la comparaison. Une autre perspective ne peut pas être reconstruite à partir de deux images 2D.</span><span class="region-title">Lumière : augmente ce réglage seulement si les deux photos ont des éclairages très différents.</span>
 <div id="modeStatus" class="status" aria-live="polite"></div>
 <details id="morphDiagnostic" class="morph-diagnostic">
 <summary>Diagnostic du morphing · inspecter les doubles contours</summary>
@@ -219,6 +220,7 @@ import {applySimilarity,robustStableAlignment} from './handheld-alignment.mjs';
 import {localMaskFeatures,localAppearanceMix,mouthOpeningRatio,outerLipEnvelope} from './local-expression.mjs';
 import {chinTransition} from './chin-transition.mjs';
 import {cheekTransitions} from './cheek-transition.mjs';
+import {createFullFaceMorph} from './full-face-morph.mjs';
 import {createScanArchive,readScanArchive} from './scan-archive.mjs';
 const MEDIAPIPE_MODULE="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs";
 const MEDIAPIPE_WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm";
@@ -594,7 +596,7 @@ async function applyMatchedView(targetYaw=null,{automatic=false}={}){
   const hasSavedRings=savedCandidates.every(candidate=>Array.isArray(candidate.headRing)&&candidate.headRing.length===state.faceOval.length&&candidate.headRing.every(point=>Number.isFinite(point?.x)&&Number.isFinite(point?.y)));
   if(!hasSavedRings)await ensureSegmenter();if(generation!==state.operationGeneration)return;
   for(let index=0;index<2;index++){pairPreparationStatus(`Analyse de la silhouette ${index+1}/2…`);headRings[index]=hasSavedRings?savedCandidates[index].headRing.map(point=>({...point})):await extractHeadRing(photos[index],marks[index]);if(generation!==state.operationGeneration)return}
-  stopCamera();closeSegmenter();state.photos=photos;state.marks=marks;state.headRings=headRings;state.selectedPair=pair;state.step=0;state.solutionURL='';state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.buffers.clear();invalidateFaceLighting();state.regionHarmony=wasAlign?previousHarmony:automaticHarmony(pair.first.photometry,pair.second.photometry);syncRegionControls();photos.forEach((photo,index)=>{const thumbnail=makeCanvas(192),ctx=thumbnail.getContext('2d');ctx.drawImage(photo,0,0,192,192);const value=`url(${thumbnail.toDataURL('image/jpeg',.8)})`;$('thumb'+(index+1)).style.backgroundImage=value;$('sourceThumb'+(index+1)).style.backgroundImage=value});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();state.animation.userFrozen=false;syncPairUI();autoAlign({activate:false,render:false});syncViewpointUI(pair);updateModeAvailability();if(wasAlign){$('alignStage').inert=false;$('alignStage').removeAttribute('aria-busy')}if(canMeshMorph()){const desiredMode=wasAlign&&['canvas','webgl','regions','stabilized','local'].includes(previousMode)?previousMode:'local';setMode(desiredMode);if(!automatic||!reducedMotionQuery?.matches)maybeAutoStartAnimation()}else scheduleRender();(state.pair.status==='unusable'?$('retakePhoto2'):$('alignStatus')).focus()
+  stopCamera();closeSegmenter();state.photos=photos;state.marks=marks;state.headRings=headRings;state.selectedPair=pair;state.step=0;state.solutionURL='';state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.buffers.clear();invalidateFaceLighting();state.regionHarmony=wasAlign?previousHarmony:automaticHarmony(pair.first.photometry,pair.second.photometry);syncRegionControls();photos.forEach((photo,index)=>{const thumbnail=makeCanvas(192),ctx=thumbnail.getContext('2d');ctx.drawImage(photo,0,0,192,192);const value=`url(${thumbnail.toDataURL('image/jpeg',.8)})`;$('thumb'+(index+1)).style.backgroundImage=value;$('sourceThumb'+(index+1)).style.backgroundImage=value});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();state.animation.userFrozen=false;syncPairUI();autoAlign({activate:false,render:false});syncViewpointUI(pair);updateModeAvailability();if(wasAlign){$('alignStage').inert=false;$('alignStage').removeAttribute('aria-busy')}if(canMeshMorph()){const desiredMode=wasAlign&&['full','canvas','webgl','regions','stabilized','local'].includes(previousMode)?previousMode:'full';setMode(desiredMode);if(!automatic||!reducedMotionQuery?.matches)maybeAutoStartAnimation()}else scheduleRender();(state.pair.status==='unusable'?$('retakePhoto2'):$('alignStatus')).focus()
  }catch(error){console.error(error);if(generation===state.operationGeneration){pairPreparationStatus('Préparation du morphing impossible : '+(error.message||error));showStage(wasAlign?'alignStage':'captureStage')}}
  finally{if(generation===state.operationGeneration){state.applyingPair=false;$('alignStage').inert=false;$('alignStage').removeAttribute('aria-busy');disableViewpointControls(false);updateScanUI()}}
 }
@@ -867,6 +869,45 @@ function renderLocalExpressions(canvas,v){
  return{fallback:false,renderer,message:'Expressions locales · géométrie '+Math.round(v.a*100)+' % / texture bouche '+Math.round(textureMix*100)+' % · '+(protect?'haut du visage et lunettes préservés':'yeux inclus')+' · fond fixe · '+(geometry.warning||'géométrie recalée')};
 }
 function morphTrianglesForGeometry(geometry){const semantic=state.morphTriangles.length?state.morphTriangles:state.meshTriangles;return semantic.concat(geometry.eyeTriangles||[],geometry.mouthTriangles||[])}
+function fullMorphGeometry(v){
+ if(!canMeshMorph())return null;
+ const key=state.photoVersion+'|'+state.morphTopologyVersion;
+ if(state.fullMorphCache?.key!==key){
+  const first=landmarkPoints(0),second=landmarkPoints(1);
+  // The legacy compatibility check aligns B to A. The full portrait follows
+  // the actual A-to-B camera path, whose skin must also avoid large folds.
+  const quality=assessMorphTopology(first,second,state.meshTriangles,'trajet complet A → B');
+  const usable=quality.flipArea<=.04&&quality.collapseArea<=.08;
+  state.fullMorphCache={key,quality,model:usable?createFullFaceMorph(first,second,state.meshTriangles,state.faceOval):null};
+ }
+ const face=state.fullMorphCache.model?.sample(v.a);if(!face)return null;
+ face.head1=state.headRings[0]||fallbackHeadRing(face.raw1);
+ face.head2=state.headRings[1]||fallbackHeadRing(face.raw2);
+ const portrait=fullFrameGeometry(face);if(!portrait)return null;
+ return {...portrait,triangles:portrait.contextTriangles.concat(face.triangles),
+  fullMorph:true,regularization:face.regularization,textureMix:face.t,
+  sourceKey:'full-raw|'+state.photoVersion};
+}
+function renderFullMorph(canvas,v,sourceOverrides=null){
+ const sources=sourceOverrides||state.photos;
+ const ctx=canvas.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,canvas.width,canvas.height);
+ // Exact canonical photographs, without illumination correction or a frozen A layer.
+ if(v.a<=0)return renderPortraitEndpoint(canvas,0,sources[0]);
+ if(v.a>=1)return renderPortraitEndpoint(canvas,1,sources[1]);
+ const geometry=fullMorphGeometry(v);
+ if(!geometry)return{fallback:true,message:'Morphing complet indisponible : géométrie commune ou contour non validé.'};
+ let renderer='canvas';
+ try{
+  const image=renderWebGLFace(canvas.width,sourceOverrides?{...geometry,sourceKey:null}:geometry,sources);
+  if(image){ctx.drawImage(image,0,0);renderer='webgl'}
+  else{const result=renderCanvasMorph(canvas,v,geometry,sources);if(result.fallback)return result}
+ }catch(error){
+  console.warn('Morphing complet : repli Canvas 2D',error);
+  const result=renderCanvasMorph(canvas,v,geometry,sources);if(result.fallback)return result;
+ }
+ return{fallback:false,renderer,message:'Morphing complet · visage A → B · '+Math.round(v.a*100)+' % · '+
+  (geometry.regularization>0?'déformation continue':'interpolation de référence')+' · qualité visuelle à vérifier'};
+}
 function manualGeometryIsSafe(v){if(!hasLandmarkPair()||!state.morphTriangles.length)return false;const first=landmarkPoints(0).slice(0,468),second=landmarkPoints(1).slice(0,468).map(point=>mapPoint(photo2Matrix(v),point)),metrics=assessMorphTopology(first,second,state.morphTriangles,'réglage manuel'),cropA=faceOvalCrop(first),cropB=faceOvalCrop(second),outsideArea=Math.max(cropA.outsideArea,cropB.outsideArea),maxOverflow=Math.max(cropA.maxOverflow,cropB.maxOverflow);return!topologyTechnicallyUnusable(metrics,outsideArea,maxOverflow)}
 function drawPhoto2(ctx,v,alpha,outSize){
  const m=photo2Matrix(v),q=outSize/SIZE;ctx.save();ctx.globalAlpha=alpha;ctx.setTransform(m.a*q,m.b*q,m.c*q,m.d*q,m.e*q,m.f*q);ctx.drawImage(morphPhoto(1),0,0);ctx.restore()
@@ -921,7 +962,7 @@ function drawBackground(canvas){const ctx=canvas.getContext('2d'),size=canvas.wi
 function drawMorphBackground(canvas,v,geometry){
  const ctx=drawBackground(canvas),size=canvas.width,amount=smoother(clamp(geometry.t,0,1));if(amount>.001){ctx.globalAlpha=amount;ctx.drawImage(state.photos[1],0,0,size,size);ctx.globalAlpha=1}return ctx
 }
-function renderPortraitEndpoint(canvas,index){const ctx=canvas.getContext('2d'),size=canvas.width,source=morphPhoto(index);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(source,0,0,size,size);return{fallback:false,message:`Portrait ${index+1} canonique · extrémité continue du morphing.`}}
+function renderPortraitEndpoint(canvas,index,override=null){const ctx=canvas.getContext('2d'),size=canvas.width,source=override||morphPhoto(index);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(source,0,0,size,size);return{fallback:false,renderer:'canvas',message:`Portrait ${index+1} canonique · extrémité continue du morphing.`}}
 // Match WebGL's linear-light blend, including partially covered mesh edges.
 // Tables avoid per-pixel powers during the Canvas fallback animation.
 const MORPH_LINEAR=Float32Array.from({length:256},(_,i)=>{const c=i/255;return c<=.04045?c/12.92:((c+.055)/1.055)**2.4});
@@ -941,7 +982,7 @@ function morphTopologyMatches(indices,triangles){
  return true
 }
 function renderCanvasMorph(canvas,v,providedGeometry=null,sourceOverrides=null){
- if(v.a<=.0001)return renderPortraitEndpoint(canvas,0);if(v.a>=.9999)return renderPortraitEndpoint(canvas,1);const faceGeometry=providedGeometry||meshGeometry(v),geometry=providedGeometry?.contextTriangles?providedGeometry:faceGeometry&&fullFrameGeometry(faceGeometry);if(!geometry)return renderAlphaFallback(canvas,v);const size=canvas.width;
+ if(!providedGeometry){if(v.a<=.0001)return renderPortraitEndpoint(canvas,0,sourceOverrides?.[0]);if(v.a>=.9999)return renderPortraitEndpoint(canvas,1,sourceOverrides?.[1])}const faceGeometry=providedGeometry||meshGeometry(v),geometry=providedGeometry?.contextTriangles?providedGeometry:faceGeometry&&fullFrameGeometry(faceGeometry);if(!geometry)return renderAlphaFallback(canvas,v);const size=canvas.width;
  const sources=sourceOverrides||[state.photos[0],morphPhoto(1)],triangles=geometry.triangles,warpA=warpImage('warpA',size,sources[0],geometry.raw1,geometry.target,triangles),warpB=warpImage('warpB',size,sources[1],geometry.raw2,geometry.target,triangles);
  const mixed=getBuffer('mixedFace',size),mctx=mixed.getContext('2d'),pixelsA=warpA.getContext('2d').getImageData(0,0,size,size),pixelsB=warpB.getContext('2d').getImageData(0,0,size,size);blendMorphPixels(pixelsA.data,pixelsB.data,geometry.textureMix??geometry.t,pixelsA.data);mctx.putImageData(pixelsA,0,0);
  const ctx=canvas.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(mixed,0,0);
@@ -997,7 +1038,7 @@ function renderWebGLFace(size,geometry,sourceOverrides=null){
  const r=initWebGLRenderer();if(r.failed||r.lost)return null;const {gl}=r;if(gl.isContextLost()){r.lost=true;return null}while(gl.getError()!==gl.NO_ERROR){}if(r.canvas.width!==size||r.canvas.height!==size){r.canvas.width=r.canvas.height=size}
  gl.viewport(0,0,size,size);gl.useProgram(r.program);
  const activeTriangles=geometry.triangles||morphTrianglesForGeometry(geometry),indexVersion=`${state.morphTopologyVersion}|full-frame-v2|${activeTriangles.length}`;if(r.indexVersion!==indexVersion||!morphTopologyMatches(r.indices,activeTriangles)){const indices=new Uint16Array(activeTriangles.flat());gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,r.index);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);assertWebGL(gl,'Chargement de la topologie');r.indices=indices;r.indexCount=indices.length;r.indexVersion=indexVersion}
- const textureVersion=sourceOverrides?null:morphPhoto2Key();if(sourceOverrides||r.textureVersion!==textureVersion){const sources=sourceOverrides||[state.photos[0],morphPhoto(1)];uploadTexture(gl,r.tex1,sources[0],gl.TEXTURE0);uploadTexture(gl,r.tex2,sources[1],gl.TEXTURE1);assertWebGL(gl,'Chargement des textures');r.textureVersion=textureVersion}
+ const textureVersion=sourceOverrides?(geometry.sourceKey??null):morphPhoto2Key();if(textureVersion===null||r.textureVersion!==textureVersion){const sources=sourceOverrides||[state.photos[0],morphPhoto(1)];uploadTexture(gl,r.tex1,sources[0],gl.TEXTURE0);uploadTexture(gl,r.tex2,sources[1],gl.TEXTURE1);assertWebGL(gl,'Chargement des textures');r.textureVersion=textureVersion}
  const count=geometry.raw1.length,positions=new Float32Array(count*2),uv1=new Float32Array(count*2),uv2=new Float32Array(count*2),q=size/SIZE;
  for(let i=0;i<count;i++){positions[i*2]=geometry.target[i].x*q;positions[i*2+1]=geometry.target[i].y*q;uv1[i*2]=geometry.raw1[i].x/SIZE;uv1[i*2+1]=geometry.raw1[i].y/SIZE;uv2[i*2]=geometry.raw2[i].x/SIZE;uv2[i*2+1]=geometry.raw2[i].y/SIZE}
  uploadAttribute(gl,r.position,r.locations.position,positions);uploadAttribute(gl,r.uv1,r.locations.uv1,uv1);uploadAttribute(gl,r.uv2,r.locations.uv2,uv2);assertWebGL(gl,'Chargement du maillage');
@@ -1080,7 +1121,7 @@ function renderRegions(canvas,v,regionMix=state.regionMix,regionBaseValues=null,
 }
 function renderSelected(canvas,{updateUI=true,values=null,regionMix=null,regionBaseValues=null,regionEffect=null,mode=state.mode,sourceOverrides=null}={}){
  if(state.photos.length<2)return null;const v=values||readControls();let info;
- if(mode==='local')info=renderLocalExpressions(canvas,v);else if(mode==='stabilized')info=renderStabilizedFace(canvas,v);else if(mode==='webgl')info=renderWebGLMorph(canvas,v,sourceOverrides);else if(mode==='regions')info=renderRegions(canvas,v,regionMix||state.regionMix,regionBaseValues,regionEffect);else if(mode==='fallback')info=renderAlphaFallback(canvas,v);else info=renderCanvasMorph(canvas,v,null,sourceOverrides);
+ if(mode==='full')info=renderFullMorph(canvas,v,sourceOverrides);else if(mode==='local')info=renderLocalExpressions(canvas,v);else if(mode==='stabilized')info=renderStabilizedFace(canvas,v);else if(mode==='webgl')info=renderWebGLMorph(canvas,v,sourceOverrides);else if(mode==='regions')info=renderRegions(canvas,v,regionMix||state.regionMix,regionBaseValues,regionEffect);else if(mode==='fallback')info=renderAlphaFallback(canvas,v);else info=renderCanvasMorph(canvas,v,null,sourceOverrides);
  if(updateUI){updateControlLabels(v);$('modeStatus').textContent=info?.message||''}return info
 }
 // Diagnostic: neutralize each source IN canonical-image space before warping.
@@ -1098,7 +1139,7 @@ function diagnosticNeutralSources(geometry){
  const count=commonLandmarkCount(),length=state.faceOval.length;
  if(geometry.raw1.length<count+3*length||geometry.raw2.length<count+3*length)throw new Error('Contour tête absent du maillage complet.');
  const ringA=geometry.raw1.slice(count,count+length),ringB=geometry.raw2.slice(count,count+length);
- return[diagnosticNeutralPortrait(state.photos[0],ringA),diagnosticNeutralPortrait(morphPhoto(1),ringB)];
+ return[diagnosticNeutralPortrait(state.photos[0],ringA),diagnosticNeutralPortrait(geometry.fullMorph?state.photos[1]:morphPhoto(1),ringB)];
 }
 // Controlled diagnostic. Every sample uses the same renderSelected pipeline as the
 // actual preview, not an approximate alpha cross-fade or a separate shader.
@@ -1128,7 +1169,7 @@ function diagnosticFrameDifference(first,second){
 function captureMorphDiagnostic(){
  const report=$('diagnosticStatus');
  if(!canMeshMorph()){report.textContent='Deux scans compatibles sont nécessaires avant le diagnostic.';return}
- if(!['webgl','canvas','stabilized','local'].includes(state.mode)){report.textContent='Sélectionne Visage stabilisé, Triangles WebGL ou Triangles 2D pour vérifier les trois positions.';return}
+ if(!['full','webgl','canvas','stabilized','local'].includes(state.mode)){report.textContent='Sélectionne Visage stabilisé, Triangles WebGL ou Triangles 2D pour vérifier les trois positions.';return}
  stopAnimation({freeze:false,render:false});state.animation.userFrozen=true;syncAnimationControls();
  const percent=Number($('diagnosticPosition').value);
  if(!Number.isFinite(percent)){report.textContent='Position de diagnostic non reconnue.';return}
@@ -1149,7 +1190,7 @@ function captureMorphDiagnostic(){
   // Render all three snapshots at the exact requested t, in the same mode.
   for(const position of [25,50,75]){
    const v=diagnosticMorphValue(controls,position);
-   const face=localized?null:meshGeometry(v),geometry=localized?stabilizedGeometry(v):face&&fullFrameGeometry(face);
+   const face=localized?null:meshGeometry(v),geometry=localized?stabilizedGeometry(v):state.mode==='full'?fullMorphGeometry(v):face&&fullFrameGeometry(face);
    if(!geometry||!Number.isFinite(geometry.t)||Math.abs(geometry.t-position/100)>1e-8||!geometry.triangles?.length){
     throw new Error('Maillage intermédiaire invalide à '+position+' %. Aucun résultat fictif ne sera affiché.');
    }
@@ -1174,10 +1215,10 @@ function captureMorphDiagnostic(){
   const delta25_50=diagnosticFrameDifference(frames[0],frames[1]),delta50_75=diagnosticFrameDifference(frames[1],frames[2]);
   if(delta25_50<.05||delta50_75<.05)problems.push('deux positions semblent presque identiques : inspecte les expressions');
   const v=diagnosticMorphValue(controls,percent);
-  const faceGeometry=localized?null:meshGeometry(v),geometry=localized?stabilizedGeometry(v):faceGeometry&&fullFrameGeometry(faceGeometry);
+  const faceGeometry=localized?null:meshGeometry(v),geometry=localized?stabilizedGeometry(v):state.mode==='full'?fullMorphGeometry(v):faceGeometry&&fullFrameGeometry(faceGeometry);
   if(!geometry)throw new Error('Maillage manquant à '+percent+' %.');
   const a=warpImage('diagnostic-warp-a',size,state.photos[0],geometry.raw1,geometry.target,geometry.triangles);
-  const b=warpImage('diagnostic-warp-b',size,morphPhoto(1),geometry.raw2,geometry.target,geometry.triangles);
+  const b=warpImage('diagnostic-warp-b',size,geometry.fullMorph?state.photos[1]:morphPhoto(1),geometry.raw2,geometry.target,geometry.triangles);
   copy('diagnosticWarpA',a);copy('diagnosticWarpB',b);
   const info=renderSelected(alignCanvas,{values:v,mode:state.mode});
   if(['fallback','inconnu'].includes(diagnosticMorphEngine(info)))throw new Error('Rendu du contrôle sélectionné non triangulaire.');
@@ -1204,13 +1245,13 @@ $('diagnosticOpen').addEventListener('click',()=>{
  captureMorphDiagnostic();
  requestAnimationFrame(()=>section.scrollIntoView({behavior:'smooth',block:'start'}));
 });
-function animationModeAvailable(){return canMeshMorph()&&(state.mode==='webgl'||state.mode==='regions'||(['stabilized','local'].includes(state.mode)&&!!stabilizedGeometry({a:.5})))}
+function animationModeAvailable(){return canMeshMorph()&&(state.mode==='full'&&!!fullMorphGeometry({a:.5})||state.mode==='webgl'||state.mode==='regions'||(['stabilized','local'].includes(state.mode)&&!!stabilizedGeometry({a:.5})))}
 function animationSettings(){return{amplitude:+$('animationAmplitude').value/100,speed:+$('animationSpeed').value/100}}
 function syncAnimationControls(){
- const meshReady=canMeshMorph(),modeReady=state.mode==='webgl'||state.mode==='regions'||state.mode==='stabilized'||state.mode==='local',available=meshReady&&modeReady,animation=state.animation,running=animation.running,frozen=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode,{amplitude,speed}=animationSettings(),controls=$('animationControls'),badge=$('animationBadge'),reduced=automaticMotionReduced(),styleLabel=REGION_ANIMATION_LABELS[state.regionAnimationStyle]||REGION_ANIMATION_LABELS.progressive,styles=$('regionAnimationStyles');controls.hidden=state.photos.length<2;styles.hidden=state.mode!=='regions';document.querySelectorAll('[data-region-animation-style]').forEach(button=>{const active=button.dataset.regionAnimationStyle===state.regionAnimationStyle;button.classList.toggle('is-active',active);button.setAttribute('aria-pressed',String(active))});controls.classList.toggle('is-animating',running);badge.hidden=!running;badge.textContent=running?`MORPHING ACTIF · ${state.mode==='webgl'?'WEBGL':state.mode==='local'?'EXPRESSIONS LOCALES':state.mode==='stabilized'?'VISAGE STABILISÉ':`RÉGIONS · ${styleLabel.toUpperCase()}`} · ${Math.round(amplitude*100)} %`:'MORPHING ACTIF';$('toggleAnimation').disabled=!available||amplitude<=0;$('toggleAnimation').classList.toggle('is-running',running);$('toggleAnimation').setAttribute('aria-pressed',String(running));$('toggleAnimation').textContent=running?'Arrêter et figer':frozen?'Reprendre doucement':'Démarrer l’animation';
- $('regionHarmony').disabled=state.photos.length<2||!meshReady;
+ const meshReady=canMeshMorph(),modeReady=state.mode==='full'||state.mode==='webgl'||state.mode==='regions'||state.mode==='stabilized'||state.mode==='local',available=meshReady&&modeReady,animation=state.animation,running=animation.running,frozen=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode,{amplitude,speed}=animationSettings(),controls=$('animationControls'),badge=$('animationBadge'),reduced=automaticMotionReduced(),styleLabel=REGION_ANIMATION_LABELS[state.regionAnimationStyle]||REGION_ANIMATION_LABELS.progressive,styles=$('regionAnimationStyles');controls.hidden=state.photos.length<2;styles.hidden=state.mode!=='regions';document.querySelectorAll('[data-region-animation-style]').forEach(button=>{const active=button.dataset.regionAnimationStyle===state.regionAnimationStyle;button.classList.toggle('is-active',active);button.setAttribute('aria-pressed',String(active))});controls.classList.toggle('is-animating',running);badge.hidden=!running;badge.textContent=running?`MORPHING ACTIF · ${state.mode==='full'?'VISAGE A → B':state.mode==='webgl'?'WEBGL':state.mode==='local'?'EXPRESSIONS LOCALES':state.mode==='stabilized'?'VISAGE STABILISÉ':`RÉGIONS · ${styleLabel.toUpperCase()}`} · ${Math.round(amplitude*100)} %`:'MORPHING ACTIF';$('toggleAnimation').disabled=!available||amplitude<=0;$('toggleAnimation').classList.toggle('is-running',running);$('toggleAnimation').setAttribute('aria-pressed',String(running));$('toggleAnimation').textContent=running?'Arrêter et figer':frozen?'Reprendre doucement':'Démarrer l’animation';
+ $('regionHarmony').disabled=state.mode==='full'||state.photos.length<2||!meshReady;
  $('animationAmplitudeVal').textContent=Math.round(amplitude*100)+'%';$('animationAmplitude').setAttribute('aria-valuetext',`${Math.round(amplitude*100)} %`);$('animationSpeedVal').textContent=speed.toFixed(2)+'×';$('animationSpeed').setAttribute('aria-valuetext',`${speed.toFixed(2)} fois`);
- let description;if(state.pair.status==='unusable')description='Animation bloquée : conserve la photo 1 et reprends la photo 2 selon les indications ci-dessus.';else if(!meshReady)description='Animation indisponible : les deux visages doivent être détectés et le maillage doit rester stable.';else if(!modeReady)description='Choisis Visage stabilisé, Triangles WebGL ou Régions pour le morphing animé.';else description=state.mode==='local'?'Seules les régions expressives sont composées sur le portrait A, surtout autour de la bouche.':state.mode==='stabilized'?'La géométrie du visage est recalée entre A et B tandis que le fond et les cheveux de A restent fixes.':state.mode==='webgl'?'La forme et le mélange oscillent sans déplacer, tourner ni redimensionner le recalage global.':REGION_ANIMATION_HINTS[state.regionAnimationStyle];if(state.pair.status==='adapted'&&meshReady)description+=' Le maillage renforcé compense automatiquement la différence de pose.';if(reduced&&available&&!running)description+=' Le réglage iPhone « Réduire les animations » bloque seulement le démarrage automatique : le bouton reste utilisable.';$('animationState').textContent=running?'Animation active':frozen?'Image figée':state.pair.status==='unusable'?'Photo 2 à reprendre':!meshReady?'Paire non validée':!modeReady?'Mode statique':reduced?'Prête · démarrage manuel':'Prête à démarrer';$('animationHint').textContent=description+(amplitude<=0?' Amplitude 0 % : animation suspendue.':frozen?' Les curseurs conservent les valeurs centrales.':'')
+ let description;if(state.pair.status==='unusable')description='Animation bloquée : conserve la photo 1 et reprends la photo 2 selon les indications ci-dessus.';else if(!meshReady)description='Animation indisponible : les deux visages doivent être détectés et le maillage doit rester stable.';else if(!modeReady)description='Choisis Visage stabilisé, Triangles WebGL ou Régions pour le morphing animé.';else description=state.mode==='full'?'Tous les traits et le contour évoluent de A vers B. Les grandes ouvertures de bouche restent expérimentales.':state.mode==='local'?'Seules les régions expressives sont composées sur le portrait A, surtout autour de la bouche.':state.mode==='stabilized'?'La géométrie du visage est recalée entre A et B tandis que le fond et les cheveux de A restent fixes.':state.mode==='webgl'?'La forme et le mélange oscillent sans déplacer, tourner ni redimensionner le recalage global.':REGION_ANIMATION_HINTS[state.regionAnimationStyle];if(state.pair.status==='adapted'&&meshReady)description+=' Le maillage renforcé compense automatiquement la différence de pose.';if(reduced&&available&&!running)description+=' Le réglage iPhone « Réduire les animations » bloque seulement le démarrage automatique : le bouton reste utilisable.';$('animationState').textContent=running?'Animation active':frozen?'Image figée':state.pair.status==='unusable'?'Photo 2 à reprendre':!meshReady?'Paire non validée':!modeReady?'Mode statique':reduced?'Prête · démarrage manuel':'Prête à démarrer';$('animationHint').textContent=description+(amplitude<=0?' Amplitude 0 % : animation suspendue.':frozen?' Les curseurs conservent les valeurs centrales.':'')
 }
 function smoothstep(value){return value*value*(3-2*value)}
 function smoother(value){const x=clamp(value,0,1);return x*x*x*(x*(x*6-15)+10)}
@@ -1229,7 +1270,7 @@ function applyStyleTransition(frame){
 }
 function animationFrame(){
  const animation=state.animation,base=animation.baseControls,p=animation.phase,{amplitude}=animationSettings(),amount=amplitude*smoothstep(animation.ramp);if(!base)return null;
- if(state.mode==='webgl'||state.mode==='stabilized'||state.mode==='local')return animationSnapshot(state.mode,{...base,a:oscillatedBounded(base.a,amount,Math.sin(p*.67+3.4),0,1)},null);
+ if(state.mode==='full'||state.mode==='webgl'||state.mode==='stabilized'||state.mode==='local')return animationSnapshot(state.mode,{...base,a:oscillatedBounded(base.a,amount,Math.sin(p*.67+3.4),0,1)},null);
  const style=state.regionAnimationStyle,weights={},shapeAmount=Math.min(.25,amount*.8),strength=clamp(amount/.45,0,1);let shapeWave=0,explosiveDirection=0;
  if(style==='progressive'){const u=fract(p*.9/(Math.PI*2)),fade=1-smoother((u-.84)/.16),onsets={leftEye:.02,rightEye:.06,nose:.24,mouth:.4,left:.58,right:.62};for(const key of REGION_KEYS)weights[key]=smoother((u-onsets[key])/.14)*fade;shapeWave=2*smoother((u-.64)/.14)*fade-1}
  else if(style==='random'){REGION_KEYS.forEach((key,index)=>weights[key]=smoothSeeded(p*.9+index*.137,animation.randomSeed+index*31));shapeWave=2*smoothSeeded(p*.48,animation.randomSeed+311)-1}
@@ -1248,14 +1289,14 @@ function resumeAutomaticAnimation(){queueAutomaticAnimationStart(true)}
 function queueAnimationLoop(){if(state.animation.running&&!state.animation.raf&&!document.hidden&&$('alignStage').classList.contains('active'))state.animation.raf=requestAnimationFrame(animationTick)}
 function animationTick(now){
  const animation=state.animation;animation.raf=0;if(!animation.running)return;if(!animationModeAvailable()){stopAnimation({render:false});return}
- const elapsed=Math.min(.1,Math.max(0,(now-animation.lastTick)/1000)),settings=animationSettings();animation.lastTick=now;animation.phase+=elapsed*.65*settings.speed;animation.ramp=Math.min(1,animation.ramp+elapsed/1.2);if(animation.styleTransition)animation.styleTransition.progress=Math.min(1,animation.styleTransition.progress+elapsed/animation.styleTransition.duration);const interval=state.mode==='webgl'?1000/20:['stabilized','local'].includes(state.mode)?(state.webgl?.failed?1000/8:1000/15):1000/8;
+ const elapsed=Math.min(.1,Math.max(0,(now-animation.lastTick)/1000)),settings=animationSettings();animation.lastTick=now;animation.phase+=elapsed*.65*settings.speed;animation.ramp=Math.min(1,animation.ramp+elapsed/1.2);if(animation.styleTransition)animation.styleTransition.progress=Math.min(1,animation.styleTransition.progress+elapsed/animation.styleTransition.duration);const interval=state.mode==='full'?(state.webgl?.failed?1000/8:1000/15):state.mode==='webgl'?1000/20:['stabilized','local'].includes(state.mode)?(state.webgl?.failed?1000/8:1000/15):1000/8;
  if(now-animation.lastRender>=interval-1){const frame=animationFrame();if(frame){const info=renderSelected(alignCanvas,{updateUI:false,values:frame.values,regionMix:frame.regionMix,regionBaseValues:frame.regionBaseValues,regionEffect:frame.regionEffect,mode:frame.mode});animation.lastFrame=frame;animation.lastRender=now;
    if(state.mode==='webgl'&&(!info||info.message.includes('Canvas 2D'))){stopAnimation({freeze:true,render:false});$('modeStatus').textContent='Animation WebGL figée : WebGL indisponible, cette image Canvas est conservée.';return}
-   if(['stabilized','local'].includes(state.mode)&&(!info||info.fallback)){stopAnimation({freeze:false,render:false});$('modeStatus').textContent='Animation stabilisée arrêtée : '+(info?.message||'maillage indisponible');return}
+   if(['full','stabilized','local'].includes(state.mode)&&(!info||info.fallback)){stopAnimation({freeze:false,render:false});$('modeStatus').textContent='Animation stabilisée arrêtée : '+(info?.message||'maillage indisponible');return}
   }}queueAnimationLoop()
 }
 function startAnimation(automatic=false){
- cancelPendingAutoStart();if(state.animation.exporting||automatic&&(automaticMotionReduced()||(state.mode==='webgl'&&(state.webgl?.failed||state.webgl?.lost))))return;if(!animationModeAvailable()||state.animation.running||animationSettings().amplitude<=0||!$('alignStage').classList.contains('active'))return;const animation=state.animation;animation.userFrozen=false;animation.resumeAfterGame=false;animation.resumeAfterMotion=false;animation.resumeOnPageShow=false;if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}const resuming=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode&&animation.baseControls;if(!resuming){animation.phase=0;animation.ramp=0;animation.baseControls=readControls();animation.baseRegionMix={...state.regionMix};if(state.mode==='regions'&&state.regionAnimationStyle==='random')animation.randomSeed=(animation.randomSeed*1664525+1013904223)>>>0;animation.lastFrame=animationSnapshot(state.mode,{...animation.baseControls},state.mode==='regions'?{...animation.baseRegionMix}:null,state.mode==='regions'?animation.baseControls:null,state.mode==='regions'?emptyRegionEffect():null)}animation.frozenFrame=null;animation.running=true;animation.lastTick=performance.now();animation.lastRender=animation.lastTick-(state.mode==='webgl'?1000/20:['stabilized','local'].includes(state.mode)?1000/15:1000/8);syncAnimationControls();const {amplitude,speed}=animationSettings(),styleLabel=REGION_ANIMATION_LABELS[state.regionAnimationStyle];$('modeStatus').textContent=resuming?'Animation reprise doucement.':state.mode==='webgl'?`Animation WebGL active · amplitude ${Math.round(amplitude*100)} % · vitesse ${speed.toFixed(2)}×.`:state.mode==='local'?`Animation expressions locales active · fond fixe · amplitude ${Math.round(amplitude*100)} %.`:state.mode==='stabilized'?`Animation visage stabilisé active · fond fixe · amplitude ${Math.round(amplitude*100)} %.`:`Animation Régions ${styleLabel.toLowerCase()} active · amplitude ${Math.round(amplitude*100)} % · jusqu’à 8 images/s.`;queueAnimationLoop()
+ cancelPendingAutoStart();if(state.animation.exporting||automatic&&(automaticMotionReduced()||(state.mode==='webgl'&&(state.webgl?.failed||state.webgl?.lost))))return;if(!animationModeAvailable()||state.animation.running||animationSettings().amplitude<=0||!$('alignStage').classList.contains('active'))return;const animation=state.animation;animation.userFrozen=false;animation.resumeAfterGame=false;animation.resumeAfterMotion=false;animation.resumeOnPageShow=false;if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}const resuming=!!animation.frozenFrame&&animation.frozenFrame.mode===state.mode&&animation.baseControls;if(!resuming){animation.phase=0;animation.ramp=0;animation.baseControls=readControls();animation.baseRegionMix={...state.regionMix};if(state.mode==='regions'&&state.regionAnimationStyle==='random')animation.randomSeed=(animation.randomSeed*1664525+1013904223)>>>0;animation.lastFrame=animationSnapshot(state.mode,{...animation.baseControls},state.mode==='regions'?{...animation.baseRegionMix}:null,state.mode==='regions'?animation.baseControls:null,state.mode==='regions'?emptyRegionEffect():null)}animation.frozenFrame=null;animation.running=true;animation.lastTick=performance.now();animation.lastRender=animation.lastTick-(state.mode==='webgl'?1000/20:['stabilized','local'].includes(state.mode)?1000/15:1000/8);syncAnimationControls();const {amplitude,speed}=animationSettings(),styleLabel=REGION_ANIMATION_LABELS[state.regionAnimationStyle];$('modeStatus').textContent=resuming?'Animation reprise doucement.':state.mode==='full'?`Animation du visage complet A → B · amplitude ${Math.round(amplitude*100)} %.`:state.mode==='webgl'?`Animation WebGL active · amplitude ${Math.round(amplitude*100)} % · vitesse ${speed.toFixed(2)}×.`:state.mode==='local'?`Animation expressions locales active · fond fixe · amplitude ${Math.round(amplitude*100)} %.`:state.mode==='stabilized'?`Animation visage stabilisé active · fond fixe · amplitude ${Math.round(amplitude*100)} %.`:`Animation Régions ${styleLabel.toLowerCase()} active · amplitude ${Math.round(amplitude*100)} % · jusqu’à 8 images/s.`;queueAnimationLoop()
 }
 function stopAnimation({freeze=false,render=true}={}){
  cancelPendingAutoStart();const animation=state.animation;animation.styleTransition=null;if(!animation.running){if(!freeze&&animation.frozenFrame){animation.frozenFrame=null;animation.baseControls=null;animation.baseRegionMix=null;animation.lastFrame=null;syncAnimationControls();if(render&&state.photos.length>=2&&$('alignStage').classList.contains('active'))scheduleRender()}return}if(animation.raf)cancelAnimationFrame(animation.raf);if(state.accurateRenderTimer){clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=null}animation.raf=0;animation.running=false;if(freeze&&animation.lastFrame)animation.frozenFrame=animation.lastFrame;else{animation.frozenFrame=null;animation.baseControls=null;animation.baseRegionMix=null;animation.lastFrame=null;animation.phase=0;animation.ramp=0}syncAnimationControls();if(freeze&&render)$('modeStatus').textContent='Animation figée · Reprendre doucement pour continuer.';if(render&&state.photos.length>=2&&$('alignStage').classList.contains('active'))scheduleRender()
@@ -1266,7 +1307,7 @@ function scheduleRender(){
  if(state.animation.running||state.renderQueued)return;state.renderQueued=true;requestAnimationFrame(()=>{state.renderQueued=false;if(!state.animation.running)renderSelected(alignCanvas,frozenRenderOptions()||{})})
 }
 function scheduleInteractiveRender(){
- if(state.mode==='webgl'||state.mode==='stabilized'||state.mode==='local'||state.mode==='fallback'){scheduleRender();return}
+ if(state.mode==='full'||state.mode==='webgl'||state.mode==='stabilized'||state.mode==='local'||state.mode==='fallback'){scheduleRender();return}
  if(state.mode==='regions'){
   if(!state.quickRenderQueued){state.quickRenderQueued=true;requestAnimationFrame(()=>{state.quickRenderQueued=false;if(state.animation.running)return;updateControlLabels(readControls());$('modeStatus').textContent='Ajustement en cours · composition par régions après relâchement.'})}
   if(state.accurateRenderTimer)clearTimeout(state.accurateRenderTimer);state.accurateRenderTimer=setTimeout(()=>{state.accurateRenderTimer=null;scheduleRender()},120);return
@@ -1344,7 +1385,7 @@ async function loadDemoPortrait(src){
 }
 async function loadDemoLandmarks(src){const response=await fetch(src,{cache:'no-store'});if(!response.ok)throw new Error(`Repères de démonstration indisponibles (${response.status})`);return response.json()}
 async function loadDemoPair(){
- await landmarkerReady;stopCamera();const base='../Make%20puzzle%20-%20from%20Iphone/',[photos,fixture]=await Promise.all([Promise.all([loadDemoPortrait(base+'visage_homme.png'),loadDemoPortrait(base+'visage_femme.png')]),loadDemoLandmarks('./qa/portrait-landmarks.json?v=20260817')]),marks=[fixture['visage_homme.png'],fixture['visage_femme.png']];if(state.meshTriangles.length<800||marks.some(mark=>!mark||mark.length<478))throw new Error('Maillage de démonstration incomplet');status.textContent='Analyse des têtes et des cheveux de démonstration…';const headRings=[];for(let index=0;index<photos.length;index++)headRings[index]=await extractHeadRing(photos[index],marks[index]);closeSegmenter();state.photos=photos;state.marks=marks;state.headRings=headRings;state.step=0;state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;invalidateFaceLighting();photos.forEach((photo,index)=>{const url=`url(${photo.toDataURL('image/jpeg',.9)})`;$('thumb'+(index+1)).style.backgroundImage=url;$('sourceThumb'+(index+1)).style.backgroundImage=url});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();syncPairUI();autoAlign({activate:false,render:false});updateModeAvailability();if(canMeshMorph()){setMode('webgl');maybeAutoStartAnimation()}else scheduleRender()
+ await landmarkerReady;stopCamera();const base='../Make%20puzzle%20-%20from%20Iphone/',[photos,fixture]=await Promise.all([Promise.all([loadDemoPortrait(base+'visage_homme.png'),loadDemoPortrait(base+'visage_femme.png')]),loadDemoLandmarks('./qa/portrait-landmarks.json?v=20260817')]),marks=[fixture['visage_homme.png'],fixture['visage_femme.png']];if(state.meshTriangles.length<800||marks.some(mark=>!mark||mark.length<478))throw new Error('Maillage de démonstration incomplet');status.textContent='Analyse des têtes et des cheveux de démonstration…';const headRings=[];for(let index=0;index<photos.length;index++)headRings[index]=await extractHeadRing(photos[index],marks[index]);closeSegmenter();state.photos=photos;state.marks=marks;state.headRings=headRings;state.step=0;state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;invalidateFaceLighting();photos.forEach((photo,index)=>{const url=`url(${photo.toDataURL('image/jpeg',.9)})`;$('thumb'+(index+1)).style.backgroundImage=url;$('sourceThumb'+(index+1)).style.backgroundImage=url});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();syncPairUI();autoAlign({activate:false,render:false});updateModeAvailability();if(canMeshMorph()){setMode('full');maybeAutoStartAnimation()}else scheduleRender()
 }
 
 async function exportCurrentScans(){

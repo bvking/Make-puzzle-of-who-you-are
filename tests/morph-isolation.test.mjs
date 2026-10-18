@@ -55,8 +55,8 @@ test('neutral portrait refuses invalid or absent silhouette contour',()=>{
 test('both modes use the same mesh and explicit source overrides',()=>{
  assert.match(page,/sourceOverrides\|\|\[state\.photos\[0\],morphPhoto\(1\)\]/);
  assert.match(page,/function renderWebGLFace\(size,geometry,sourceOverrides=null\)/);
- assert.match(page,/const textureVersion=sourceOverrides\?null:morphPhoto2Key\(\)/);
- assert.match(page,/if\(sourceOverrides\|\|r\.textureVersion!==textureVersion\)/);
+ assert.match(page,/const textureVersion=sourceOverrides\?\(geometry\.sourceKey\?\?null\):morphPhoto2Key\(\)/);
+ assert.match(page,/if\(textureVersion===null\|\|r\.textureVersion!==textureVersion\)/);
  assert.match(page,/renderWebGLFace\(canvas\.width,geometry,sourceOverrides\)/);
  assert.match(page,/renderCanvasMorph\(canvas,v,geometry,sourceOverrides\)/);
  assert.match(page,/renderSelected\(alignCanvas,\{updateUI:false,values:v,mode:state\.mode,sourceOverrides:neutralSources\}\)/);
@@ -69,6 +69,6 @@ test('isolation is not a mask over the final merged portrait',()=>{
  const start=page.indexOf('function diagnosticNeutralSources('),end=page.indexOf('function diagnosticMorphValue(',start);
  const isolated=page.slice(start,end);
  assert.match(isolated,/diagnosticNeutralPortrait\(state\.photos\[0\],ringA\)/);
- assert.match(isolated,/diagnosticNeutralPortrait\(morphPhoto\(1\),ringB\)/);
+ assert.match(isolated,/diagnosticNeutralPortrait\(geometry\.fullMorph\?state\.photos\[1\]:morphPhoto\(1\),ringB\)/);
  assert.doesNotMatch(isolated,/alignCanvas/);
 });
