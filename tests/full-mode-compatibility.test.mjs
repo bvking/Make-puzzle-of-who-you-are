@@ -57,7 +57,7 @@ test('a missing portrait, invalid sampled path, excessive flips or excessive col
  }
 });
 
-test('validated raw crops and full path enable only full while preserving the complete legacy rejection',()=>{
+test('validated raw crops and full path permit full while preserving the complete legacy rejection',()=>{
  const legacy=refusedLegacy(),before=structuredClone(legacy),quality={valid:true,flipArea:.04,collapseArea:.08};
  const d=policy({crops:[{outsideArea:.04,maxOverflow:30},{outsideArea:0,maxOverflow:0}],quality});
  const result=d.fullOnlyCompatibility(legacy);
@@ -91,9 +91,9 @@ test('validation-only adapter still refuses every invalid model quality and a fa
 });
 
 function button(mode){return{dataset:{mode},disabled:false,attributes:{},classList:{toggle(){},remove(){}},setAttribute(name,value){this.attributes[name]=value}}}
-function controls(){const elements=new Map();return id=>{if(!elements.has(id))elements.set(id,{hidden:false,textContent:'',value:''});return elements.get(id)}}
+function controls(){const elements=new Map();return id=>{if(!elements.has(id))elements.set(id,{hidden:false,textContent:'',value:'',nextElementSibling:{textContent:''}});return elements.get(id)}}
 
-test('mode availability exposes only full for a full-only pair and disables every mode when the pair is unusable',()=>{
+test('mode availability exposes full while keeping all refused legacy modes disabled',()=>{
  for(const available of [true,false]){
   const state={pair:{fullOnly:true},mode:'regions',photoVersion:1,previewTrianglesVersion:1},buttons=['full',...legacyModes].map(button);
   const update=new Function('state','canMeshMorph','document','buildMorphTriangles','buildPreviewTriangles','stopAnimation','$','setMode','syncAnimationControls','syncPairUI',availabilitySource+';return updateModeAvailability')(
@@ -112,7 +112,7 @@ test('direct legacy mode selection cannot bypass disabled buttons on a full-only
 });
 
 function dispatch(fullOnly){
- const state={pair:{fullOnly},mode:'full',photos:[{},{}],regionMix:{}},calls=[],names=['renderFullMorph','renderLocalExpressions','renderStabilizedFace','renderWebGLMorph','renderRegions','renderAlphaFallback','renderCanvasMorph'];
+ const state={pair:{fullOnly},mode:'full',photos:[{},{}],regionMix:{}},calls=[],names=['renderFullMorph','renderSurface3DMorph','renderLocalExpressions','renderStabilizedFace','renderWebGLMorph','renderRegions','renderAlphaFallback','renderCanvasMorph'];
  const renderers=names.map(name=>(...args)=>{const result={name};calls.push({name,args});return result});
  const renderSelected=new Function('state','readControls',...names,'updateControlLabels','$',dispatchSource+';return renderSelected')(
   state,()=>({a:.123}),...renderers,()=>{},controls());
@@ -131,4 +131,23 @@ test('old render snapshots cannot reach legacy renderers after a pair becomes fu
 test('independently usable legacy modes retain their normal dispatch',()=>{
  const d=dispatch(false),expected={local:'renderLocalExpressions',stabilized:'renderStabilizedFace',canvas:'renderCanvasMorph',webgl:'renderWebGLMorph',regions:'renderRegions'};
  for(const [mode,name] of Object.entries(expected)){d.calls.length=0;assert.equal(d.renderSelected({}, {updateUI:false,mode,values:{a:.5}}).name,name);assert.equal(d.calls.length,1)}
+});
+
+
+test('a separately validated 3D model can be selected without enabling any refused legacy mode',()=>{
+ for(const valid3D of [true,false]){
+  const state={pair:{fullOnly:true},mode:'full',photoVersion:1,previewTrianglesVersion:1},buttons=['full','surface3d',...legacyModes].map(button);
+  const update=new Function('state','canMeshMorph','surface3DModel','document','buildMorphTriangles','buildPreviewTriangles','stopAnimation','$','setMode','syncAnimationControls','syncPairUI',availabilitySource+';return updateModeAvailability')(
+   state,()=>true,()=>valid3D?{}:null,{querySelectorAll:()=>buttons},()=>{throw Error('Unexpected rebuild')},()=>[],()=>{},controls(),()=>{},()=>{},()=>{});
+  update();assert.equal(buttons[0].disabled,false);assert.equal(buttons[1].disabled,!valid3D);for(const b of buttons.slice(2))assert.equal(b.disabled,true,b.dataset.mode);
+  const calls=[],setMode=new Function('state','canMeshMorph','surface3DModel','stopAnimation','disposeWebGL','document','$','syncRegionControls','syncPairUI','syncAnimationControls','scheduleRender','maybeAutoStartAnimation',modeSource+';return setMode')(
+   state,()=>true,()=>valid3D?{}:null,()=>calls.push('stop'),()=>{},{querySelectorAll:()=>[]},controls(),()=>{},()=>{},()=>{},()=>calls.push('render'),()=>{});
+  state.animation={};setMode('surface3d');assert.equal(state.mode,valid3D?'surface3d':'full');assert.equal(calls.includes('render'),valid3D);
+ }
+});
+
+test('an explicit 3D render snapshot keeps the 3D adapter on a pair with independently refused legacy modes',()=>{
+ const d=dispatch(true),canvas={},values={a:.5},sources=[{name:'A'},{name:'B'}];
+ assert.equal(d.renderSelected(canvas,{updateUI:false,mode:'surface3d',values,sourceOverrides:sources}).name,'renderSurface3DMorph');
+ assert.equal(d.calls.length,1);assert.deepEqual(d.calls[0].args,[canvas,values,sources]);
 });

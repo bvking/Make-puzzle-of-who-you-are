@@ -50,14 +50,14 @@ test('v15 exposes multiview, import, fallback and viewpoint controls', () => {
 test('v15 states the requested goal and the unresolved perspective limitation', () => {
   assert.match(page, /Objectif demandé — pas encore atteint pour des perspectives différentes/);
   assert.match(page, /même visage ou de deux visages différents/);
-  assert.match(page, /ne reconstruit pas un visage sous un nouvel angle/);
-  assert.match(page, /au moins une perspective suffisamment proche/);
-  assert.match(page, /reproduction CPU du pipeline géométrique/);
-  assert.match(page, /ne valide pas le pilote WebGL de l’iPhone/);
+  assert.match(page, /ne reconstruit pas fidèlement les angles cachés/);
+  assert.match(page, /Les prises de vue doivent rester proches/);
+  assert.match(page, /ce n’est pas un scan 3D métrique/);
+  assert.match(page, /Safari\/iPhone restent à valider/);
 });
 
-test('v15 defaults to complete identity morph while preserving local and legacy modes', () => {
-  assert.match(page, /const desiredMode=wasAlign&&\['full','canvas','webgl','regions','stabilized','local'\]\.includes\(previousMode\)\?previousMode:'full'/);
+test('v20 prefers an available 3D surface while preserving complete and legacy modes', () => {
+  assert.match(page, /const desiredMode=wasAlign&&\['surface3d','full','canvas','webgl','regions','stabilized','local'\]\.includes\(previousMode\)\?previousMode:\(surface3DModel\(\)\?'surface3d':'full'\)/);
   assert.match(page, /data-mode="full"/);
   assert.match(page, /data-mode="local"/);
   assert.match(page, /function renderLocalExpressions\(/);
