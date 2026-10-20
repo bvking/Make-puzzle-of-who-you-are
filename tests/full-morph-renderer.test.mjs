@@ -8,8 +8,8 @@ const renderSource=between('function renderFullMorph(','function manualGeometryI
 const canvasSource=between('function renderCanvasMorph(','function compileShader(');
 
 function setup(engine='webgl'){
- const calls=[],photos=[{name:'raw A'},{name:'raw B'}];
- const ctx={setTransform(){},clearRect(){calls.push('clear')},drawImage(image){calls.push(image)},
+ const calls=[],photos=[{name:'white A'},{name:'white B'}];
+ const ctx={setTransform(){},clearRect(){calls.push('clear')},fillRect(){calls.push({kind:'background',color:this.fillStyle})},drawImage(image){calls.push(image)},
   getImageData:()=>({data:new Uint8ClampedArray([0,0,0,255])}),putImageData(){}};
  const canvas={width:384,height:384,getContext:()=>ctx};
  const geometry={target:[],raw1:[],raw2:[],triangles:[[0,1,2]],contextTriangles:[],t:.5,regularization:.35,sourceKey:'full-raw|1'};
@@ -22,24 +22,26 @@ function setup(engine='webgl'){
  return{render,photos,calls,canvas,geometry};
 }
 
-test('new renderer shows exact raw A/B at endpoints and honors diagnostic source overrides',()=>{
+test('new renderer shows exact prepared white A/B at endpoints and honors diagnostic source overrides',()=>{
  const d=setup();
  for(const [t,index] of [[0,0],[1,1]]){
   d.calls.length=0;const result=d.render(d.canvas,{a:t});
   assert.equal(result.fallback,false);assert.equal(result.renderer,'canvas');
-  assert.deepEqual(d.calls.filter(call=>call!=='clear'),[d.photos[index]]);
+  assert.deepEqual(d.calls.filter(call=>call!=='clear'&&call.kind!=='background'),[d.photos[index]]);
+  assert.deepEqual(d.calls.find(call=>call.kind==='background'),{kind:'background',color:'#fff'});
   const overrides=[{name:'neutral A'},{name:'neutral B'}];d.calls.length=0;
   d.render(d.canvas,{a:t},overrides);assert.equal(d.calls.at(-1),overrides[index]);
  }
 });
 
-test('full morph uses the same geometry and raw pair through WebGL and Canvas without overlaying A',()=>{
+test('full morph uses the same geometry and prepared white pair through WebGL and Canvas without overlaying A',()=>{
  for(const engine of ['webgl','canvas']){
   const d=setup(engine),result=d.render(d.canvas,{a:.5});
   assert.equal(result.renderer,engine);assert.equal(result.fallback,false);
   const renderCall=d.calls.find(call=>call.kind===engine);
   assert.equal(renderCall.geometry,d.geometry);assert.equal(renderCall.sources,d.photos);
   assert.ok(!d.calls.includes(d.photos[0]));assert.ok(!d.calls.includes(d.photos[1]));
+  assert.deepEqual(d.calls.find(call=>call.kind==='background'),{kind:'background',color:'#fff'});
   assert.doesNotMatch(renderSource,/drawBackground|localExpressionMask|localAppearanceMix/);
  }
 });

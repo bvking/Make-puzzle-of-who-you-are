@@ -79,7 +79,8 @@ test('v15 keeps dependencies reproducible and camera mirroring conditional', () 
   assert.match(page, /video\.classList\.toggle\('is-mirrored',state\.activeFacing==='user'\)/);
   const captureFunction = page.match(/function captureSquare\([\s\S]*?\n\}/)?.[0] ?? '';
   assert.doesNotMatch(captureFunction, /scale\(-1,1\)/);
-  assert.match(page, /confidenceMasks\?\.\[1\]/);
+  assert.match(page, /selfie_multiclass_256x256\/float32\/1\/selfie_multiclass_256x256\.tflite/);
+  assert.match(page, /outputCategoryMask:true,outputConfidenceMasks:true/);
 });
 
 test('v15 keeps slow iPhone camera permission requests alive and offers native capture', () => {

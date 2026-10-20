@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#050505">
-<title>Taquin V18 · Morphing complet entre deux visages</title>
+<title>Taquin V19 · Morphing complet entre deux visages</title>
 <style>
 :root{color-scheme:dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -65,7 +65,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 </head>
 <body>
 <main>
-<span class="badge">V18 expérimental · Morphing complet A → B</span>
+<span class="badge">V19 expérimental · Morphing complet A → B</span>
 <h1>Taquin — deux visages</h1>
 <p class="lead">Enregistre plusieurs angles de chaque visage. L’application retient les vues les plus nettes et recherche une perspective commune.</p>
 <aside class="limitation" role="note" aria-label="Objectif demandé et limite actuelle">
@@ -106,10 +106,11 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 <button id="retakePhoto2" type="button" class="danger" aria-describedby="compatibilityTitle compatibilityText" hidden>Reprendre uniquement le visage 2</button>
 </div>
 <div class="controls">
+<p id="portraitMatteStatus" class="region-title" role="status">Les visages seront détourés sur le même fond blanc.</p>
 <div class="source-key" role="group" aria-label="Photos sources"><div class="source-card"><div id="sourceThumb1" class="source-thumb" role="img" aria-label="Photo source 1"></div><span>Photo 1</span></div><div class="source-card"><div id="sourceThumb2" class="source-thumb" role="img" aria-label="Photo source 2"></div><span>Photo 2</span></div></div>
 <div class="scan-archive" aria-label="Sauvegarder les scans du morphing">
 <strong>Conserver tes deux scans pour les prochaines versions</strong>
-<p>Archive ZIP privée contenant les deux images recadrées utilisées, les points MediaPipe et les contours de tête. Les photos originales pleine résolution ne sont pas conservées par cette application. Aucune transmission à GitHub.</p>
+<p>Archive ZIP privée contenant les deux images recadrées originales avant détourage, les points MediaPipe et les contours de tête. Les photos originales pleine résolution ne sont pas conservées par cette application. Aucune transmission à GitHub.</p>
 <div class="row"><button id="exportScanArchive" type="button" disabled>Exporter les deux scans (.zip)</button></div>
 <p id="archiveStatus" role="status" aria-live="polite">Conserve cette archive dans Fichiers sur l’iPhone, puis réimporte-la depuis le premier écran pour reprendre les tests.</p>
 </div>
@@ -130,7 +131,7 @@ input[type=range]{width:100%}.value{text-align:right;color:#9fe7ff;font-variant-
 </div>
 <div id="localExpressionOptions" class="diagnostic-isolation-option" hidden><label><input id="localProtectGlasses" type="checkbox" checked> Garder les lunettes, les sourcils et le haut du visage de la photo A (protection manuelle, sans détection automatique).</label></div>
 <label>Lumière visage <input id="regionHarmony" type="range" min="0" max="100" value="0"><span id="regionHarmonyVal" class="value">0%</span></label>
-<span class="region-title">« Morphing complet » transforme tous les traits et le contour de A vers B. La taille et l’inclinaison évoluent dans un repère commun. Dans la bouche et les yeux, le moteur privilégie la photo où l’intérieur est visible. Il conserve les couleurs originales ; il ne reconstruit pas les surfaces cachées. « Expressions locales » conserve le décor, les cheveux et le haut du visage de A, et interpole surtout les expressions autour de la bouche. La géométrie suit le pourcentage demandé ; la texture de bouche est ajustée pour limiter les doubles lèvres et les dents fantômes. « Visage stabilisé » conserve l’ancien masque étendu pour la comparaison. Une autre perspective ne peut pas être reconstruite à partir de deux images 2D.</span><span class="region-title">Lumière : augmente ce réglage seulement si les deux photos ont des éclairages très différents.</span>
+<span class="region-title">« Morphing complet » transforme tous les traits et le contour de A vers B. La taille et l’inclinaison évoluent dans un repère commun. Dans la bouche et les yeux, le moteur privilégie la photo où l’intérieur est visible. Les deux têtes sont détourées sur le même fond blanc avant toute déformation. Le décor et les vêtements sont retirés ; les surfaces cachées ne sont pas reconstruites. « Expressions locales » conserve les cheveux et le haut du visage détouré de A, et interpole surtout les expressions autour de la bouche. La géométrie suit le pourcentage demandé ; la texture de bouche est ajustée pour limiter les doubles lèvres et les dents fantômes. « Visage stabilisé » conserve l’ancien masque étendu pour la comparaison. Une autre perspective ne peut pas être reconstruite à partir de deux images 2D.</span><span class="region-title">Lumière : augmente ce réglage seulement si les deux photos ont des éclairages très différents.</span>
 <div id="modeStatus" class="status" aria-live="polite"></div>
 <details id="morphDiagnostic" class="morph-diagnostic">
 <summary>Diagnostic du morphing · inspecter les doubles contours</summary>
@@ -223,10 +224,11 @@ import {cheekTransitions} from './cheek-transition.mjs';
 import {createFullFaceMorph,assessSampledMorphPath} from './full-face-morph.mjs';
 import {createOpeningVisibility,openingMaskAlpha} from './opening-visibility.mjs';
 import {createScanArchive,readScanArchive} from './scan-archive.mjs';
+import {createPortraitMatte,compositePortraitOnWhite} from './portrait-matte.mjs';
 const MEDIAPIPE_MODULE="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs";
 const MEDIAPIPE_WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm";
 const FACE_MODEL="https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
-const PORTRAIT_MODEL="https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/1/selfie_segmenter.tflite";
+const PORTRAIT_MODEL="https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/1/selfie_multiclass_256x256.tflite";
 const SIZE=768,ANALYSIS_SIZE=512,PREVIEW_SIZE=384,GRID=4,$=id=>document.getElementById(id),stages=['captureStage','alignStage','gameStage'];
 const FALLBACK_FACE_OVAL=[10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
 const REGION_IDS={
@@ -247,7 +249,7 @@ const REGION_ANIMATION_HINTS={progressive:'Les yeux apparaissent, puis le nez, l
 const REGION_MOTION_IDS=[10,168,6,1,2,13,14,17,152,33,133,159,145,362,263,386,374,61,291,98,327];
 const MANUAL_ALIGNMENT_IDS=['offsetX','offsetY','scale','rotation'];
 const state={
- stream:null,facing:'user',activeFacing:'user',photos:[],marks:[],step:0,tiles:[],blank:15,solutionURL:'',showing:false,candidateId:0,
+ stream:null,facing:'user',activeFacing:'user',photos:[],originalPhotos:[],portraitMattes:[],marks:[],step:0,tiles:[],blank:15,solutionURL:'',showing:false,candidateId:0,
  landmarker:null,landmarkerCtor:null,imageLandmarker:null,imageLandmarkerPromise:null,imageLandmarkerGeneration:0,videoDetectorNeedsReset:false,detectorState:'loading',cameraRequest:0,cameraPending:false,operationGeneration:0,detectTimestamp:0,detectorDelegate:'',auto:{scale:1,rot:0,tx:0,ty:0},
  segmenter:null,segmenterCtor:null,visionFileset:null,segmenterPromise:null,segmenterGeneration:0,segmentationState:'loading',headRings:[],headTopology:{version:-1,amount:0,metrics:null},
  sessions:[[],[]],selectedPair:null,commonViewRange:null,scan:{running:false,raf:0,generation:0,startedAt:0,lastSampleAt:0,sampling:false,duration:12500,lastAnnouncementAt:0},applyingPair:false,
@@ -416,11 +418,37 @@ function bilinearMaskValue(data,width,height,x,y){
 function headRingFromConfidenceMask(points,width,height,data){
  if(!width||!height||data.length<width*height)return fallbackHeadRing(points);const radius=Math.max(1,Math.min(width,height)/360),sample=(x,y)=>{let value=0,weight=0;for(const [ox,oy,w] of [[0,0,4],[-radius,0,1],[radius,0,1],[0,-radius,1],[0,radius,1],[-radius,-radius,.5],[radius,-radius,.5],[-radius,radius,.5],[radius,radius,.5]]){value+=bilinearMaskValue(data,width,height,x+ox,y+oy)*w;weight+=w}return value/weight>=.34};return headRingFromMaskSampler(points,width,height,sample)
 }
-async function extractHeadRing(photo,landmarks){
- const points=landmarks.map(point=>({x:point.x*SIZE,y:point.y*SIZE})),fallback=fallbackHeadRing(points),segmenter=await ensureSegmenter();if(!segmenter)return fallback;let result=null;
- try{result=segmenter.segment(photo);const category=result.categoryMask;if(category)try{const data=category.getAsUint8Array().slice();document.documentElement.dataset.portraitSegmentation='category-person';return headRingFromCategoryMask(points,category.width,category.height,data)||fallback}catch(error){console.warn('Masque binaire indisponible, essai du masque de confiance.',error)}const confidence=result.confidenceMasks?.[1]||((result.confidenceMasks?.length===1)?result.confidenceMasks[0]:null);if(confidence){const data=confidence.getAsFloat32Array().slice();document.documentElement.dataset.portraitSegmentation=result.confidenceMasks?.[1]?'confidence-person':'confidence-single';return headRingFromConfidenceMask(points,confidence.width,confidence.height,data)||fallback}document.documentElement.dataset.portraitSegmentation='mask-missing';return fallback}
- catch(error){console.warn('Contour tête/cheveux non détecté, contour géométrique utilisé.',error);document.documentElement.dataset.portraitSegmentation='inference-error';return fallback}
+// Preprocess once per selected pair. Every renderer receives these opaque
+// white sources; untouched originals remain separate for private archive export.
+async function prepareWhitePortrait(photo,landmarks){
+ const points=landmarks.map(p=>({x:p.x*SIZE,y:p.y*SIZE})),basis=headRingBasis(points),
+  options={width:SIZE,height:SIZE,faceOval:state.faceOval.map(id=>points[id]),downAxis:basis?.down||{x:0,y:1},featherPx:2};
+ const segmenter=await ensureSegmenter();let result=null;
+ try{
+  if(segmenter){
+   result=segmenter.segment(photo);
+   const masks=result.confidenceMasks;
+   if(masks?.length>=6){
+    options.maskWidth=masks[0].width;options.maskHeight=masks[0].height;
+    options.confidenceMasks=[];
+    for(const id of [1,3,5])options.confidenceMasks[id]=masks[id].getAsFloat32Array().slice();
+   }else if(result.categoryMask){
+    options.maskWidth=result.categoryMask.width;options.maskHeight=result.categoryMask.height;
+    options.categoryMask=result.categoryMask.getAsUint8Array().slice();
+   }
+  }
+ }catch(error){console.warn('Détourage automatique indisponible, contour du visage utilisé.',error)}
  finally{try{if(result?.close)result.close();else{result?.categoryMask?.close?.();result?.confidenceMasks?.forEach(mask=>mask.close?.())}}catch(error){console.warn(error)}}
+ const matte=createPortraitMatte(options),prepared=makeCanvas(SIZE),ctx=prepared.getContext('2d'),
+  source=photo.getContext('2d').getImageData(0,0,SIZE,SIZE),output=ctx.createImageData(SIZE,SIZE);
+ output.data.set(compositePortraitOnWhite(source.data,matte));ctx.putImageData(output,0,0);
+ const headRing=headRingFromMaskSampler(points,SIZE,SIZE,(x,y)=>bilinearMaskValue(matte.alpha,SIZE,SIZE,x,y)>=128);
+ return {...matte,photo:prepared,headRing};
+}
+async function extractHeadRing(photo,landmarks){return(await prepareWhitePortrait(photo,landmarks)).headRing}
+function syncPortraitMatteUI(){
+ const simplified=state.portraitMattes.some(matte=>matte.warning);
+ $('portraitMatteStatus').textContent=simplified?'Fond blanc commun · détourage simplifié pour au moins un visage : le contour du visage est conservé, les cheveux peuvent être coupés.':'Visages et cheveux détourés avant le morphing · fond blanc commun · décor et vêtements retirés.';
 }
 function similarity(src,dst){
  const n=src.length,cs=src.reduce((a,p)=>({x:a.x+p.x/n,y:a.y+p.y/n}),{x:0,y:0}),cd=dst.reduce((a,p)=>({x:a.x+p.x/n,y:a.y+p.y/n}),{x:0,y:0});
@@ -612,11 +640,15 @@ function chooseStableMatchedPair(options){
 async function applyMatchedView(targetYaw=null,{automatic=false}={}){
  if(state.applyingPair)return;const options={preserveExpressionDifference:$('preserveExpression').checked};if(Number.isFinite(targetYaw))options.targetYaw=targetYaw;const selection=chooseStableMatchedPair(options),pair=selection?.pair;if(!pair){const gap=selection?.closest?.poseGap;pairPreparationStatus(Number.isFinite(gap)?`Aucune perspective commune : l’écart minimal est ${Math.round(gap*45)}°. Reprends une vue du visage B dans le même angle que A.`:'Aucune perspective commune utilisable. Reprends au moins une vue de face pour chaque visage.');return}const generation=++state.operationGeneration,wasAlign=$('alignStage').classList.contains('active'),previousMode=state.mode,previousHarmony=state.regionHarmony;state.applyingPair=true;disableViewpointControls(true);if(wasAlign){$('alignStage').inert=true;$('alignStage').setAttribute('aria-busy','true')}stopAnimation({render:false});updateScanUI();pairPreparationStatus('Préparation des deux portraits, de la tête et des cheveux…');
  try{
-  const photos=await Promise.all([blobToCanvas(pair.first.blob),blobToCanvas(pair.second.blob)]);if(generation!==state.operationGeneration)return;const marks=[pair.first.landmarks,pair.second.landmarks],headRings=[],savedCandidates=[pair.first,pair.second];
-  const hasSavedRings=savedCandidates.every(candidate=>Array.isArray(candidate.headRing)&&candidate.headRing.length===state.faceOval.length&&candidate.headRing.every(point=>Number.isFinite(point?.x)&&Number.isFinite(point?.y)));
-  if(!hasSavedRings)await ensureSegmenter();if(generation!==state.operationGeneration)return;
-  for(let index=0;index<2;index++){pairPreparationStatus(`Analyse de la silhouette ${index+1}/2…`);headRings[index]=hasSavedRings?savedCandidates[index].headRing.map(point=>({...point})):await extractHeadRing(photos[index],marks[index]);if(generation!==state.operationGeneration)return}
-  stopCamera();closeSegmenter();state.photos=photos;state.marks=marks;state.headRings=headRings;state.selectedPair=pair;state.step=0;state.solutionURL='';state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.buffers.clear();invalidateFaceLighting();state.regionHarmony=wasAlign?previousHarmony:automaticHarmony(pair.first.photometry,pair.second.photometry);syncRegionControls();photos.forEach((photo,index)=>{const thumbnail=makeCanvas(192),ctx=thumbnail.getContext('2d');ctx.drawImage(photo,0,0,192,192);const value=`url(${thumbnail.toDataURL('image/jpeg',.8)})`;$('thumb'+(index+1)).style.backgroundImage=value;$('sourceThumb'+(index+1)).style.backgroundImage=value});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();state.animation.userFrozen=false;syncPairUI();autoAlign({activate:false,render:false});syncViewpointUI(pair);updateModeAvailability();if(wasAlign){$('alignStage').inert=false;$('alignStage').removeAttribute('aria-busy')}if(canMeshMorph()){const desiredMode=wasAlign&&['full','canvas','webgl','regions','stabilized','local'].includes(previousMode)?previousMode:'full';setMode(desiredMode);if(!automatic||!reducedMotionQuery?.matches)maybeAutoStartAnimation()}else scheduleRender();(state.pair.status==='unusable'?$('retakePhoto2'):$('alignStatus')).focus()
+  const originalPhotos=await Promise.all([blobToCanvas(pair.first.blob),blobToCanvas(pair.second.blob)]);if(generation!==state.operationGeneration)return;
+  const marks=[pair.first.landmarks,pair.second.landmarks],portraitMattes=[];
+  // Archived contours never bypass the new source matting stage.
+  for(let index=0;index<2;index++){
+   pairPreparationStatus(`Détourage sur fond blanc ${index+1}/2…`);
+   portraitMattes[index]=await prepareWhitePortrait(originalPhotos[index],marks[index]);if(generation!==state.operationGeneration)return;
+  }
+  const photos=portraitMattes.map(matte=>matte.photo),headRings=portraitMattes.map(matte=>matte.headRing);
+  stopCamera();closeSegmenter();state.originalPhotos=originalPhotos;state.portraitMattes=portraitMattes;state.photos=photos;syncPortraitMatteUI();state.marks=marks;state.headRings=headRings;state.selectedPair=pair;state.step=0;state.solutionURL='';state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.buffers.clear();invalidateFaceLighting();state.regionHarmony=wasAlign?previousHarmony:automaticHarmony(pair.first.photometry,pair.second.photometry);syncRegionControls();photos.forEach((photo,index)=>{const thumbnail=makeCanvas(192),ctx=thumbnail.getContext('2d');ctx.drawImage(photo,0,0,192,192);const value=`url(${thumbnail.toDataURL('image/jpeg',.8)})`;$('thumb'+(index+1)).style.backgroundImage=value;$('sourceThumb'+(index+1)).style.backgroundImage=value});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();state.animation.userFrozen=false;syncPairUI();autoAlign({activate:false,render:false});syncViewpointUI(pair);updateModeAvailability();if(wasAlign){$('alignStage').inert=false;$('alignStage').removeAttribute('aria-busy')}if(canMeshMorph()){const desiredMode=wasAlign&&['full','canvas','webgl','regions','stabilized','local'].includes(previousMode)?previousMode:'full';setMode(desiredMode);if(!automatic||!reducedMotionQuery?.matches)maybeAutoStartAnimation()}else scheduleRender();(state.pair.status==='unusable'?$('retakePhoto2'):$('alignStatus')).focus()
  }catch(error){console.error(error);if(generation===state.operationGeneration){pairPreparationStatus('Préparation du morphing impossible : '+(error.message||error));showStage(wasAlign?'alignStage':'captureStage')}}
  finally{if(generation===state.operationGeneration){state.applyingPair=false;$('alignStage').inert=false;$('alignStage').removeAttribute('aria-busy');disableViewpointControls(false);updateScanUI()}}
 }
@@ -670,8 +702,8 @@ function ensureFaceLighting(){
  try{
   const sampleSize=192,referenceMask=lightingAnalysisMask(0,sampleSize),sourceMask=lightingAnalysisMask(1,sampleSize);if(!referenceMask||!sourceMask){state.lighting=lighting;return lighting}const referenceCanvas=makeCanvas(sampleSize),referenceCtx=referenceCanvas.getContext('2d'),sourceCanvas=makeCanvas(sampleSize),sourceCtx=sourceCanvas.getContext('2d'),referenceMarks=state.marks[0].map(point=>({x:point.x*sampleSize,y:point.y*sampleSize})),sourceMarks=state.marks[1].map(point=>({x:point.x*sampleSize,y:point.y*sampleSize}));referenceCtx.drawImage(state.photos[0],0,0,sampleSize,sampleSize);sourceCtx.drawImage(state.photos[1],0,0,sampleSize,sampleSize);const referenceWarp=makeCanvas(sampleSize),warpCtx=referenceWarp.getContext('2d'),referenceMaskWarp=makeCanvas(sampleSize),maskWarpCtx=referenceMaskWarp.getContext('2d'),lightingIds=new Set([...state.faceOval,...REGION_MOTION_IDS]);for(let i=0;i<468;i+=24)lightingIds.add(i);const warpTriangles=delaunayTriangles(referenceMarks,[...lightingIds]);if(!lightingGeometryReliable(referenceMarks,sourceMarks,warpTriangles)){lighting.stats={fallback:'géométrie incompatible'};state.lighting=lighting;return lighting}for(const ids of warpTriangles){const sourceSample=ids.map(i=>referenceMarks[i]),destination=ids.map(i=>sourceMarks[i]);if(sourceSample.every(Boolean)&&destination.every(Boolean)){warpTriangle(warpCtx,referenceCanvas,sourceSample,destination,.6);warpTriangle(maskWarpCtx,referenceMask,sourceSample,destination,.6)}}
   const referenceData=referenceWarp.getContext('2d').getImageData(0,0,sampleSize,sampleSize).data,nativeReferenceData=referenceCtx.getImageData(0,0,sampleSize,sampleSize).data,sourceData=sourceCtx.getImageData(0,0,sampleSize,sampleSize).data,referenceWeights=new Float32Array(sampleSize*sampleSize),nativeReferenceWeights=new Float32Array(sampleSize*sampleSize),sourceWeights=new Float32Array(sampleSize*sampleSize),referenceAlpha=referenceMaskWarp.getContext('2d').getImageData(0,0,sampleSize,sampleSize).data,nativeReferenceAlpha=referenceMask.getContext('2d').getImageData(0,0,sampleSize,sampleSize).data,sourceAlpha=sourceMask.getContext('2d').getImageData(0,0,sampleSize,sampleSize).data,referenceLinear=linearizePixels(referenceData),nativeReferenceLinear=linearizePixels(nativeReferenceData),sourceLinear=linearizePixels(sourceData);let commonCount=0,sourceCount=0,clippedCount=0;for(let i=0,p=0;i<referenceData.length;i+=4,p++){const sourceWeight=sourceAlpha[i+3]/255,validA=smoother((referenceLinear.luminance[p]-.002)/.008)*smoother((.99-referenceLinear.luminance[p])/.09),validNativeA=smoother((nativeReferenceLinear.luminance[p]-.002)/.008)*smoother((.99-nativeReferenceLinear.luminance[p])/.09),validB=smoother((sourceLinear.luminance[p]-.002)/.008)*smoother((.99-sourceLinear.luminance[p])/.09);sourceWeights[p]=sourceWeight*validB;nativeReferenceWeights[p]=nativeReferenceAlpha[i+3]/255*validNativeA;referenceWeights[p]=Math.min(referenceData[i+3],referenceAlpha[i+3],sourceAlpha[i+3])/255*validA*validB;if(sourceWeight>.5){sourceCount++;if(validB<.5)clippedCount++}if(referenceWeights[p]>.5)commonCount++}if(commonCount<1000||commonCount/Math.max(1,sourceCount)<.6||clippedCount/Math.max(1,sourceCount)>.2){lighting.stats={fallback:'confiance insuffisante'};state.lighting=lighting;return lighting}const sigma=clamp(faceOvalWidth(1,sampleSize)*.18,8,18),radius=Math.round(sigma-.5),radii=[radius,radius+1,radius],sigmaA=clamp(faceOvalWidth(0,sampleSize)*.18,8,18),radiusA=Math.round(sigmaA-.5),illuminationA=normalizedIllumination(referenceLinear.logY,referenceWeights,sampleSize,sampleSize,radii),illuminationNativeA=normalizedIllumination(nativeReferenceLinear.logY,nativeReferenceWeights,sampleSize,sampleSize,[radiusA,radiusA+1,radiusA]),illuminationB=normalizedIllumination(sourceLinear.logY,sourceWeights,sampleSize,sampleSize,radii),detailA=new Float32Array(referenceWeights.length),detailB=new Float32Array(referenceWeights.length),adjustment=new Float32Array(referenceWeights.length);for(let i=0;i<adjustment.length;i++){detailA[i]=nativeReferenceLinear.logY[i]-illuminationNativeA.field[i];detailB[i]=sourceLinear.logY[i]-illuminationB.field[i]}const spreadA=robustDetailSpread(detailA,nativeReferenceWeights),spreadB=robustDetailSpread(detailB,sourceWeights),detailGain=spreadA&&spreadB?clamp(spreadA/spreadB,.9,1.1):1;for(let i=0;i<adjustment.length;i++){const confidence=smoother((Math.min(illuminationA.confidence[i],illuminationB.confidence[i])-.02)/.1),localDelta=clamp(illuminationA.field[i]-illuminationB.field[i],-.46,.46),detail=clamp((detailGain-1)*detailB[i],-.15,.15);adjustment[i]=confidence*(localDelta+detail)}
-  const corrected=makeCanvas(SIZE),ctx=corrected.getContext('2d'),maskBlur=clamp(faceOvalWidth(1,SIZE)*.045,8,18),applicationMask=rawFaceLightingMask(1,SIZE,1.08,maskBlur);ctx.drawImage(state.photos[1],0,0);const image=ctx.getImageData(0,0,SIZE,SIZE),data=image.data,mask=applicationMask?.getContext('2d').getImageData(0,0,SIZE,SIZE).data;if(!mask){state.lighting=lighting;return lighting}const {encode,exp,size}=lightingLuts(),encodeMax=size-1,expScale=encodeMax/1.28;
-  for(let y=0,p=0;y<SIZE;y++)for(let x=0;x<SIZE;x++,p++){const i=p*4,weight=mask[i+3]/255;if(weight<=.001)continue;const sx=x*(sampleSize-1)/(SIZE-1),sy=y*(sampleSize-1)/(SIZE-1),logFactor=clamp(weight*bilinearSample(adjustment,sampleSize,sampleSize,sx,sy),-.64,.64),rawFactor=exp[Math.round((logFactor+.64)*expScale)],r=sourceLinear.lut[data[i]],g=sourceLinear.lut[data[i+1]],b=sourceLinear.lut[data[i+2]],maxChannel=Math.max(r,g,b),factor=rawFactor>1&&maxChannel>0?Math.min(rawFactor,.995/maxChannel):rawFactor;data[i]=encode[Math.round(clamp(r*factor,0,1)*encodeMax)];data[i+1]=encode[Math.round(clamp(g*factor,0,1)*encodeMax)];data[i+2]=encode[Math.round(clamp(b*factor,0,1)*encodeMax)]}ctx.putImageData(image,0,0);lighting.corrected=corrected;lighting.stats={sigma,detailGain,commonCoverage:commonCount/Math.max(1,sourceCount)};state.lighting=lighting;return lighting
+  const corrected=makeCanvas(SIZE),ctx=corrected.getContext('2d'),maskBlur=clamp(faceOvalWidth(1,SIZE)*.045,8,18),applicationMask=rawFaceLightingMask(1,SIZE,1.08,maskBlur);ctx.drawImage(state.photos[1],0,0);const image=ctx.getImageData(0,0,SIZE,SIZE),data=image.data,mask=applicationMask?.getContext('2d').getImageData(0,0,SIZE,SIZE).data;if(!mask){state.lighting=lighting;return lighting}const {encode,exp,size}=lightingLuts(),encodeMax=size-1,expScale=encodeMax/1.28,portraitAlpha=state.portraitMattes[1]?.alpha;
+  for(let y=0,p=0;y<SIZE;y++)for(let x=0;x<SIZE;x++,p++){const i=p*4,weight=mask[i+3]/255*(portraitAlpha?portraitAlpha[p]/255:1);if(weight<=.001)continue;const sx=x*(sampleSize-1)/(SIZE-1),sy=y*(sampleSize-1)/(SIZE-1),logFactor=clamp(weight*bilinearSample(adjustment,sampleSize,sampleSize,sx,sy),-.64,.64),rawFactor=exp[Math.round((logFactor+.64)*expScale)],r=sourceLinear.lut[data[i]],g=sourceLinear.lut[data[i+1]],b=sourceLinear.lut[data[i+2]],maxChannel=Math.max(r,g,b),factor=rawFactor>1&&maxChannel>0?Math.min(rawFactor,.995/maxChannel):rawFactor;data[i]=encode[Math.round(clamp(r*factor,0,1)*encodeMax)];data[i+1]=encode[Math.round(clamp(g*factor,0,1)*encodeMax)];data[i+2]=encode[Math.round(clamp(b*factor,0,1)*encodeMax)]}ctx.putImageData(image,0,0);lighting.corrected=corrected;lighting.stats={sigma,detailGain,commonCoverage:commonCount/Math.max(1,sourceCount)};state.lighting=lighting;return lighting
  }catch(error){console.warn('Harmonisation locale indisponible',error);lighting.stats={error:String(error?.message||error)};state.lighting=lighting;return lighting}
 }
 function morphPhoto2Key(){if(!pairUsable()||state.regionHarmony<=.001)return`${state.photoVersion}|raw`;const lighting=ensureFaceLighting();return`${state.photoVersion}|${lighting.corrected?'normalized':'raw'}|${state.regionHarmony.toFixed(3)}`}
@@ -957,8 +989,8 @@ function openingMixMap(geometry,size){
 }
 function renderFullMorph(canvas,v,sourceOverrides=null){
  const sources=sourceOverrides||state.photos;
- const ctx=canvas.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,canvas.width,canvas.height);
- // Exact canonical photographs, without illumination correction or a frozen A layer.
+ const ctx=canvas.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+ // Exact prepared white portraits at endpoints; original captures are archive-only.
  if(v.a<=0)return renderPortraitEndpoint(canvas,0,sources[0]);
  if(v.a>=1)return renderPortraitEndpoint(canvas,1,sources[1]);
  const geometry=fullMorphGeometry(v);
@@ -1029,7 +1061,7 @@ function drawBackground(canvas){const ctx=canvas.getContext('2d'),size=canvas.wi
 function drawMorphBackground(canvas,v,geometry){
  const ctx=drawBackground(canvas),size=canvas.width,amount=smoother(clamp(geometry.t,0,1));if(amount>.001){ctx.globalAlpha=amount;ctx.drawImage(state.photos[1],0,0,size,size);ctx.globalAlpha=1}return ctx
 }
-function renderPortraitEndpoint(canvas,index,override=null){const ctx=canvas.getContext('2d'),size=canvas.width,source=override||morphPhoto(index);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(source,0,0,size,size);return{fallback:false,renderer:'canvas',message:`Portrait ${index+1} canonique · extrémité continue du morphing.`}}
+function renderPortraitEndpoint(canvas,index,override=null){const ctx=canvas.getContext('2d'),size=canvas.width,source=override||morphPhoto(index);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(source,0,0,size,size);return{fallback:false,renderer:'canvas',message:`Portrait ${index+1} détouré sur blanc · extrémité du morphing.`}}
 // Match WebGL's linear-light blend, including partially covered mesh edges.
 // Tables avoid per-pixel powers during the Canvas fallback animation.
 const MORPH_LINEAR=Float32Array.from({length:256},(_,i)=>{const c=i/255;return c<=.04045?c/12.92:((c+.055)/1.055)**2.4});
@@ -1053,7 +1085,7 @@ function renderCanvasMorph(canvas,v,providedGeometry=null,sourceOverrides=null){
  if(!providedGeometry){if(v.a<=.0001)return renderPortraitEndpoint(canvas,0,sourceOverrides?.[0]);if(v.a>=.9999)return renderPortraitEndpoint(canvas,1,sourceOverrides?.[1])}const faceGeometry=providedGeometry||meshGeometry(v),geometry=providedGeometry?.contextTriangles?providedGeometry:faceGeometry&&fullFrameGeometry(faceGeometry);if(!geometry)return renderAlphaFallback(canvas,v);const size=canvas.width;
  const sources=sourceOverrides||[state.photos[0],morphPhoto(1)],triangles=geometry.triangles,warpA=warpImage('warpA',size,sources[0],geometry.raw1,geometry.target,triangles),warpB=warpImage('warpB',size,sources[1],geometry.raw2,geometry.target,triangles);
  const mixed=getBuffer('mixedFace',size),mctx=mixed.getContext('2d'),pixelsA=warpA.getContext('2d').getImageData(0,0,size,size),pixelsB=warpB.getContext('2d').getImageData(0,0,size,size);blendMorphPixels(pixelsA.data,pixelsB.data,geometry.textureMix??geometry.t,pixelsA.data,openingMixMap(geometry,size)?.weights);mctx.putImageData(pixelsA,0,0);
- const ctx=canvas.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(mixed,0,0);
+ const ctx=canvas.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.fillStyle='#fff';ctx.fillRect(0,0,size,size);ctx.drawImage(mixed,0,0);
  return{fallback:false,renderer:'canvas',message:`Morphing du portrait complet Canvas 2D · ${lightingStatus()} · ${triangles.length} triangles.`}
 }
 
@@ -1125,7 +1157,7 @@ function renderWebGLMorph(canvas,v,sourceOverrides=null){
  if(v.a<=.0001)return renderPortraitEndpoint(canvas,0);if(v.a>=.9999)return renderPortraitEndpoint(canvas,1);const faceGeometry=meshGeometry(v),geometry=faceGeometry&&fullFrameGeometry(faceGeometry);if(!geometry)return renderAlphaFallback(canvas,v);
  try{
   const webglFace=renderWebGLFace(canvas.width,geometry,sourceOverrides);if(!webglFace){const result=renderCanvasMorph(canvas,v,geometry,sourceOverrides);result.message='WebGL indisponible : morphing Canvas 2D utilisé.';return result}
-  const ctx=canvas.getContext('2d'),size=canvas.width;ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.drawImage(webglFace,0,0);
+  const ctx=canvas.getContext('2d'),size=canvas.width;ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,size,size);ctx.fillStyle='#fff';ctx.fillRect(0,0,size,size);ctx.drawImage(webglFace,0,0);
   return{fallback:false,renderer:'webgl',message:`Morphing du portrait complet WebGL · ${lightingStatus()} · ${geometry.triangles.length} triangles.`}
  }catch(e){console.error(e);if(state.webgl){state.webgl.failed=true;state.webgl.failedAt=performance.now();state.webgl.error=e.message||String(e)}const result=renderCanvasMorph(canvas,v,geometry,sourceOverrides);result.message='Erreur WebGL : morphing Canvas 2D utilisé.';return result}
 }
@@ -1447,21 +1479,29 @@ function shuffle(n=150){state.showing=false;$('showSolution').textContent='Voir 
 function isSolved(){return state.tiles.every((v,i)=>v===i)}
 function showSolution(){state.showing=!state.showing;$('puzzle').style.background=state.showing?`#000 url(${state.solutionURL}) center/cover no-repeat`:'#070707';$('showSolution').textContent=state.showing?'Revenir au jeu':'Voir la solution';layout()}
 function resetAll(preserveAnimationSettings=false){
- cancelPendingOperations();stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,autoStartRaf:0,exporting:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();closeSegmenter();state.photos=[];state.marks=[];state.headRings=[];state.sessions=[[],[]];state.selectedPair=null;state.commonViewRange=null;state.applyingPair=false;state.videoDetectorNeedsReset=state.detectTimestamp>0;state.solutionURL='';state.step=0;state.pair={status:'empty',score:null,reasons:[],advice:[],metrics:null,hint:''};state.photoVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.morphTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTrianglesVersion=-1;state.auto={scale:1,rot:0,tx:0,ty:0};state.validatedControls={x:0,y:0,s:1,r:0};state.buffers.clear();invalidateFaceLighting();
+ cancelPendingOperations();stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,autoStartRaf:0,exporting:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();closeSegmenter();state.photos=[];state.originalPhotos=[];state.portraitMattes=[];state.marks=[];state.headRings=[];state.sessions=[[],[]];state.selectedPair=null;state.commonViewRange=null;state.applyingPair=false;state.videoDetectorNeedsReset=state.detectTimestamp>0;state.solutionURL='';state.step=0;state.pair={status:'empty',score:null,reasons:[],advice:[],metrics:null,hint:''};state.photoVersion++;state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.morphTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTrianglesVersion=-1;state.auto={scale:1,rot:0,tx:0,ty:0};state.validatedControls={x:0,y:0,s:1,r:0};state.buffers.clear();invalidateFaceLighting();
  if(!preserveAnimationSettings){state.regionAnimationStyle='progressive';state.regionHarmony=0;state.animation.randomSeed=137;$('animationAmplitude').value=45;$('animationSpeed').value=110}
  ['offsetX','offsetY','rotation'].forEach(id=>$(id).value=0);$('scale').value=100;$('blend').value=50;
  $('viewpointControls').hidden=true;for(const id of ['thumb1','thumb2','sourceThumb1','sourceThumb2'])$(id).style.backgroundImage='none';showStage('captureStage');showScanGuide('Cadrez tout le visage');updateScanUI();
  status.textContent=state.detectorState==='ready'?'Détecteur prêt. Active la caméra ou importe plusieurs photos.':state.detectorState==='failed'?'Détecteur indisponible : recharge la page pour activer le contrôle de compatibilité.':'Chargement du détecteur de visage…';syncRegionControls();syncAnimationControls();syncPairUI()
 }
 function retakePhoto2(){
- const guidance=state.pair.advice?.slice(0,2).join(' ')||'Capture une perspective aussi proche que possible d’une vue du visage A.';cancelPendingOperations();stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();closeSegmenter();state.photos.length=Math.min(1,state.photos.length);state.marks.length=Math.min(1,state.marks.length);state.headRings.length=Math.min(1,state.headRings.length);state.sessions[1]=[];state.selectedPair=null;state.commonViewRange=null;state.videoDetectorNeedsReset=true;state.step=1;state.pair={status:'capturing2',score:null,reasons:[],advice:[],metrics:null,hint:`Visage A conservé. ${guidance}`};state.photoVersion++;state.auto={scale:1,rot:0,tx:0,ty:0};state.validatedControls={x:0,y:0,s:1,r:0};state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.morphTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTrianglesVersion=-1;state.regionCache=null;state.solutionURL='';state.buffers.clear();invalidateFaceLighting();if(state.webgl)state.webgl.indexVersion='';for(const id of ['thumb2','sourceThumb2'])$(id).style.backgroundImage='none';$('viewpointControls').hidden=true;showStage('captureStage');showScanGuide('Visage B · tourne lentement des deux côtés');updateScanUI();syncPairUI();updateModeAvailability();status.textContent=state.pair.hint;status.focus();ensureSegmenter();startCamera()
+ const guidance=state.pair.advice?.slice(0,2).join(' ')||'Capture une perspective aussi proche que possible d’une vue du visage A.';cancelPendingOperations();stopAnimation({render:false});Object.assign(state.animation,{userFrozen:false,resumeAfterGame:false,resumeAfterMotion:false,resumeOnPageShow:false});stopCamera();closeSegmenter();state.photos.length=Math.min(1,state.photos.length);state.originalPhotos.length=Math.min(1,state.originalPhotos.length);state.portraitMattes.length=Math.min(1,state.portraitMattes.length);state.marks.length=Math.min(1,state.marks.length);state.headRings.length=Math.min(1,state.headRings.length);state.sessions[1]=[];state.selectedPair=null;state.commonViewRange=null;state.videoDetectorNeedsReset=true;state.step=1;state.pair={status:'capturing2',score:null,reasons:[],advice:[],metrics:null,hint:`Visage A conservé. ${guidance}`};state.photoVersion++;state.auto={scale:1,rot:0,tx:0,ty:0};state.validatedControls={x:0,y:0,s:1,r:0};state.previewTriangles=[];state.morphTriangles=state.meshTriangles.slice();state.morphTrianglesVersion=-1;state.morphTopologyVersion++;state.previewTrianglesVersion=-1;state.regionCache=null;state.solutionURL='';state.buffers.clear();invalidateFaceLighting();if(state.webgl)state.webgl.indexVersion='';for(const id of ['thumb2','sourceThumb2'])$(id).style.backgroundImage='none';$('viewpointControls').hidden=true;showStage('captureStage');showScanGuide('Visage B · tourne lentement des deux côtés');updateScanUI();syncPairUI();updateModeAvailability();status.textContent=state.pair.hint;status.focus();ensureSegmenter();startCamera()
 }
 async function loadDemoPortrait(src){
  const image=await new Promise((resolve,reject)=>{const element=new Image();element.decoding='async';element.crossOrigin='anonymous';element.onload=()=>resolve(element);element.onerror=()=>reject(new Error(`Image de démonstration introuvable : ${src}`));element.src=src}),canvas=makeCanvas(SIZE),ctx=canvas.getContext('2d'),side=Math.min(image.naturalWidth,image.naturalHeight),sx=(image.naturalWidth-side)/2,sy=(image.naturalHeight-side)/2;ctx.drawImage(image,sx,sy,side,side,0,0,SIZE,SIZE);return canvas
 }
 async function loadDemoLandmarks(src){const response=await fetch(src,{cache:'no-store'});if(!response.ok)throw new Error(`Repères de démonstration indisponibles (${response.status})`);return response.json()}
 async function loadDemoPair(){
- await landmarkerReady;stopCamera();const base='../Make%20puzzle%20-%20from%20Iphone/',[photos,fixture]=await Promise.all([Promise.all([loadDemoPortrait(base+'visage_homme.png'),loadDemoPortrait(base+'visage_femme.png')]),loadDemoLandmarks('./qa/portrait-landmarks.json?v=20260817')]),marks=[fixture['visage_homme.png'],fixture['visage_femme.png']];if(state.meshTriangles.length<800||marks.some(mark=>!mark||mark.length<478))throw new Error('Maillage de démonstration incomplet');status.textContent='Analyse des têtes et des cheveux de démonstration…';const headRings=[];for(let index=0;index<photos.length;index++)headRings[index]=await extractHeadRing(photos[index],marks[index]);closeSegmenter();state.photos=photos;state.marks=marks;state.headRings=headRings;state.step=0;state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;invalidateFaceLighting();photos.forEach((photo,index)=>{const url=`url(${photo.toDataURL('image/jpeg',.9)})`;$('thumb'+(index+1)).style.backgroundImage=url;$('sourceThumb'+(index+1)).style.backgroundImage=url});state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();syncPairUI();autoAlign({activate:false,render:false});updateModeAvailability();if(canMeshMorph()){setMode('full');maybeAutoStartAnimation()}else scheduleRender()
+ await landmarkerReady;stopCamera();
+ const base='../Make%20puzzle%20-%20from%20Iphone/',[originalPhotos,fixture]=await Promise.all([Promise.all([loadDemoPortrait(base+'visage_homme.png'),loadDemoPortrait(base+'visage_femme.png')]),loadDemoLandmarks('./qa/portrait-landmarks.json?v=20260817')]),marks=[fixture['visage_homme.png'],fixture['visage_femme.png']];
+ if(state.meshTriangles.length<800||marks.some(mark=>!mark||mark.length<478))throw new Error('Maillage de démonstration incomplet');
+ const portraitMattes=[];
+ for(let index=0;index<2;index++){status.textContent=`Détourage sur fond blanc ${index+1}/2…`;portraitMattes[index]=await prepareWhitePortrait(originalPhotos[index],marks[index])}
+ const photos=portraitMattes.map(matte=>matte.photo),headRings=portraitMattes.map(matte=>matte.headRing);
+ closeSegmenter();state.originalPhotos=originalPhotos;state.portraitMattes=portraitMattes;state.photos=photos;syncPortraitMatteUI();state.marks=marks;state.headRings=headRings;state.step=0;state.photoVersion++;state.morphTrianglesVersion=-1;state.previewTrianglesVersion=-1;invalidateFaceLighting();
+ photos.forEach((photo,index)=>{const url=`url(${photo.toDataURL('image/jpeg',.9)})`;$('thumb'+(index+1)).style.backgroundImage=url;$('sourceThumb'+(index+1)).style.backgroundImage=url});
+ state.pair={status:'checking',score:null,reasons:[],advice:[],metrics:null,hint:''};showStage('alignStage');updatePreviewSize();syncPairUI();autoAlign({activate:false,render:false});updateModeAvailability();if(canMeshMorph()){setMode('full');maybeAutoStartAnimation()}else scheduleRender();
 }
 
 async function exportCurrentScans(){
@@ -1472,7 +1512,7 @@ async function exportCurrentScans(){
   const pair=state.selectedPair,faces=[];
   for(let index=0;index<2;index++){
    const candidate=pair?.[index===0?'first':'second'];
-   faces.push({photoBlob:candidate?.blob||await canvasToBlob(state.photos[index],.92),
+   faces.push({photoBlob:candidate?.blob||await canvasToBlob(state.originalPhotos[index]||state.photos[index],.92),
     landmarks:state.marks[index],headRing:state.headRings[index]||null,
     pose:candidate?.pose||derivePose(state.marks[index],state.faceOval),
     photometry:candidate?.photometry||null,quality:candidate?.quality||null,
