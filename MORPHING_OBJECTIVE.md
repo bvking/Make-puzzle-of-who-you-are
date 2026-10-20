@@ -1,6 +1,6 @@
 # Mission pour l'IA chargée du développement du morphing
 
-Date de clarification : 18 octobre 2026.
+Date de clarification : 18 octobre 2026. Fond blanc précisé le 20 octobre 2026.
 
 ## But final
 
@@ -20,8 +20,10 @@ cas secondaires de contrôle.
 
 ## Résultat attendu
 
-- À 0 %, retrouver exactement l'image A utilisée par le moteur.
-- À 100 %, retrouver exactement l'image B utilisée par le moteur.
+- Détourer systématiquement les deux visages sur un fond blanc opaque identique
+  avant le morphing, y compris lors de la réimportation d'anciens scans.
+- À 0 %, retrouver exactement le portrait A préparé sur blanc.
+- À 100 %, retrouver exactement le portrait B préparé sur blanc.
 - Entre les deux, faire évoluer ensemble les yeux, sourcils, nez, lèvres,
   joues, mâchoire, menton et contour du visage. La texture, les volumes apparents
   et l'expression doivent suivre une trajectoire cohérente.
@@ -36,14 +38,15 @@ cas secondaires de contrôle.
   pas subsister dans le résultat B.
 
 L'exactitude des extrémités se mesure sur les deux images canoniques réellement
-utilisées : recadrage et orientation identifiés. Une comparaison à l'original
+utilisées : recadrage, orientation et détourage sur blanc identifiés. Une comparaison à l'original
 pleine définition doit tenir compte de ce prétraitement. Toute harmonisation
 temporaire doit respecter ces extrémités.
 
-La tête, les cheveux, le cou et le décor doivent être traités de façon continue
-avec le cadrage retenu, sans contour de A laissé sous le visage B. Ils ne doivent
-pas empêcher la transformation complète du visage. Le contrat A/B ci-dessus
-s'applique au rendu complet du mode final.
+Le décor, les vêtements et le cou sont retirés avant la déformation. Le visage
+et les cheveux retenus doivent évoluer continûment avec le cadrage, sans contour
+de A laissé sous le visage B. Le détourage préserve les yeux, les lunettes et
+l'intérieur de bouche ; un modèle indisponible déclenche un contour facial de
+secours annoncé. Les originaux restent disponibles pour l'archive privée.
 
 ## Échelle, pose, lumière et données manquantes
 

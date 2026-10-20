@@ -1,6 +1,6 @@
 # Méthodes retenues pour le morphing entre deux identités
 
-Décision de conception du 18 octobre 2026. Lire d'abord
+Décision de conception du 18 octobre 2026, complétée le 20 octobre. Lire d'abord
 [la mission et les critères de réussite](MORPHING_OBJECTIVE.md).
 Les choix ci-dessous sont un programme de développement. Un premier jalon est
 implémenté : géométrie commune du portrait complet, repère de taille/rotation
@@ -209,3 +209,34 @@ les paupières. Chaque œil peut revenir indépendamment aux bandes historiques
 si le centre est absent, l’œil fermé ou la géométrie ambiguë. Ce contrôle est
 basé sur les [repères du modèle MediaPipe](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker),
 pas sur une estimation de profondeur métrique ni une reconstruction de l’œil.
+
+## Jalon V19 : détourer avant toute déformation
+
+Le décor et les vêtements de deux prises de vue différentes n'ont aucune
+correspondance faciale. Leur fondu produit des superpositions que le recalage
+des yeux et de la bouche ne peut pas corriger. Je retiens donc une préparation
+commune des sources : tête isolée, fond blanc opaque, puis morphing habituel.
+Cette préparation est appliquée à tous les modes et aux anciennes archives.
+Les extrémités exactes désignent désormais ces portraits préparés ; les images
+recadrées originales restent séparées pour l'export privé.
+
+Le modèle MediaPipe Selfie Multiclass distingue cheveux, peau du visage,
+accessoires, peau du corps et vêtements. Un simple masque de personne aurait
+conservé le cou et la chemise. La V19 retient les classes cheveux/visage/accessoires,
+bornées autour de la tête et reliées au visage connu. Elle remplit aussi tout
+l'ovale facial pour que des erreurs de segmentation ne trouent pas les yeux,
+les lunettes, les dents ou la bouche ouverte. Un adoucissement intérieur de deux
+pixels réduit les marches du contour. L'harmonisation lumineuse respecte ce
+masque et laisse le blanc extérieur intact.
+
+Cette décision s'appuie sur la [documentation officielle des classes MediaPipe](https://developers.google.com/edge/mediapipe/solutions/vision/image_segmenter)
+et la [fiche du modèle multiclasses](https://storage.googleapis.com/mediapipe-assets/Model%20Card%20Multiclass%20Segmentation.pdf).
+Le modèle est chargé une fois pendant la préparation de la paire ; les images
+restent dans le navigateur. Si le masque manque ou échoue, le moteur utilise
+l'ovale facial sur blanc avec un avertissement : les cheveux peuvent être coupés.
+
+Le détourage supprime le bruit extérieur, mais ne résout ni les doubles mèches,
+ni les textures internes mal alignées. Des liserés ou des oreilles tronquées
+restent possibles. Les tests privés restent locaux et ne valident pas à eux
+seuls deux identités différentes. Le [bilan V19](Taquin%20deux%20visages%20interpol%C3%A9s/qa/v19-white-background-2026-10-20.md)
+sépare ces observations des contrôles techniques publics.

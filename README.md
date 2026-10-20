@@ -18,6 +18,12 @@ exactes. Le [bilan du premier jalon](Taquin%20deux%20visages%20interpol%C3%A9s/q
 détaille les tests et les limites, notamment les expressions extrêmes encore
 non validées entre deux identités différentes.
 
+La V19 prépare systématiquement les deux têtes sur un **fond blanc opaque
+commun** avant toute déformation. L'archive privée conserve les images recadrées
+originales ; les extrémités du morphing correspondent aux portraits détourés.
+Le [bilan V19](Taquin%20deux%20visages%20interpol%C3%A9s/qa/v19-white-background-2026-10-20.md)
+décrit les contrôles et les défauts visuels encore présents.
+
 ### Référence historique
 
 La branche `browser-morph-v16` reste une version candidate. Le passage entre

@@ -16,10 +16,22 @@ const qaPanelContext=qaPanel.getContext('2d');qaPanelContext.fillStyle='#111820'
 for(let i=0;i<qaPositions.length;i++)qaPanelContext.fillText(Math.round(qaPositions[i]*100)+' %',qaLabelWidth+i*qaSize+12,85);
 const qaPixels=canvas=>canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
 function qaCompare(a,b){let sum=0,max=0;for(let i=0;i<a.length;i++){const d=Math.abs(a[i]-b[i]);sum+=d;max=Math.max(max,d)}return{mean:sum/a.length,max}}
+function qaWhiteCorners(pixels,size,patchSize=12){
+ const corners=[['top-left',0,0],['top-right',size-patchSize,0],['bottom-left',0,size-patchSize],['bottom-right',size-patchSize,size-patchSize]].map(([name,left,top])=>{
+  let maxDeviation=0,nonWhitePixels=0;
+  for(let y=top;y<top+patchSize;y++)for(let x=left;x<left+patchSize;x++){
+   const offset=(y*size+x)*4;let deviation=0;
+   for(let channel=0;channel<4;channel++)deviation=Math.max(deviation,Math.abs(255-pixels[offset+channel]));
+   maxDeviation=Math.max(maxDeviation,deviation);if(deviation)nonWhitePixels++;
+  }
+  return{name,checkedPixels:patchSize*patchSize,maxDeviation,nonWhitePixels};
+ });
+ return{patchSize,corners,maxDeviation:Math.max(...corners.map(corner=>corner.maxDeviation)),nonWhitePixels:corners.reduce((sum,corner)=>sum+corner.nonWhitePixels,0)};
+}
 function qaAssert(condition,message){if(!condition)throw Error(message)}
 function qaProgress(message){
  const maximum=(checks,key)=>checks.length?Math.max(...checks.map(check=>check[key])).toFixed(3):'—';
- const lines=qaResults.cases.map(c=>c.id+' : '+(c.status||'en cours')+' · extrémités max '+maximum(c.endpoints,'max')+' · parité moy/max '+maximum(c.parity,'mean')+'/'+maximum(c.parity,'max')+' · inverse max '+maximum(c.reversal,'max')+' · pixels modifiés hors cavités '+(c.visibility.length?Math.max(...c.visibility.map(v=>v.outsideChanged??0)):'—')+(c.benchmark?' · nouveau p50/p95 '+c.benchmark.new384.p50.toFixed(1)+'/'+c.benchmark.new384.p95.toFixed(1)+' ms':'')+(c.error?' · '+c.error:''));
+ const lines=qaResults.cases.map(c=>c.id+' : '+(c.status||'en cours')+' · extrémités max '+maximum(c.endpoints,'max')+' · écart fond blanc max '+maximum(c.whiteCorners,'maxDeviation')+' · parité moy/max '+maximum(c.parity,'mean')+'/'+maximum(c.parity,'max')+' · inverse max '+maximum(c.reversal,'max')+' · pixels modifiés hors cavités '+(c.visibility.length?Math.max(...c.visibility.map(v=>v.outsideChanged??0)):'—')+(c.benchmark?' · nouveau p50/p95 '+c.benchmark.new384.p50.toFixed(1)+'/'+c.benchmark.new384.p95.toFixed(1)+' ms':'')+(c.error?' · '+c.error:''));
  qaStatus.textContent=message+'\n'+lines.join('\n');qaMetrics.textContent=JSON.stringify(qaResults,null,2);
 }
 function qaInvalidate(){state.photoVersion++;state.fullMorphCache=null;state.headTopology={version:-1,amount:0,metrics:null};state.stabilizedCache={key:'',geometry:null,fit:null,warning:''};invalidateFaceLighting();if(state.webgl)state.webgl.indexVersion=''}
@@ -32,7 +44,7 @@ function qaAffine(spec){
 function qaApplyCase(spec){
  qaRestore();
  if(spec.transform){
-  const m=qaAffine(spec.transform),photo=makeCanvas(SIZE),ctx=photo.getContext('2d');ctx.fillStyle='#20252b';ctx.fillRect(0,0,SIZE,SIZE);ctx.setTransform(m.a,m.b,m.c,m.d,m.e,m.f);ctx.drawImage(qaOriginal.photos[1],0,0);ctx.setTransform(1,0,0,1,0,0);
+  const m=qaAffine(spec.transform),photo=makeCanvas(SIZE),ctx=photo.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,SIZE,SIZE);ctx.setTransform(m.a,m.b,m.c,m.d,m.e,m.f);ctx.drawImage(qaOriginal.photos[1],0,0);ctx.setTransform(1,0,0,1,0,0);
   state.photos=[qaOriginal.photos[0],photo];state.marks=[qaOriginal.marks[0],qaOriginal.marks[1].map(p=>{const q=mapPoint(m,{x:p.x*SIZE,y:p.y*SIZE});return{...p,x:q.x/SIZE,y:q.y/SIZE}})];state.headRings=[qaOriginal.headRings[0],qaOriginal.headRings[1].map(p=>mapPoint(m,p))];
   qaInvalidate();autoAlign({activate:false,render:false});
  }
@@ -94,9 +106,12 @@ function qaPublishPanel(){
 }
 try{
  await loadDemoPair();stopAnimation({render:false});state.animation.userFrozen=true;
+ // This runner loads only repository demo assets. Publish a small metadata
+ // allowlist, never a full matte object or any pixel/landmark buffer.
+ qaResults.portraitMatting=state.portraitMattes.map((matte,index)=>({source:index?'public-demo-B':'public-demo-A',method:matte.method,warning:matte.warning}));
  qaOriginal={photos:state.photos,marks:state.marks,headRings:state.headRings,pair:state.pair,auto:{...state.auto},morphTriangles:state.morphTriangles};
  for(let caseIndex=0;caseIndex<qaCases.length;caseIndex++){
-  const spec=qaCases[caseIndex],result={id:spec.id,label:spec.label,transform:spec.transform||null,renderer:[],endpoints:[],parity:[],continuity:[],reversal:[],visibility:[],baselineDifference:[]};qaResults.cases.push(result);qaProgress('Comparaison publique '+(caseIndex+1)+' / '+qaCases.length+' : '+spec.label);
+  const spec=qaCases[caseIndex],result={id:spec.id,label:spec.label,transform:spec.transform||null,renderer:[],endpoints:[],whiteCorners:[],parity:[],continuity:[],reversal:[],visibility:[],baselineDifference:[]};qaResults.cases.push(result);qaProgress('Comparaison publique '+(caseIndex+1)+' / '+qaCases.length+' : '+spec.label);
   try{
    qaApplyCase(spec);const baseline=qaBaselineModel(),frames=new Map();qaAssert(baseline,'Modèle de référence indisponible');
    const mid=fullMorphGeometry({a:.5});result.regularization=mid.regularization;result.poseNormalization=true;result.irisAnchors=mid.irisAnchors||[];
@@ -104,6 +119,7 @@ try{
    for(const amount of [0,.001,.25,.5,.75,.999,1]){
     const out=makeCanvas(qaSize),v={...readControls(),a:amount},info=renderFullMorph(out,v);qaAssert(!info.fallback,info.message);result.renderer.push({amount,engine:info.renderer});const data=qaPixels(out);frames.set(amount,data);
     if(qaPositions.includes(amount)){
+     const white=qaWhiteCorners(data,qaSize);result.whiteCorners.push({amount,...white});qaAssert(white.nonWhitePixels===0,'Fond non blanc opaque dans les coins 12 px à '+amount+' : '+white.nonWhitePixels+' pixels');
      const column=qaPositions.indexOf(amount),rowTop=90+caseIndex*2*qaRowHeight,reference=makeCanvas(qaSize);qaRenderBaseline(reference,amount,baseline);qaPanelContext.drawImage(reference,qaLabelWidth+column*qaSize,rowTop);qaPanelContext.drawImage(out,qaLabelWidth+column*qaSize,rowTop+qaRowHeight);result.baselineDifference.push({amount,...qaCompare(data,qaPixels(reference))});
     }
     if(amount===0||amount===1){

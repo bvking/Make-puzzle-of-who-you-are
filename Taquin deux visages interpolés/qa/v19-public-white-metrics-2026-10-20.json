@@ -1,0 +1,1440 @@
+{
+  "scope": "Public demo only; 2D scale/rotation/affine robustness, not new expressions or 3D perspective",
+  "cases": [
+    {
+      "id": "native",
+      "label": "Portraits publics natifs",
+      "transform": null,
+      "renderer": [
+        {
+          "amount": 0,
+          "engine": "canvas"
+        },
+        {
+          "amount": 0.001,
+          "engine": "webgl"
+        },
+        {
+          "amount": 0.25,
+          "engine": "webgl"
+        },
+        {
+          "amount": 0.5,
+          "engine": "webgl"
+        },
+        {
+          "amount": 0.75,
+          "engine": "webgl"
+        },
+        {
+          "amount": 0.999,
+          "engine": "webgl"
+        },
+        {
+          "amount": 1,
+          "engine": "canvas"
+        }
+      ],
+      "endpoints": [
+        {
+          "amount": 0,
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "amount": 1,
+          "mean": 0,
+          "max": 0
+        }
+      ],
+      "whiteCorners": [
+        {
+          "amount": 0,
+          "patchSize": 12,
+          "corners": [
+            {
+              "name": "top-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "top-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            }
+          ],
+          "maxDeviation": 0,
+          "nonWhitePixels": 0
+        },
+        {
+          "amount": 0.25,
+          "patchSize": 12,
+          "corners": [
+            {
+              "name": "top-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "top-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            }
+          ],
+          "maxDeviation": 0,
+          "nonWhitePixels": 0
+        },
+        {
+          "amount": 0.5,
+          "patchSize": 12,
+          "corners": [
+            {
+              "name": "top-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "top-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            }
+          ],
+          "maxDeviation": 0,
+          "nonWhitePixels": 0
+        },
+        {
+          "amount": 0.75,
+          "patchSize": 12,
+          "corners": [
+            {
+              "name": "top-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "top-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            }
+          ],
+          "maxDeviation": 0,
+          "nonWhitePixels": 0
+        },
+        {
+          "amount": 1,
+          "patchSize": 12,
+          "corners": [
+            {
+              "name": "top-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "top-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            }
+          ],
+          "maxDeviation": 0,
+          "nonWhitePixels": 0
+        }
+      ],
+      "parity": [
+        {
+          "amount": 0.001,
+          "mean": 0.037150065104166664,
+          "max": 4
+        },
+        {
+          "amount": 0.25,
+          "mean": 0.0646548800998264,
+          "max": 8
+        },
+        {
+          "amount": 0.5,
+          "mean": 0.06870863172743055,
+          "max": 7
+        },
+        {
+          "amount": 0.75,
+          "mean": 0.07908460828993055,
+          "max": 9
+        },
+        {
+          "amount": 0.999,
+          "mean": 0.021628485785590276,
+          "max": 1
+        }
+      ],
+      "continuity": [
+        {
+          "near": 0,
+          "mean": 0.08316548665364583,
+          "max": 8
+        },
+        {
+          "near": 1,
+          "mean": 0.07346937391493055,
+          "max": 12
+        }
+      ],
+      "reversal": [
+        {
+          "amount": 0.25,
+          "mean": 0.0000016954210069444444,
+          "max": 1
+        },
+        {
+          "amount": 0.5,
+          "mean": 0.0003560384114583333,
+          "max": 1
+        },
+        {
+          "amount": 0.75,
+          "mean": 0.0000016954210069444444,
+          "max": 1
+        }
+      ],
+      "visibility": [
+        {
+          "amount": 0.25,
+          "available": true,
+          "regions": [
+            {
+              "id": "mouth",
+              "textureMix": 0.9302325581395349,
+              "apertureA": 0.00003759178131335011,
+              "apertureB": 0.1461826097347923
+            },
+            {
+              "id": "eye-left",
+              "textureMix": 0.25,
+              "apertureA": 0.2471975829186643,
+              "apertureB": 0.20175134978343912
+            },
+            {
+              "id": "eye-right",
+              "textureMix": 0.25,
+              "apertureA": 0.21195537017646018,
+              "apertureB": 0.20489060836637243
+            }
+          ],
+          "changedPixels": 206,
+          "outsideChanged": 0,
+          "maxOutsideDeviation": 0,
+          "maxChange": 0.680235743522644
+        },
+        {
+          "amount": 0.5,
+          "available": true,
+          "regions": [
+            {
+              "id": "mouth",
+              "textureMix": 0.9756097560975611,
+              "apertureA": 0.00003759178131335011,
+              "apertureB": 0.1461826097347923
+            },
+            {
+              "id": "eye-left",
+              "textureMix": 0.5,
+              "apertureA": 0.2471975829186643,
+              "apertureB": 0.20175134978343912
+            },
+            {
+              "id": "eye-right",
+              "textureMix": 0.5,
+              "apertureA": 0.21195537017646018,
+              "apertureB": 0.20489060836637243
+            }
+          ],
+          "changedPixels": 502,
+          "outsideChanged": 0,
+          "maxOutsideDeviation": 0,
+          "maxChange": 0.47561609745025635
+        },
+        {
+          "amount": 0.75,
+          "available": true,
+          "regions": [
+            {
+              "id": "mouth",
+              "textureMix": 0.9917355371900827,
+              "apertureA": 0.00003759178131335011,
+              "apertureB": 0.1461826097347923
+            },
+            {
+              "id": "eye-left",
+              "textureMix": 0.75,
+              "apertureA": 0.2471975829186643,
+              "apertureB": 0.20175134978343912
+            },
+            {
+              "id": "eye-right",
+              "textureMix": 0.75,
+              "apertureA": 0.21195537017646018,
+              "apertureB": 0.20489060836637243
+            }
+          ],
+          "changedPixels": 881,
+          "outsideChanged": 0,
+          "maxOutsideDeviation": 0,
+          "maxChange": 0.24172961711883545
+        }
+      ],
+      "baselineDifference": [
+        {
+          "amount": 0,
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "amount": 0.25,
+          "mean": 0.7794850667317709,
+          "max": 143
+        },
+        {
+          "amount": 0.5,
+          "mean": 0.9843427870008681,
+          "max": 141
+        },
+        {
+          "amount": 0.75,
+          "mean": 0.7491590711805556,
+          "max": 115
+        },
+        {
+          "amount": 1,
+          "mean": 0,
+          "max": 0
+        }
+      ],
+      "regularization": 0.021875,
+      "poseNormalization": true,
+      "irisAnchors": [
+        468,
+        473
+      ],
+      "reversePair": {
+        "status": "adapted",
+        "score": 99,
+        "reasons": [
+          "morphing complet validé dans les cadres d’origine ; anciens modes indisponibles"
+        ],
+        "scale": 1.362044045429045,
+        "combinedRisk": 0.5534750367657882,
+        "warp": {
+          "name": "MediaPipe",
+          "triangles": 852,
+          "flipArea": 0.0006838969842252438,
+          "collapseArea": 0.00016882866241702197,
+          "severeStretchArea": 0.0016529477422030292,
+          "largestUnstable": 0.00023015700541066254,
+          "p95Stretch": 1.663452134280919,
+          "p99Stretch": 2.580250732504517,
+          "risk": 1.1640501098455147,
+          "outsideArea": 0.020579786595935845,
+          "maxOverflow": 38.164270022143,
+          "cropA": {
+            "outsideArea": 0,
+            "maxOverflow": 0
+          },
+          "cropB": {
+            "outsideArea": 0.020579786595935845,
+            "maxOverflow": 38.164270022143
+          },
+          "candidates": [
+            {
+              "name": "MediaPipe",
+              "risk": 1.1640501098455147,
+              "flipArea": 0.0006838969842252438,
+              "collapseArea": 0.00016882866241702197,
+              "severeStretchArea": 0.0016529477422030292,
+              "p95Stretch": 1.663452134280919,
+              "p99Stretch": 2.580250732504517
+            },
+            {
+              "name": "photo 2 alignée",
+              "risk": 3.4749600507232445,
+              "flipArea": 0.0008481851552595832,
+              "collapseArea": 0.002725447759540336,
+              "severeStretchArea": 0.007295080703279824,
+              "p95Stretch": 2.0551976857165024,
+              "p99Stretch": 5.992267571952202
+            },
+            {
+              "name": "photo 1",
+              "risk": 8.879635070560472,
+              "flipArea": 0.003745849904546677,
+              "collapseArea": 0.006389956917415779,
+              "severeStretchArea": 0.010270312365094335,
+              "p95Stretch": 1.8187911259445362,
+              "p99Stretch": 20.942344983630207
+            },
+            {
+              "name": "forme moyenne",
+              "risk": 9.061114168129192,
+              "flipArea": 0.004056711315834879,
+              "collapseArea": 0.005952562305628015,
+              "severeStretchArea": 0.010314279168305273,
+              "p95Stretch": 1.7873438554457202,
+              "p99Stretch": 17.530995293707484
+            }
+          ]
+        }
+      },
+      "benchmark": {
+        "new384": {
+          "size": 384,
+          "warmup": 4,
+          "samples": 12,
+          "p50": 1.2000000001862645,
+          "p95": 1.599999999627471
+        },
+        "baseline384": {
+          "size": 384,
+          "warmup": 4,
+          "samples": 12,
+          "p50": 0.40000000037252903,
+          "p95": 0.599999999627471
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "scale-rotation",
+      "label": "B : taille 78 %, rotation 8°",
+      "transform": {
+        "scale": 0.78,
+        "angle": 8,
+        "dx": 14,
+        "dy": -12
+      },
+      "renderer": [
+        {
+          "amount": 0,
+          "engine": "canvas"
+        },
+        {
+          "amount": 0.001,
+          "engine": "webgl"
+        },
+        {
+          "amount": 0.25,
+          "engine": "webgl"
+        },
+        {
+          "amount": 0.5,
+          "engine": "webgl"
+        },
+        {
+          "amount": 0.75,
+          "engine": "webgl"
+        },
+        {
+          "amount": 0.999,
+          "engine": "webgl"
+        },
+        {
+          "amount": 1,
+          "engine": "canvas"
+        }
+      ],
+      "endpoints": [
+        {
+          "amount": 0,
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "amount": 1,
+          "mean": 0,
+          "max": 0
+        }
+      ],
+      "whiteCorners": [
+        {
+          "amount": 0,
+          "patchSize": 12,
+          "corners": [
+            {
+              "name": "top-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "top-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            }
+          ],
+          "maxDeviation": 0,
+          "nonWhitePixels": 0
+        },
+        {
+          "amount": 0.25,
+          "patchSize": 12,
+          "corners": [
+            {
+              "name": "top-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "top-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            }
+          ],
+          "maxDeviation": 0,
+          "nonWhitePixels": 0
+        },
+        {
+          "amount": 0.5,
+          "patchSize": 12,
+          "corners": [
+            {
+              "name": "top-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "top-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            }
+          ],
+          "maxDeviation": 0,
+          "nonWhitePixels": 0
+        },
+        {
+          "amount": 0.75,
+          "patchSize": 12,
+          "corners": [
+            {
+              "name": "top-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "top-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            }
+          ],
+          "maxDeviation": 0,
+          "nonWhitePixels": 0
+        },
+        {
+          "amount": 1,
+          "patchSize": 12,
+          "corners": [
+            {
+              "name": "top-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "top-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            }
+          ],
+          "maxDeviation": 0,
+          "nonWhitePixels": 0
+        }
+      ],
+      "parity": [
+        {
+          "amount": 0.001,
+          "mean": 0.035329182942708336,
+          "max": 4
+        },
+        {
+          "amount": 0.25,
+          "mean": 0.05998060438368055,
+          "max": 18
+        },
+        {
+          "amount": 0.5,
+          "mean": 0.057652791341145836,
+          "max": 29
+        },
+        {
+          "amount": 0.75,
+          "mean": 0.059059990776909724,
+          "max": 20
+        },
+        {
+          "amount": 0.999,
+          "mean": 0.021162245008680556,
+          "max": 1
+        }
+      ],
+      "continuity": [
+        {
+          "near": 0,
+          "mean": 0.06966315375434028,
+          "max": 11
+        },
+        {
+          "near": 1,
+          "mean": 0.048529730902777776,
+          "max": 7
+        }
+      ],
+      "reversal": [
+        {
+          "amount": 0.25,
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "amount": 0.5,
+          "mean": 0.00025092230902777775,
+          "max": 1
+        },
+        {
+          "amount": 0.75,
+          "mean": 0.0000016954210069444444,
+          "max": 1
+        }
+      ],
+      "visibility": [
+        {
+          "amount": 0.25,
+          "available": true,
+          "regions": [
+            {
+              "id": "mouth",
+              "textureMix": 0.9302325581395349,
+              "apertureA": 0.00003759178131335011,
+              "apertureB": 0.14618260973479263
+            },
+            {
+              "id": "eye-left",
+              "textureMix": 0.25,
+              "apertureA": 0.2471975829186643,
+              "apertureB": 0.2017513497834391
+            },
+            {
+              "id": "eye-right",
+              "textureMix": 0.25,
+              "apertureA": 0.21195537017646018,
+              "apertureB": 0.20489060836637268
+            }
+          ],
+          "changedPixels": 190,
+          "outsideChanged": 0,
+          "maxOutsideDeviation": 0,
+          "maxChange": 0.680235743522644
+        },
+        {
+          "amount": 0.5,
+          "available": true,
+          "regions": [
+            {
+              "id": "mouth",
+              "textureMix": 0.9756097560975611,
+              "apertureA": 0.00003759178131335011,
+              "apertureB": 0.14618260973479263
+            },
+            {
+              "id": "eye-left",
+              "textureMix": 0.5,
+              "apertureA": 0.2471975829186643,
+              "apertureB": 0.2017513497834391
+            },
+            {
+              "id": "eye-right",
+              "textureMix": 0.5,
+              "apertureA": 0.21195537017646018,
+              "apertureB": 0.20489060836637268
+            }
+          ],
+          "changedPixels": 389,
+          "outsideChanged": 0,
+          "maxOutsideDeviation": 0,
+          "maxChange": 0.47561609745025635
+        },
+        {
+          "amount": 0.75,
+          "available": true,
+          "regions": [
+            {
+              "id": "mouth",
+              "textureMix": 0.9917355371900827,
+              "apertureA": 0.00003759178131335011,
+              "apertureB": 0.14618260973479263
+            },
+            {
+              "id": "eye-left",
+              "textureMix": 0.75,
+              "apertureA": 0.2471975829186643,
+              "apertureB": 0.2017513497834391
+            },
+            {
+              "id": "eye-right",
+              "textureMix": 0.75,
+              "apertureA": 0.21195537017646018,
+              "apertureB": 0.20489060836637268
+            }
+          ],
+          "changedPixels": 600,
+          "outsideChanged": 0,
+          "maxOutsideDeviation": 0,
+          "maxChange": 0.24172961711883545
+        }
+      ],
+      "baselineDifference": [
+        {
+          "amount": 0,
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "amount": 0.25,
+          "mean": 0.7060479058159722,
+          "max": 147
+        },
+        {
+          "amount": 0.5,
+          "mean": 0.8258768717447916,
+          "max": 151
+        },
+        {
+          "amount": 0.75,
+          "mean": 0.5815633138020834,
+          "max": 140
+        },
+        {
+          "amount": 1,
+          "mean": 0,
+          "max": 0
+        }
+      ],
+      "regularization": 0.021875,
+      "poseNormalization": true,
+      "irisAnchors": [
+        468,
+        473
+      ],
+      "reversePair": {
+        "status": "good",
+        "score": 99,
+        "reasons": [
+          "expression de bouche différente, déformée localement"
+        ],
+        "scale": 1.062394355434655,
+        "combinedRisk": 0.038980371867391984,
+        "warp": {
+          "name": "MediaPipe",
+          "triangles": 852,
+          "flipArea": 0.0006838969842252528,
+          "collapseArea": 0.00016882866241702574,
+          "severeStretchArea": 0.0016529477422030413,
+          "largestUnstable": 0.00023015700541065273,
+          "p95Stretch": 1.663452134280888,
+          "p99Stretch": 2.5802507325044943,
+          "risk": 1.1640501098455256,
+          "outsideArea": 0,
+          "maxOverflow": 0,
+          "cropA": {
+            "outsideArea": 0,
+            "maxOverflow": 0
+          },
+          "cropB": {
+            "outsideArea": 0,
+            "maxOverflow": 0
+          },
+          "candidates": [
+            {
+              "name": "MediaPipe",
+              "risk": 1.1640501098455256,
+              "flipArea": 0.0006838969842252528,
+              "collapseArea": 0.00016882866241702574,
+              "severeStretchArea": 0.0016529477422030413,
+              "p95Stretch": 1.663452134280888,
+              "p99Stretch": 2.5802507325044943
+            },
+            {
+              "name": "photo 2 alignée",
+              "risk": 3.4749600507232494,
+              "flipArea": 0.0008481851552595885,
+              "collapseArea": 0.002725447759540335,
+              "severeStretchArea": 0.007295080703279825,
+              "p95Stretch": 2.0551976857164918,
+              "p99Stretch": 5.99226757195215
+            },
+            {
+              "name": "photo 1",
+              "risk": 8.879635070560472,
+              "flipArea": 0.003745849904546673,
+              "collapseArea": 0.0063899569174157905,
+              "severeStretchArea": 0.010270312365094342,
+              "p95Stretch": 1.8187911259444929,
+              "p99Stretch": 20.942344983630207
+            },
+            {
+              "name": "forme moyenne",
+              "risk": 9.061114168129194,
+              "flipArea": 0.004056711315834877,
+              "collapseArea": 0.005952562305628024,
+              "severeStretchArea": 0.010314279168305287,
+              "p95Stretch": 1.787343855445758,
+              "p99Stretch": 17.530995293705846
+            }
+          ]
+        }
+      },
+      "benchmark": {
+        "new384": {
+          "size": 384,
+          "warmup": 4,
+          "samples": 12,
+          "p50": 6.5,
+          "p95": 28
+        },
+        "baseline384": {
+          "size": 384,
+          "warmup": 4,
+          "samples": 12,
+          "p50": 1.1000000005587935,
+          "p95": 1.7000000001862645
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "affine",
+      "label": "B : affine légère, rotation −5°",
+      "transform": {
+        "scale": 0.9,
+        "angle": -5,
+        "sx": 1.05,
+        "sy": 0.95,
+        "shear": 0.035,
+        "dx": -8,
+        "dy": 10
+      },
+      "renderer": [
+        {
+          "amount": 0,
+          "engine": "canvas"
+        },
+        {
+          "amount": 0.001,
+          "engine": "webgl"
+        },
+        {
+          "amount": 0.25,
+          "engine": "webgl"
+        },
+        {
+          "amount": 0.5,
+          "engine": "webgl"
+        },
+        {
+          "amount": 0.75,
+          "engine": "webgl"
+        },
+        {
+          "amount": 0.999,
+          "engine": "webgl"
+        },
+        {
+          "amount": 1,
+          "engine": "canvas"
+        }
+      ],
+      "endpoints": [
+        {
+          "amount": 0,
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "amount": 1,
+          "mean": 0,
+          "max": 0
+        }
+      ],
+      "whiteCorners": [
+        {
+          "amount": 0,
+          "patchSize": 12,
+          "corners": [
+            {
+              "name": "top-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "top-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            }
+          ],
+          "maxDeviation": 0,
+          "nonWhitePixels": 0
+        },
+        {
+          "amount": 0.25,
+          "patchSize": 12,
+          "corners": [
+            {
+              "name": "top-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "top-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            }
+          ],
+          "maxDeviation": 0,
+          "nonWhitePixels": 0
+        },
+        {
+          "amount": 0.5,
+          "patchSize": 12,
+          "corners": [
+            {
+              "name": "top-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "top-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            }
+          ],
+          "maxDeviation": 0,
+          "nonWhitePixels": 0
+        },
+        {
+          "amount": 0.75,
+          "patchSize": 12,
+          "corners": [
+            {
+              "name": "top-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "top-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            }
+          ],
+          "maxDeviation": 0,
+          "nonWhitePixels": 0
+        },
+        {
+          "amount": 1,
+          "patchSize": 12,
+          "corners": [
+            {
+              "name": "top-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "top-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-left",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            },
+            {
+              "name": "bottom-right",
+              "checkedPixels": 144,
+              "maxDeviation": 0,
+              "nonWhitePixels": 0
+            }
+          ],
+          "maxDeviation": 0,
+          "nonWhitePixels": 0
+        }
+      ],
+      "parity": [
+        {
+          "amount": 0.001,
+          "mean": 0.036280314127604164,
+          "max": 1
+        },
+        {
+          "amount": 0.25,
+          "mean": 0.0628780788845486,
+          "max": 11
+        },
+        {
+          "amount": 0.5,
+          "mean": 0.0649227566189236,
+          "max": 17
+        },
+        {
+          "amount": 0.75,
+          "mean": 0.0707431369357639,
+          "max": 14
+        },
+        {
+          "amount": 0.999,
+          "mean": 0.021516587999131944,
+          "max": 1
+        }
+      ],
+      "continuity": [
+        {
+          "near": 0,
+          "mean": 0.06826612684461805,
+          "max": 9
+        },
+        {
+          "near": 1,
+          "mean": 0.0567626953125,
+          "max": 10
+        }
+      ],
+      "reversal": [
+        {
+          "amount": 0.25,
+          "mean": 0.0000016954210069444444,
+          "max": 1
+        },
+        {
+          "amount": 0.5,
+          "mean": 0.00032721625434027775,
+          "max": 1
+        },
+        {
+          "amount": 0.75,
+          "mean": 0,
+          "max": 0
+        }
+      ],
+      "visibility": [
+        {
+          "amount": 0.25,
+          "available": true,
+          "regions": [
+            {
+              "id": "mouth",
+              "textureMix": 0.9302325581395349,
+              "apertureA": 0.00003759178131335011,
+              "apertureB": 0.13248027134593332
+            },
+            {
+              "id": "eye-left",
+              "textureMix": 0.25,
+              "apertureA": 0.2471975829186643,
+              "apertureB": 0.18151087749734135
+            },
+            {
+              "id": "eye-right",
+              "textureMix": 0.25,
+              "apertureA": 0.21195537017646018,
+              "apertureB": 0.1871625496182488
+            }
+          ],
+          "changedPixels": 183,
+          "outsideChanged": 0,
+          "maxOutsideDeviation": 0,
+          "maxChange": 0.680235743522644
+        },
+        {
+          "amount": 0.5,
+          "available": true,
+          "regions": [
+            {
+              "id": "mouth",
+              "textureMix": 0.9756097560975611,
+              "apertureA": 0.00003759178131335011,
+              "apertureB": 0.13248027134593332
+            },
+            {
+              "id": "eye-left",
+              "textureMix": 0.5,
+              "apertureA": 0.2471975829186643,
+              "apertureB": 0.18151087749734135
+            },
+            {
+              "id": "eye-right",
+              "textureMix": 0.5,
+              "apertureA": 0.21195537017646018,
+              "apertureB": 0.1871625496182488
+            }
+          ],
+          "changedPixels": 429,
+          "outsideChanged": 0,
+          "maxOutsideDeviation": 0,
+          "maxChange": 0.47561609745025635
+        },
+        {
+          "amount": 0.75,
+          "available": true,
+          "regions": [
+            {
+              "id": "mouth",
+              "textureMix": 0.9917355371900827,
+              "apertureA": 0.00003759178131335011,
+              "apertureB": 0.13248027134593332
+            },
+            {
+              "id": "eye-left",
+              "textureMix": 0.75,
+              "apertureA": 0.2471975829186643,
+              "apertureB": 0.18151087749734135
+            },
+            {
+              "id": "eye-right",
+              "textureMix": 0.75,
+              "apertureA": 0.21195537017646018,
+              "apertureB": 0.1871625496182488
+            }
+          ],
+          "changedPixels": 727,
+          "outsideChanged": 0,
+          "maxOutsideDeviation": 0,
+          "maxChange": 0.24172961711883545
+        }
+      ],
+      "baselineDifference": [
+        {
+          "amount": 0,
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "amount": 0.25,
+          "mean": 1.1575758192274306,
+          "max": 211
+        },
+        {
+          "amount": 0.5,
+          "mean": 1.443205091688368,
+          "max": 204
+        },
+        {
+          "amount": 0.75,
+          "mean": 1.0871531168619792,
+          "max": 194
+        },
+        {
+          "amount": 1,
+          "mean": 0,
+          "max": 0
+        }
+      ],
+      "regularization": 0.021875,
+      "poseNormalization": true,
+      "irisAnchors": [
+        468,
+        473
+      ],
+      "reversePair": {
+        "status": "adapted",
+        "score": 70,
+        "reasons": [
+          "expression de bouche différente, déformée localement",
+          "ouverture des yeux différente, déformée localement",
+          "hauteur de prise de vue différente, compensée localement"
+        ],
+        "scale": 1.2871271513629436,
+        "combinedRisk": 0.35774725772642707,
+        "warp": {
+          "name": "MediaPipe",
+          "triangles": 852,
+          "flipArea": 0.0007107396064905155,
+          "collapseArea": 0.00017500558710454724,
+          "severeStretchArea": 0.0015142295853606427,
+          "largestUnstable": 0.0002349462167477334,
+          "p95Stretch": 1.7086386056607485,
+          "p99Stretch": 2.8303588920816614,
+          "risk": 1.183831457253262,
+          "outsideArea": 0.012738909558446698,
+          "maxOverflow": 25.673636261765523,
+          "cropA": {
+            "outsideArea": 0,
+            "maxOverflow": 0
+          },
+          "cropB": {
+            "outsideArea": 0.012738909558446698,
+            "maxOverflow": 25.673636261765523
+          },
+          "candidates": [
+            {
+              "name": "MediaPipe",
+              "risk": 1.183831457253262,
+              "flipArea": 0.0007107396064905155,
+              "collapseArea": 0.00017500558710454724,
+              "severeStretchArea": 0.0015142295853606427,
+              "p95Stretch": 1.7086386056607485,
+              "p99Stretch": 2.8303588920816614
+            },
+            {
+              "name": "photo 2 alignée",
+              "risk": 3.3648927969055014,
+              "flipArea": 0.000872472398192284,
+              "collapseArea": 0.0025739546308920936,
+              "severeStretchArea": 0.006828251436279168,
+              "p95Stretch": 2.0472752463657677,
+              "p99Stretch": 5.453399272238822
+            },
+            {
+              "name": "photo 1",
+              "risk": 8.392698749981665,
+              "flipArea": 0.0035828464208345046,
+              "collapseArea": 0.00597630675084207,
+              "severeStretchArea": 0.009513793237964167,
+              "p95Stretch": 1.8558846872160701,
+              "p99Stretch": 5.010398039942713
+            },
+            {
+              "name": "forme moyenne",
+              "risk": 8.603021202317557,
+              "flipArea": 0.003902011929535873,
+              "collapseArea": 0.005572166725156803,
+              "severeStretchArea": 0.009590343334074464,
+              "p95Stretch": 1.7996708911101138,
+              "p99Stretch": 5.117846962108541
+            }
+          ]
+        }
+      },
+      "benchmark": {
+        "new384": {
+          "size": 384,
+          "warmup": 4,
+          "samples": 12,
+          "p50": 5.699999999254942,
+          "p95": 8.400000000372529
+        },
+        "baseline384": {
+          "size": 384,
+          "warmup": 4,
+          "samples": 12,
+          "p50": 1.099999999627471,
+          "p95": 1.599999999627471
+        }
+      },
+      "status": "PASS"
+    }
+  ],
+  "failures": [],
+  "portraitMatting": [
+    {
+      "source": "public-demo-A",
+      "method": "head-segmentation",
+      "warning": ""
+    },
+    {
+      "source": "public-demo-B",
+      "method": "head-segmentation",
+      "warning": ""
+    }
+  ]
+}
