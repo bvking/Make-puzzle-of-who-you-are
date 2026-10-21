@@ -2,6 +2,12 @@
 
 Date de clarification : 18 octobre 2026. Fond blanc précisé le 20 octobre 2026.
 
+Nouvelle direction demandée le 20 octobre : reconstruire un visage de synthèse
+en 3D à partir de chaque source, puis faire le morphing des formes et expressions
+dans cet espace avant de projeter les textures. Le jalon V20 est une surface
+faciale ouverte à profondeur estimée, examinable en argile et sous petite
+rotation. Il ne constitue pas encore une tête 3D complète ni un scan métrique.
+
 ## But final
 
 Développer un morphing complet entre **deux personnes différentes, A et B,
@@ -41,6 +47,12 @@ L'exactitude des extrémités se mesure sur les deux images canoniques réelleme
 utilisées : recadrage, orientation et détourage sur blanc identifiés. Une comparaison à l'original
 pleine définition doit tenir compte de ce prétraitement. Toute harmonisation
 temporaire doit respecter ces extrémités.
+
+Pour le prototype Surface 3D, les extrémités sont les surfaces reconstruites de
+A et B : vérifier leurs repères projetés et leur profondeur. L'argile sert à
+examiner le volume sans texture. Ne pas ajouter les photos originales en fond
+pour masquer une reconstruction manquante. Le contrat des portraits exacts sur
+blanc reste vérifié séparément dans le mode Morphing complet.
 
 Le décor, les vêtements et le cou sont retirés avant la déformation. Le visage
 et les cheveux retenus doivent évoluer continûment avec le cadrage, sans contour

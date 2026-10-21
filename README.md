@@ -24,6 +24,13 @@ originales ; les extrémités du morphing correspondent aux portraits détourés
 Le [bilan V19](Taquin%20deux%20visages%20interpol%C3%A9s/qa/v19-white-background-2026-10-20.md)
 décrit les contrôles et les défauts visuels encore présents.
 
+La V20 ajoute **Surface 3D · prototype** : reconstruction d'une surface faciale
+avec relief estimé, morphing des formes XYZ, aspect Argile pour examiner le
+volume, puis Photos projetées. Les petites rotations permettent l'inspection.
+Les cheveux, le crâne et les surfaces cachées ne sont pas reconstruits ; il ne
+s'agit pas d'un scan 3D métrique. Le [bilan V20](Taquin%20deux%20visages%20interpol%C3%A9s/qa/v20-surface3d-2026-10-21.md)
+sépare le fonctionnement 3D vérifié de la qualité visuelle encore expérimentale.
+
 ### Référence historique
 
 La branche `browser-morph-v16` reste une version candidate. Le passage entre

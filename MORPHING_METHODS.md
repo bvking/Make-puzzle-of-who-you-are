@@ -1,6 +1,6 @@
 # Méthodes retenues pour le morphing entre deux identités
 
-Décision de conception du 18 octobre 2026, complétée le 20 octobre. Lire d'abord
+Décision de conception du 18 octobre 2026, complétée les 20 et 21 octobre. Lire d'abord
 [la mission et les critères de réussite](MORPHING_OBJECTIVE.md).
 Les choix ci-dessous sont un programme de développement. Un premier jalon est
 implémenté : géométrie commune du portrait complet, repère de taille/rotation
@@ -240,3 +240,48 @@ ni les textures internes mal alignées. Des liserés ou des oreilles tronquées
 restent possibles. Les tests privés restent locaux et ne valident pas à eux
 seuls deux identités différentes. Le [bilan V19](Taquin%20deux%20visages%20interpol%C3%A9s/qa/v19-white-background-2026-10-20.md)
 sépare ces observations des contrôles techniques publics.
+
+## Jalon V20 : surface faciale de synthèse en 3D
+
+La nouvelle demande consiste à créer une représentation 3D de chaque visage,
+puis à transformer la forme et l'expression de A vers B dans cet espace.
+Je retiens d'abord une surface faciale XYZ issue des profondeurs relatives déjà
+fournies par MediaPipe. Elle peut être rendue en argile, tournée et inclinée,
+indépendamment des textures. Cette séparation permet de voir si le volume
+change correctement avant de juger le mélange des deux photos.
+
+Les coordonnées Z de MediaPipe sont estimées et mises à l'échelle comme X sous
+une projection en perspective faible. Elles ne sont pas des distances mesurées.
+La [documentation officielle Face Mesh](https://github.com/google-ai-edge/mediapipe/blob/master/docs/solutions/face_mesh.md)
+distingue ces coordonnées du module de géométrie métrique. La V20 n'intègre pas
+ce module métrique et ne prétend pas connaître la focale des photos.
+
+Un repère XYZ orthonormal fondé sur les coins des yeux et le front sépare le
+cadrage de la forme. Les rotations des repères sont interpolées par quaternion,
+la taille géométriquement et les formes XYZ dans le repère commun. Cela évite
+d'écraser le visage entre deux rotations. Les lèvres et paupières gardent les
+correspondances sémantiques du moteur précédent. Une cavité de bouche bornée
+par l'ouverture est ajoutée pour examiner une bouche ouverte en argile ; sa
+profondeur est heuristique et ne reconstruit ni langue ni dents.
+
+Le rendu utilise un vrai tampon de profondeur WebGL et des normales recalculées.
+L'argile reçoit un éclairage simple. Le matériau photographique projette les
+deux textures sur la surface commune, en lumière linéaire, avec la sélection
+de visibilité limitée aux cavités. Il conserve l'éclairage déjà présent dans
+les photos. Aucun portrait de fond n'est superposé à la surface.
+
+Je choisis cette étape parce qu'elle est inspectable, locale, compatible avec
+les données existantes et testable sans entraîner ni télécharger un autre
+modèle de visage. Elle fournit un prototype 3D, pas une garantie de meilleur
+photoréalisme : une mauvaise correspondance des textures peut encore se voir.
+Un modèle de tête complet et un ajustement de caméra/identité/expression plus
+contraint restent nécessaires pour des perspectives éloignées. Les cheveux,
+les oreilles, le crâne et les surfaces cachées sont absents de cette surface.
+
+Le trajet projeté 3D est contrôlé séparément à 33 positions. Une paire peut
+activer Surface 3D si ce contrôle et le contrôle commun réussissent, même si
+l'ancien recalage 2D B vers A est refusé. Les autres modes refusés restent
+désactivés. Une absence de profondeur ou de GPU produit un message explicite,
+sans présenter un fondu 2D comme un résultat 3D.
+
+Voir [le bilan V20](Taquin%20deux%20visages%20interpol%C3%A9s/qa/v20-surface3d-2026-10-21.md).
