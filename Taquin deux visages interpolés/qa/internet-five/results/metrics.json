@@ -1,0 +1,2899 @@
+{
+  "scope": "public-internet-five",
+  "engine": "estimated-open-face-surface",
+  "date": "2026-10-21T17:58:30.701Z",
+  "positions": [
+    0,
+    0.25,
+    0.5,
+    0.75,
+    1
+  ],
+  "renderSize": 192,
+  "portraits": [
+    {
+      "id": "closed-mouth",
+      "status": "READY",
+      "warning": "",
+      "error": "",
+      "landmarks": 478,
+      "pose": {
+        "yaw": 0.050115147044983044,
+        "pitch": 0.068791714222896,
+        "roll": -0.08722201835425147,
+        "scale": 0.24957476435795173,
+        "mouthOpen": 0.0023282688007626308,
+        "mouthCurve": 0.05199388404343489,
+        "eyeOpen": [
+          0.26227859543203935,
+          0.3011413537004544
+        ],
+        "cheekAsymmetry": 0.043950238395904354,
+        "inFrame": 1,
+        "width": 0.5750424861907959,
+        "height": 0.6651203334331512
+      },
+      "captureQuality": {
+        "ok": true,
+        "reasons": [],
+        "score": 94
+      },
+      "matte": {
+        "method": "head-segmentation",
+        "warning": "",
+        "coverage": 0.5409596761067709
+      }
+    },
+    {
+      "id": "teeth-smile",
+      "status": "READY",
+      "warning": "",
+      "error": "",
+      "landmarks": 478,
+      "pose": {
+        "yaw": -0.06069096457370056,
+        "pitch": -0.17658993694783903,
+        "roll": 0.02135253189399653,
+        "scale": 0.2617907352976185,
+        "mouthOpen": 0.1740531090144013,
+        "mouthCurve": 0.15546681842789978,
+        "eyeOpen": [
+          0.27470906366980963,
+          0.27830488389548214
+        ],
+        "cheekAsymmetry": -0.051006957760332525,
+        "inFrame": 1,
+        "width": 0.5894037485122681,
+        "height": 0.7151106595993042
+      },
+      "captureQuality": {
+        "ok": true,
+        "reasons": [],
+        "score": 93.4
+      },
+      "matte": {
+        "method": "head-segmentation",
+        "warning": "",
+        "coverage": 0.6401231553819444
+      }
+    },
+    {
+      "id": "open-laugh",
+      "status": "READY",
+      "warning": "",
+      "error": "",
+      "landmarks": 478,
+      "pose": {
+        "yaw": 0.13252943443236945,
+        "pitch": -0.20256328631932524,
+        "roll": -0.04788276388501688,
+        "scale": 0.26780920062101454,
+        "mouthOpen": 0.3638876295248008,
+        "mouthCurve": 0.1902103944901516,
+        "eyeOpen": [
+          0.18971586948745878,
+          0.21644400852570742
+        ],
+        "cheekAsymmetry": 0.09457640282699471,
+        "inFrame": 1,
+        "width": 0.588230311870575,
+        "height": 0.6699676811695099
+      },
+      "captureQuality": {
+        "ok": true,
+        "reasons": [],
+        "score": 96.4
+      },
+      "matte": {
+        "method": "head-segmentation",
+        "warning": "",
+        "coverage": 0.5109625922309028
+      }
+    },
+    {
+      "id": "brow-frown",
+      "status": "READY",
+      "warning": "",
+      "error": "",
+      "landmarks": 478,
+      "pose": {
+        "yaw": 0.07290520965643486,
+        "pitch": -0.06186226267059028,
+        "roll": 0.030370430444424213,
+        "scale": 0.26721309782376307,
+        "mouthOpen": 0.0034367604655038022,
+        "mouthCurve": -0.05478633875380016,
+        "eyeOpen": [
+          0.3959993502246002,
+          0.3890594763315166
+        ],
+        "cheekAsymmetry": 0.04994744664334748,
+        "inFrame": 1,
+        "width": 0.5875252485275269,
+        "height": 0.6960148066282272
+      },
+      "captureQuality": {
+        "ok": true,
+        "reasons": [],
+        "score": 96.9
+      },
+      "matte": {
+        "method": "head-segmentation",
+        "warning": "",
+        "coverage": 0.54443359375
+      }
+    },
+    {
+      "id": "closed-eyes",
+      "status": "READY",
+      "warning": "",
+      "error": "",
+      "landmarks": 478,
+      "pose": {
+        "yaw": -0.9828990536549882,
+        "pitch": -0.17581962272124418,
+        "roll": -0.5079184430144825,
+        "scale": 0.21289330336441226,
+        "mouthOpen": 0.008943976990330947,
+        "mouthCurve": -0.07478298925024317,
+        "eyeOpen": [
+          0.0941997135991777,
+          0.051219664958759674
+        ],
+        "cheekAsymmetry": -0.6287746231360466,
+        "inFrame": 1,
+        "width": 0.5778658390045166,
+        "height": 0.6185776144266129
+      },
+      "captureQuality": {
+        "ok": true,
+        "reasons": [],
+        "score": 97.3
+      },
+      "matte": {
+        "method": "head-segmentation",
+        "warning": "",
+        "coverage": 0.483001708984375
+      }
+    }
+  ],
+  "pairs": [
+    {
+      "id": "closed-mouth--teeth-smile",
+      "first": "closed-mouth",
+      "second": "teeth-smile",
+      "accepted": true,
+      "checks": [
+        {
+          "name": "clay-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11621,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.1923389732837677,
+            0.3637330234050751
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11925,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.20824046432971954,
+            0.3515927791595459
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12216,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.22354090213775635,
+            0.34267929196357727
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12525,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2381812483072281,
+            0.3475475609302521
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12810,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.25210413336753845,
+            0.35288864374160767
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11618,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.1923389732837677,
+            0.3637330234050751
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11925,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.20824046432971954,
+            0.3515927791595459
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12216,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.22354090213775635,
+            0.34267929196357727
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12525,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2381812483072281,
+            0.3475475609302521
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12810,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.25210413336753845,
+            0.35288864374160767
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-is-distinct-from-photos",
+          "status": "PASS",
+          "mean": 16.41919623480903,
+          "max": 214
+        },
+        {
+          "name": "rotation-20-10",
+          "status": "PASS",
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12270,
+            "cornerDeviations": 0
+          },
+          "projectionDifference": {
+            "mean": 12.13045925564236,
+            "max": 243
+          }
+        },
+        {
+          "name": "reverse-clay-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-clay-0.5",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.5",
+          "status": "PASS",
+          "mean": 0.00022379557291666666,
+          "max": 1
+        },
+        {
+          "name": "reverse-clay-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        }
+      ],
+      "failures": [],
+      "compatibility": {
+        "status": "adapted",
+        "score": 97,
+        "fullOnly": false,
+        "reasons": [
+          "expression de bouche différente, déformée localement",
+          "hauteur de prise de vue différente, compensée localement"
+        ],
+        "advice": [
+          "Une ouverture de bouche similaire améliore les lèvres et le menton.",
+          "Place l’iPhone à une hauteur plus proche de la photo 1."
+        ]
+      },
+      "surfaceQuality": {
+        "valid": true,
+        "flipArea": 0.005829233899160445,
+        "collapseArea": 0,
+        "triangles": 852,
+        "samples": 33
+      },
+      "metadata": {
+        "kind": "estimated-open-face-surface",
+        "metric": false,
+        "depthSource": "mediapipe-relative-z",
+        "projection": "weak-perspective",
+        "poseInterpolation": "orthonormal-eye-frame-quaternion",
+        "mouthCavity": "bounded-aperture-heuristic",
+        "limitation": "Surface faciale ouverte estimée ; aucun crâne, cheveux ni texture cachée reconstruits.",
+        "depthProjectionScale": 0.6958547721994887
+      },
+      "reverseCompatibility": {
+        "status": "adapted",
+        "reasons": [
+          "expression de bouche différente, déformée localement",
+          "hauteur de prise de vue différente, compensée localement"
+        ],
+        "surfaceWarning": ""
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "closed-mouth--open-laugh",
+      "first": "closed-mouth",
+      "second": "open-laugh",
+      "accepted": true,
+      "checks": [
+        {
+          "name": "clay-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11621,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.1878676861524582,
+            0.3552773594856262
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11667,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.20587235689163208,
+            0.3480810523033142
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11679,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.22357288002967834,
+            0.3440147936344147
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11672,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.24090008437633514,
+            0.33986255526542664
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11657,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2577831447124481,
+            0.3356642425060272
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11618,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.1878676861524582,
+            0.3552773594856262
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11665,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.20587235689163208,
+            0.3480810523033142
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11679,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.22357288002967834,
+            0.3440147936344147
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11670,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.24090008437633514,
+            0.33986255526542664
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11610,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2577831447124481,
+            0.3356642425060272
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-is-distinct-from-photos",
+          "status": "PASS",
+          "mean": 14.747022840711805,
+          "max": 177
+        },
+        {
+          "name": "rotation-20-10",
+          "status": "PASS",
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11833,
+            "cornerDeviations": 0
+          },
+          "projectionDifference": {
+            "mean": 11.028306749131945,
+            "max": 232
+          }
+        },
+        {
+          "name": "reverse-clay-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-clay-0.5",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.5",
+          "status": "PASS",
+          "mean": 0.00012885199652777778,
+          "max": 1
+        },
+        {
+          "name": "reverse-clay-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        }
+      ],
+      "failures": [],
+      "compatibility": {
+        "status": "good",
+        "score": 99,
+        "fullOnly": false,
+        "reasons": [
+          "expression de bouche différente, déformée localement"
+        ],
+        "advice": [
+          "Une ouverture de bouche similaire améliore les lèvres et le menton."
+        ]
+      },
+      "surfaceQuality": {
+        "valid": true,
+        "flipArea": 0.0017680050643305177,
+        "collapseArea": 0.000014436135294789605,
+        "triangles": 852,
+        "samples": 33
+      },
+      "metadata": {
+        "kind": "estimated-open-face-surface",
+        "metric": false,
+        "depthSource": "mediapipe-relative-z",
+        "projection": "weak-perspective",
+        "poseInterpolation": "orthonormal-eye-frame-quaternion",
+        "mouthCavity": "bounded-aperture-heuristic",
+        "limitation": "Surface faciale ouverte estimée ; aucun crâne, cheveux ni texture cachée reconstruits.",
+        "depthProjectionScale": 0.6796782971436542
+      },
+      "reverseCompatibility": {
+        "status": "good",
+        "reasons": [
+          "expression de bouche différente, déformée localement"
+        ],
+        "surfaceWarning": ""
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "closed-mouth--brow-frown",
+      "first": "closed-mouth",
+      "second": "brow-frown",
+      "accepted": true,
+      "checks": [
+        {
+          "name": "clay-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11621,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.18835578858852386,
+            0.3562003970146179
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11789,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.1965256631374359,
+            0.3544141948223114
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11949,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.20455481112003326,
+            0.355257511138916
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12108,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.21242165565490723,
+            0.35568228363990784
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12238,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.22010454535484314,
+            0.355612188577652
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11618,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.18835578858852386,
+            0.3562003970146179
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11789,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.1965256631374359,
+            0.3544141948223114
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11948,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.20455481112003326,
+            0.355257511138916
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12106,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.21242165565490723,
+            0.35568228363990784
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12222,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.22010454535484314,
+            0.355612188577652
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-is-distinct-from-photos",
+          "status": "PASS",
+          "mean": 17.4197998046875,
+          "max": 182
+        },
+        {
+          "name": "rotation-20-10",
+          "status": "PASS",
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12106,
+            "cornerDeviations": 0
+          },
+          "projectionDifference": {
+            "mean": 11.828111436631945,
+            "max": 239
+          }
+        },
+        {
+          "name": "reverse-clay-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-clay-0.5",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.5",
+          "status": "PASS",
+          "mean": 0.00019666883680555556,
+          "max": 1
+        },
+        {
+          "name": "reverse-clay-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        }
+      ],
+      "failures": [],
+      "compatibility": {
+        "status": "good",
+        "score": 100,
+        "fullOnly": false,
+        "reasons": [
+          "expression de bouche différente, déformée localement",
+          "ouverture des yeux différente, déformée localement"
+        ],
+        "advice": [
+          "Une ouverture de bouche similaire améliore les lèvres et le menton.",
+          "Garde un regard et une ouverture des yeux proches pour un résultat encore plus net."
+        ]
+      },
+      "surfaceQuality": {
+        "valid": true,
+        "flipArea": 0.00014407956596338014,
+        "collapseArea": 0,
+        "triangles": 852,
+        "samples": 33
+      },
+      "metadata": {
+        "kind": "estimated-open-face-surface",
+        "metric": false,
+        "depthSource": "mediapipe-relative-z",
+        "projection": "weak-perspective",
+        "poseInterpolation": "orthonormal-eye-frame-quaternion",
+        "mouthCavity": "bounded-aperture-heuristic",
+        "limitation": "Surface faciale ouverte estimée ; aucun crâne, cheveux ni texture cachée reconstruits.",
+        "depthProjectionScale": 0.6814441554605912
+      },
+      "reverseCompatibility": {
+        "status": "good",
+        "reasons": [
+          "expression de bouche différente, déformée localement",
+          "ouverture des yeux différente, déformée localement"
+        ],
+        "surfaceWarning": ""
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "closed-mouth--closed-eyes",
+      "first": "closed-mouth",
+      "second": "closed-eyes",
+      "accepted": true,
+      "checks": [
+        {
+          "name": "clay-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11621,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.20177061855793,
+            0.3815692663192749
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "clay-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11170,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.20761048793792725,
+            0.3813921809196472
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "clay-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 10700,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2125934213399887,
+            0.4023653268814087
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "clay-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 10157,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.21710562705993652,
+            0.41395747661590576
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "clay-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 9579,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.21883106231689453,
+            0.42389312386512756
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "texture-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11618,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.20177061855793,
+            0.3815692663192749
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "texture-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11170,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.20761048793792725,
+            0.3813921809196472
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "texture-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 10698,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2125934213399887,
+            0.4023653268814087
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "texture-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 10154,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.21710562705993652,
+            0.41395747661590576
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "texture-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 9554,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.21883106231689453,
+            0.42389312386512756
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "clay-is-distinct-from-photos",
+          "status": "PASS",
+          "mean": 9.943962944878471,
+          "max": 156
+        },
+        {
+          "name": "rotation-20-10",
+          "status": "PASS",
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 10407,
+            "cornerDeviations": 0
+          },
+          "projectionDifference": {
+            "mean": 8.07864040798611,
+            "max": 237
+          }
+        },
+        {
+          "name": "reverse-clay-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-clay-0.5",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.5",
+          "status": "PASS",
+          "mean": 0.00012885199652777778,
+          "max": 1
+        },
+        {
+          "name": "reverse-clay-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        }
+      ],
+      "failures": [],
+      "compatibility": {
+        "status": "adapted",
+        "score": 51,
+        "fullOnly": true,
+        "reasons": [
+          "morphing complet validé dans les cadres d’origine ; anciens modes indisponibles"
+        ],
+        "advice": [
+          "Les perspectives doivent rester proches ; les surfaces cachées ne sont pas reconstruites."
+        ]
+      },
+      "surfaceQuality": {
+        "valid": true,
+        "flipArea": 0.039682903115821705,
+        "collapseArea": 0.0036219314949332503,
+        "triangles": 852,
+        "samples": 33
+      },
+      "metadata": {
+        "kind": "estimated-open-face-surface",
+        "metric": false,
+        "depthSource": "mediapipe-relative-z",
+        "projection": "weak-perspective",
+        "poseInterpolation": "orthonormal-eye-frame-quaternion",
+        "mouthCavity": "bounded-aperture-heuristic",
+        "limitation": "Surface faciale ouverte estimée ; aucun crâne, cheveux ni texture cachée reconstruits.",
+        "depthProjectionScale": 0.7299770991566734
+      },
+      "reverseCompatibility": {
+        "status": "adapted",
+        "reasons": [
+          "morphing complet validé dans les cadres d’origine ; anciens modes indisponibles"
+        ],
+        "surfaceWarning": ""
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "teeth-smile--open-laugh",
+      "first": "teeth-smile",
+      "second": "open-laugh",
+      "accepted": true,
+      "checks": [
+        {
+          "name": "clay-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12810,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.24950987100601196,
+            0.349257230758667
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12516,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2526129186153412,
+            0.33701419830322266
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12221,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.25559771060943604,
+            0.3295113146305084
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11937,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.25846174359321594,
+            0.3350084125995636
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11657,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2612026035785675,
+            0.3401167392730713
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12810,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.24950987100601196,
+            0.349257230758667
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12514,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2526129186153412,
+            0.33701419830322266
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12218,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.25559771060943604,
+            0.3295113146305084
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11930,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.25846174359321594,
+            0.3350084125995636
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11610,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2612026035785675,
+            0.3401167392730713
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-is-distinct-from-photos",
+          "status": "PASS",
+          "mean": 15.810350206163195,
+          "max": 191
+        },
+        {
+          "name": "rotation-20-10",
+          "status": "PASS",
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12148,
+            "cornerDeviations": 0
+          },
+          "projectionDifference": {
+            "mean": 10.3741455078125,
+            "max": 242
+          }
+        },
+        {
+          "name": "reverse-clay-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-clay-0.5",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.5",
+          "status": "PASS",
+          "mean": 0.00013563368055555556,
+          "max": 1
+        },
+        {
+          "name": "reverse-clay-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        }
+      ],
+      "failures": [],
+      "compatibility": {
+        "status": "adapted",
+        "score": 96,
+        "fullOnly": false,
+        "reasons": [
+          "expression de bouche différente, déformée localement"
+        ],
+        "advice": [
+          "Une ouverture de bouche similaire améliore les lèvres et le menton."
+        ]
+      },
+      "surfaceQuality": {
+        "valid": true,
+        "flipArea": 0.007313124576560262,
+        "collapseArea": 0.000014044003723933088,
+        "triangles": 852,
+        "samples": 33
+      },
+      "metadata": {
+        "kind": "estimated-open-face-surface",
+        "metric": false,
+        "depthSource": "mediapipe-relative-z",
+        "projection": "weak-perspective",
+        "poseInterpolation": "orthonormal-eye-frame-quaternion",
+        "mouthCavity": "bounded-aperture-heuristic",
+        "limitation": "Surface faciale ouverte estimée ; aucun crâne, cheveux ni texture cachée reconstruits.",
+        "depthProjectionScale": 0.6886941060185666
+      },
+      "reverseCompatibility": {
+        "status": "adapted",
+        "reasons": [
+          "expression de bouche différente, déformée localement"
+        ],
+        "surfaceWarning": ""
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "teeth-smile--brow-frown",
+      "first": "teeth-smile",
+      "second": "brow-frown",
+      "accepted": true,
+      "checks": [
+        {
+          "name": "clay-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12810,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2501581311225891,
+            0.35016465187072754
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12669,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.243646040558815,
+            0.343075156211853
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12509,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.236946240067482,
+            0.3397339880466461
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12366,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.23006883263587952,
+            0.3501519560813904
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12238,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2230241894721985,
+            0.3603293001651764
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12810,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2501581311225891,
+            0.35016465187072754
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12669,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.243646040558815,
+            0.343075156211853
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12509,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.236946240067482,
+            0.3397339880466461
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12366,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.23006883263587952,
+            0.3501519560813904
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12222,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2230241894721985,
+            0.3603293001651764
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-is-distinct-from-photos",
+          "status": "PASS",
+          "mean": 18.19351535373264,
+          "max": 214
+        },
+        {
+          "name": "rotation-20-10",
+          "status": "PASS",
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12450,
+            "cornerDeviations": 0
+          },
+          "projectionDifference": {
+            "mean": 11.092793782552084,
+            "max": 249
+          }
+        },
+        {
+          "name": "reverse-clay-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-clay-0.5",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.5",
+          "status": "PASS",
+          "mean": 0.00019666883680555556,
+          "max": 1
+        },
+        {
+          "name": "reverse-clay-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        }
+      ],
+      "failures": [],
+      "compatibility": {
+        "status": "adapted",
+        "score": 96,
+        "fullOnly": false,
+        "reasons": [
+          "expression de bouche différente, déformée localement",
+          "ouverture des yeux différente, déformée localement"
+        ],
+        "advice": [
+          "Une ouverture de bouche similaire améliore les lèvres et le menton.",
+          "Garde un regard et une ouverture des yeux proches pour un résultat encore plus net."
+        ]
+      },
+      "surfaceQuality": {
+        "valid": true,
+        "flipArea": 0.00644545070101853,
+        "collapseArea": 0.00013414217412820458,
+        "triangles": 852,
+        "samples": 33
+      },
+      "metadata": {
+        "kind": "estimated-open-face-surface",
+        "metric": false,
+        "depthSource": "mediapipe-relative-z",
+        "projection": "weak-perspective",
+        "poseInterpolation": "orthonormal-eye-frame-quaternion",
+        "mouthCavity": "bounded-aperture-heuristic",
+        "limitation": "Surface faciale ouverte estimée ; aucun crâne, cheveux ni texture cachée reconstruits.",
+        "depthProjectionScale": 0.6904833881245999
+      },
+      "reverseCompatibility": {
+        "status": "adapted",
+        "reasons": [
+          "expression de bouche différente, déformée localement",
+          "ouverture des yeux différente, déformée localement"
+        ],
+        "surfaceWarning": ""
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "teeth-smile--closed-eyes",
+      "first": "teeth-smile",
+      "second": "closed-eyes",
+      "accepted": true,
+      "checks": [
+        {
+          "name": "clay-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12810,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.25544825196266174,
+            0.3575696349143982
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "clay-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11972,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.24249032139778137,
+            0.37839365005493164
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "clay-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11162,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2313905954360962,
+            0.39294564723968506
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "clay-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 10346,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.22129034996032715,
+            0.4043174982070923
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "clay-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 9579,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.21136900782585144,
+            0.40943852066993713
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "texture-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12810,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.25544825196266174,
+            0.3575696349143982
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "texture-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11971,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.24249032139778137,
+            0.37839365005493164
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "texture-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11161,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2313905954360962,
+            0.39294564723968506
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "texture-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 10345,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.22129034996032715,
+            0.4043174982070923
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "texture-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 9554,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.21136900782585144,
+            0.40943852066993713
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "clay-is-distinct-from-photos",
+          "status": "PASS",
+          "mean": 11.16738552517361,
+          "max": 216
+        },
+        {
+          "name": "rotation-20-10",
+          "status": "PASS",
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 10578,
+            "cornerDeviations": 0
+          },
+          "projectionDifference": {
+            "mean": 8.044874403211805,
+            "max": 246
+          }
+        },
+        {
+          "name": "reverse-clay-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-clay-0.5",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.5",
+          "status": "PASS",
+          "mean": 0.0002712673611111111,
+          "max": 1
+        },
+        {
+          "name": "reverse-clay-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.75",
+          "status": "PASS",
+          "mean": 0.000006781684027777777,
+          "max": 1
+        }
+      ],
+      "failures": [],
+      "compatibility": {
+        "status": "adapted",
+        "score": 78,
+        "fullOnly": true,
+        "reasons": [
+          "morphing complet validé dans les cadres d’origine ; anciens modes indisponibles"
+        ],
+        "advice": [
+          "Les perspectives doivent rester proches ; les surfaces cachées ne sont pas reconstruites."
+        ]
+      },
+      "surfaceQuality": {
+        "valid": true,
+        "flipArea": 0.017381202641152192,
+        "collapseArea": 0.002692835604214004,
+        "triangles": 852,
+        "samples": 33
+      },
+      "metadata": {
+        "kind": "estimated-open-face-surface",
+        "metric": false,
+        "depthSource": "mediapipe-relative-z",
+        "projection": "weak-perspective",
+        "poseInterpolation": "orthonormal-eye-frame-quaternion",
+        "mouthCavity": "bounded-aperture-heuristic",
+        "limitation": "Surface faciale ouverte estimée ; aucun crâne, cheveux ni texture cachée reconstruits.",
+        "depthProjectionScale": 0.7050851590710592
+      },
+      "reverseCompatibility": {
+        "status": "adapted",
+        "reasons": [
+          "morphing complet validé dans les cadres d’origine ; anciens modes indisponibles"
+        ],
+        "surfaceWarning": ""
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "open-laugh--brow-frown",
+      "first": "open-laugh",
+      "second": "brow-frown",
+      "accepted": true,
+      "checks": [
+        {
+          "name": "clay-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11657,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2632863223552704,
+            0.34283000230789185
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11791,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2536877691745758,
+            0.34740689396858215
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11935,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.24397504329681396,
+            0.35217195749282837
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12078,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.23415152728557587,
+            0.3571242392063141
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12238,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.22422079741954803,
+            0.3622626066207886
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11610,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2632863223552704,
+            0.34283000230789185
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11781,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.2536877691745758,
+            0.34740689396858215
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11926,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.24397504329681396,
+            0.35217195749282837
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12066,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.23415152728557587,
+            0.3571242392063141
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "texture-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12222,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.22422079741954803,
+            0.3622626066207886
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 944
+        },
+        {
+          "name": "clay-is-distinct-from-photos",
+          "status": "PASS",
+          "mean": 15.95206027560764,
+          "max": 185
+        },
+        {
+          "name": "rotation-20-10",
+          "status": "PASS",
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11949,
+            "cornerDeviations": 0
+          },
+          "projectionDifference": {
+            "mean": 10.17165798611111,
+            "max": 243
+          }
+        },
+        {
+          "name": "reverse-clay-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-clay-0.5",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.5",
+          "status": "PASS",
+          "mean": 0.0001220703125,
+          "max": 1
+        },
+        {
+          "name": "reverse-clay-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        }
+      ],
+      "failures": [],
+      "compatibility": {
+        "status": "good",
+        "score": 99,
+        "fullOnly": false,
+        "reasons": [
+          "expression de bouche différente, déformée localement",
+          "ouverture des yeux différente, déformée localement"
+        ],
+        "advice": [
+          "Une ouverture de bouche similaire améliore les lèvres et le menton.",
+          "Garde un regard et une ouverture des yeux proches pour un résultat encore plus net."
+        ]
+      },
+      "surfaceQuality": {
+        "valid": true,
+        "flipArea": 0.0014166138696186529,
+        "collapseArea": 0.00004565412587379963,
+        "triangles": 852,
+        "samples": 33
+      },
+      "metadata": {
+        "kind": "estimated-open-face-surface",
+        "metric": false,
+        "depthSource": "mediapipe-relative-z",
+        "projection": "weak-perspective",
+        "poseInterpolation": "orthonormal-eye-frame-quaternion",
+        "mouthCavity": "bounded-aperture-heuristic",
+        "limitation": "Surface faciale ouverte estimée ; aucun crâne, cheveux ni texture cachée reconstruits.",
+        "depthProjectionScale": 0.6941880850825328
+      },
+      "reverseCompatibility": {
+        "status": "good",
+        "reasons": [
+          "expression de bouche différente, déformée localement",
+          "ouverture des yeux différente, déformée localement"
+        ],
+        "surfaceWarning": ""
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "open-laugh--closed-eyes",
+      "first": "open-laugh",
+      "second": "closed-eyes",
+      "accepted": false,
+      "checks": [],
+      "failures": [],
+      "compatibility": {
+        "status": "unusable",
+        "score": 48,
+        "fullOnly": false,
+        "reasons": [
+          "le maillage se replie sur une zone visible",
+          "forte inclinaison corrigée automatiquement",
+          "angle de vue différent, compensé par le maillage",
+          "expression de bouche différente, déformée localement",
+          "ouverture des yeux différente, déformée localement"
+        ],
+        "advice": [
+          "Reprends le visage 2 avec un angle un peu plus proche de la photo 1.",
+          "Une inclinaison proche de la photo 1 donnera un contour encore plus naturel.",
+          "Regarde davantage l’objectif pour limiter les zones cachées du visage.",
+          "Une ouverture de bouche similaire améliore les lèvres et le menton.",
+          "Garde un regard et une ouverture des yeux proches pour un résultat encore plus net."
+        ]
+      },
+      "rejection": "Paire refusée : le maillage se replie sur une zone visible · forte inclinaison corrigée automatiquement · angle de vue différent, compensé par le maillage · expression de bouche différente, déformée localement · ouverture des yeux différente, déformée localement",
+      "directDiagnostic": {
+        "apiAccepted": false,
+        "modelCreated": true,
+        "quality": {
+          "valid": true,
+          "flipArea": 0.05123441814838511,
+          "collapseArea": 0.005694744275678088,
+          "triangles": 852,
+          "samples": 33
+        },
+        "metadata": {
+          "kind": "estimated-open-face-surface",
+          "metric": false,
+          "depthSource": "mediapipe-relative-z",
+          "projection": "weak-perspective",
+          "poseInterpolation": "orthonormal-eye-frame-quaternion",
+          "mouthCavity": "none",
+          "limitation": "Surface faciale ouverte estimée ; aucun crâne, cheveux ni texture cachée reconstruits.",
+          "depthProjectionScale": 0.7163809206013438
+        },
+        "explanation": "Diagnostic de géométrie uniquement ; ne contourne pas la garde et ne valide pas le rendu de l’application."
+      },
+      "status": "REJECTED"
+    },
+    {
+      "id": "brow-frown--closed-eyes",
+      "first": "brow-frown",
+      "second": "closed-eyes",
+      "accepted": true,
+      "checks": [
+        {
+          "name": "clay-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12238,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.22480334341526031,
+            0.3632037937641144
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "clay-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11583,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.21974441409111023,
+            0.3556288182735443
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "clay-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 10939,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.21542587876319885,
+            0.37741851806640625
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "clay-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 10251,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.21256060898303986,
+            0.39438050985336304
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "clay-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 9579,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.20864297449588776,
+            0.40415796637535095
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "texture-0",
+          "status": "PASS",
+          "amount": 0,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 12222,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.22480334341526031,
+            0.3632037937641144
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "texture-0.25",
+          "status": "PASS",
+          "amount": 0.25,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 11582,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.21974441409111023,
+            0.3556288182735443
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "texture-0.5",
+          "status": "PASS",
+          "amount": 0.5,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 10939,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.21542587876319885,
+            0.37741851806640625
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "texture-0.75",
+          "status": "PASS",
+          "amount": 0.75,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 10248,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.21256060898303986,
+            0.39438050985336304
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "texture-1",
+          "status": "PASS",
+          "amount": 1,
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 9554,
+            "cornerDeviations": 0
+          },
+          "depthRange": [
+            -0.20864297449588776,
+            0.40415796637535095
+          ],
+          "endpointXYError": 0,
+          "vertices": 499,
+          "triangles": 940
+        },
+        {
+          "name": "clay-is-distinct-from-photos",
+          "status": "PASS",
+          "mean": 11.033650716145834,
+          "max": 176
+        },
+        {
+          "name": "rotation-20-10",
+          "status": "PASS",
+          "image": {
+            "pixels": 36864,
+            "opaque": 36864,
+            "nonWhite": 10507,
+            "cornerDeviations": 0
+          },
+          "projectionDifference": {
+            "mean": 8.04739718967014,
+            "max": 243
+          }
+        },
+        {
+          "name": "reverse-clay-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.25",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-clay-0.5",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.5",
+          "status": "PASS",
+          "mean": 0.00016276041666666666,
+          "max": 1
+        },
+        {
+          "name": "reverse-clay-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        },
+        {
+          "name": "reverse-texture-0.75",
+          "status": "PASS",
+          "mean": 0,
+          "max": 0
+        }
+      ],
+      "failures": [],
+      "compatibility": {
+        "status": "adapted",
+        "score": 50,
+        "fullOnly": true,
+        "reasons": [
+          "morphing complet validé dans les cadres d’origine ; anciens modes indisponibles"
+        ],
+        "advice": [
+          "Les perspectives doivent rester proches ; les surfaces cachées ne sont pas reconstruites."
+        ]
+      },
+      "surfaceQuality": {
+        "valid": true,
+        "flipArea": 0.039905608661571106,
+        "collapseArea": 0.0083214069937951,
+        "triangles": 852,
+        "samples": 33
+      },
+      "metadata": {
+        "kind": "estimated-open-face-surface",
+        "metric": false,
+        "depthSource": "mediapipe-relative-z",
+        "projection": "weak-perspective",
+        "poseInterpolation": "orthonormal-eye-frame-quaternion",
+        "mouthCavity": "bounded-aperture-heuristic",
+        "limitation": "Surface faciale ouverte estimée ; aucun crâne, cheveux ni texture cachée reconstruits.",
+        "depthProjectionScale": 0.6959916409834835
+      },
+      "reverseCompatibility": {
+        "status": "adapted",
+        "reasons": [
+          "morphing complet validé dans les cadres d’origine ; anciens modes indisponibles"
+        ],
+        "surfaceWarning": ""
+      },
+      "status": "PASS"
+    }
+  ],
+  "globalChecks": [
+    {
+      "name": "real-webgl-depth-order",
+      "status": "PASS",
+      "orderDifference": {
+        "mean": 0,
+        "max": 0
+      },
+      "nearCavityCentre": [
+        33,
+        35,
+        39,
+        255
+      ]
+    }
+  ],
+  "failures": [],
+  "manifest": [
+    {
+      "id": "closed-mouth",
+      "file": "p01.jpg",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Official_Presidential_Portrait_of_President_Donald_J._Trump_(2025).jpg",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/1/16/Official_Presidential_Portrait_of_President_Donald_J._Trump_%282025%29.jpg",
+      "author": "Daniel Torok / The White House",
+      "license": "Public domain — U.S. federal government work",
+      "licenseUrl": "https://commons.wikimedia.org/wiki/Template:PD-USGov-POTUS",
+      "description": "Frontal official photographic portrait, mouth closed, eyes open.",
+      "expectedFeature": "closed mouth"
+    },
+    {
+      "id": "teeth-smile",
+      "file": "p02.jpg",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Michelle_Obama_2013_official_portrait.jpg",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4b/Michelle_Obama_2013_official_portrait.jpg",
+      "author": "Chuck Kennedy / The White House",
+      "license": "Public domain — U.S. federal government work",
+      "licenseUrl": "https://commons.wikimedia.org/wiki/Template:PD-USGov-POTUS",
+      "description": "Official photographic portrait with visible teeth in a broad smile.",
+      "expectedFeature": "teeth visible in smile"
+    },
+    {
+      "id": "open-laugh",
+      "file": "p03.jpg",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Laughing_woman.jpg",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Laughing_woman.jpg",
+      "author": "Basile Morin",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "description": "Photographic portrait of a woman looking toward the camera, mouth open in laughter.",
+      "expectedFeature": "open mouth and narrowed eyelids"
+    },
+    {
+      "id": "brow-frown",
+      "file": "p04.jpg",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Frown.JPG",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/77/Frown.JPG",
+      "author": "Richard Kelly",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "description": "Photograph titled Frown; brow and mouth configuration differs from the smiling portraits.",
+      "expectedFeature": "brows drawn together"
+    },
+    {
+      "id": "closed-eyes",
+      "file": "p05.jpg",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:A_woman_with_a_look_of_disgust.jpg",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a5/A_woman_with_a_look_of_disgust.jpg",
+      "author": "David Shankbone",
+      "license": "CC BY 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "description": "Photographic portrait with closed eyelids and a wrinkled nose; source title retained solely for attribution.",
+      "expectedFeature": "closed eyelids and nose wrinkle"
+    }
+  ],
+  "animationExport": {
+    "status": "PASS",
+    "pair": "closed-mouth--open-laugh",
+    "first": "closed-mouth",
+    "second": "open-laugh",
+    "frames": 61,
+    "columns": 8,
+    "rows": 8,
+    "frameSize": 256,
+    "progress": "frame / 60",
+    "fpsSuggestion": 20,
+    "materials": [
+      "clay",
+      "texture"
+    ],
+    "selection": "Première paire acceptée contenant open-laugh ; sinon première paire acceptée.",
+    "attribution": [
+      {
+        "id": "closed-mouth",
+        "file": "p01.jpg",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Official_Presidential_Portrait_of_President_Donald_J._Trump_(2025).jpg",
+        "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/1/16/Official_Presidential_Portrait_of_President_Donald_J._Trump_%282025%29.jpg",
+        "author": "Daniel Torok / The White House",
+        "license": "Public domain — U.S. federal government work",
+        "licenseUrl": "https://commons.wikimedia.org/wiki/Template:PD-USGov-POTUS",
+        "description": "Frontal official photographic portrait, mouth closed, eyes open.",
+        "expectedFeature": "closed mouth"
+      },
+      {
+        "id": "open-laugh",
+        "file": "p03.jpg",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Laughing_woman.jpg",
+        "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Laughing_woman.jpg",
+        "author": "Basile Morin",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "description": "Photographic portrait of a woman looking toward the camera, mouth open in laughter.",
+        "expectedFeature": "open mouth and narrowed eyelids"
+      }
+    ]
+  },
+  "summary": {
+    "portraitsReady": 5,
+    "portraitsTotal": 5,
+    "pairsAttempted": 10,
+    "pairsAccepted": 9,
+    "pairsRejected": 1,
+    "checksPassed": 163,
+    "checksFailed": 0
+  },
+  "status": "PARTIAL"
+}

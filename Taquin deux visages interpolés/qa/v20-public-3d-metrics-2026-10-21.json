@@ -1,0 +1,364 @@
+{
+  "scope": "repository-public-demo",
+  "checks": [
+    {
+      "name": "real-webgl-depth-order",
+      "status": "PASS",
+      "orderDifference": {
+        "mean": 0,
+        "max": 0
+      },
+      "nearCavityCentre": [
+        33,
+        35,
+        39,
+        255
+      ]
+    },
+    {
+      "name": "clay-0",
+      "status": "PASS",
+      "amount": 0,
+      "material": "clay",
+      "vertices": 499,
+      "triangles": 944,
+      "depthRange": [
+        -0.1524592489004135,
+        0.27438366413116455
+      ],
+      "image": {
+        "pixels": 147456,
+        "opaque": 147456,
+        "nonWhite": 40730,
+        "cornerDeviations": 0
+      },
+      "endpointXYError": 0
+    },
+    {
+      "name": "clay-0.25",
+      "status": "PASS",
+      "amount": 0.25,
+      "material": "clay",
+      "vertices": 499,
+      "triangles": 944,
+      "depthRange": [
+        -0.1646134853363037,
+        0.29063111543655396
+      ],
+      "image": {
+        "pixels": 147456,
+        "opaque": 147456,
+        "nonWhite": 45621,
+        "cornerDeviations": 0
+      },
+      "endpointXYError": 0
+    },
+    {
+      "name": "clay-0.5",
+      "status": "PASS",
+      "amount": 0.5,
+      "material": "clay",
+      "vertices": 499,
+      "triangles": 944,
+      "depthRange": [
+        -0.17751845717430115,
+        0.30775773525238037
+      ],
+      "image": {
+        "pixels": 147456,
+        "opaque": 147456,
+        "nonWhite": 51098,
+        "cornerDeviations": 0
+      },
+      "endpointXYError": 0
+    },
+    {
+      "name": "clay-0.75",
+      "status": "PASS",
+      "amount": 0.75,
+      "material": "clay",
+      "vertices": 499,
+      "triangles": 944,
+      "depthRange": [
+        -0.19119912385940552,
+        0.3261224031448364
+      ],
+      "image": {
+        "pixels": 147456,
+        "opaque": 147456,
+        "nonWhite": 57185,
+        "cornerDeviations": 0
+      },
+      "endpointXYError": 0
+    },
+    {
+      "name": "clay-1",
+      "status": "PASS",
+      "amount": 1,
+      "material": "clay",
+      "vertices": 499,
+      "triangles": 944,
+      "depthRange": [
+        -0.20567834377288818,
+        0.3460596203804016
+      ],
+      "image": {
+        "pixels": 147456,
+        "opaque": 147456,
+        "nonWhite": 64000,
+        "cornerDeviations": 0
+      },
+      "endpointXYError": 0
+    },
+    {
+      "name": "texture-0",
+      "status": "PASS",
+      "amount": 0,
+      "material": "texture",
+      "vertices": 499,
+      "triangles": 944,
+      "depthRange": [
+        -0.1524592489004135,
+        0.27438366413116455
+      ],
+      "image": {
+        "pixels": 147456,
+        "opaque": 147456,
+        "nonWhite": 40730,
+        "cornerDeviations": 0
+      },
+      "endpointXYError": 0
+    },
+    {
+      "name": "texture-0.25",
+      "status": "PASS",
+      "amount": 0.25,
+      "material": "texture",
+      "vertices": 499,
+      "triangles": 944,
+      "depthRange": [
+        -0.1646134853363037,
+        0.29063111543655396
+      ],
+      "image": {
+        "pixels": 147456,
+        "opaque": 147456,
+        "nonWhite": 45621,
+        "cornerDeviations": 0
+      },
+      "endpointXYError": 0
+    },
+    {
+      "name": "texture-0.5",
+      "status": "PASS",
+      "amount": 0.5,
+      "material": "texture",
+      "vertices": 499,
+      "triangles": 944,
+      "depthRange": [
+        -0.17751845717430115,
+        0.30775773525238037
+      ],
+      "image": {
+        "pixels": 147456,
+        "opaque": 147456,
+        "nonWhite": 51097,
+        "cornerDeviations": 0
+      },
+      "endpointXYError": 0
+    },
+    {
+      "name": "texture-0.75",
+      "status": "PASS",
+      "amount": 0.75,
+      "material": "texture",
+      "vertices": 499,
+      "triangles": 944,
+      "depthRange": [
+        -0.19119912385940552,
+        0.3261224031448364
+      ],
+      "image": {
+        "pixels": 147456,
+        "opaque": 147456,
+        "nonWhite": 57182,
+        "cornerDeviations": 0
+      },
+      "endpointXYError": 0
+    },
+    {
+      "name": "texture-1",
+      "status": "PASS",
+      "amount": 1,
+      "material": "texture",
+      "vertices": 499,
+      "triangles": 944,
+      "depthRange": [
+        -0.20567834377288818,
+        0.3460596203804016
+      ],
+      "image": {
+        "pixels": 147456,
+        "opaque": 147456,
+        "nonWhite": 63986,
+        "cornerDeviations": 0
+      },
+      "endpointXYError": 0
+    },
+    {
+      "name": "rotation-0",
+      "status": "PASS",
+      "amount": 0,
+      "material": "texture",
+      "vertices": 499,
+      "triangles": 944,
+      "depthRange": [
+        -0.1788429170846939,
+        0.3263240158557892
+      ],
+      "image": {
+        "pixels": 147456,
+        "opaque": 147456,
+        "nonWhite": 41245,
+        "cornerDeviations": 0
+      },
+      "endpointXYError": 0
+    },
+    {
+      "name": "rotation-0.25",
+      "status": "PASS",
+      "amount": 0.25,
+      "material": "texture",
+      "vertices": 499,
+      "triangles": 944,
+      "depthRange": [
+        -0.19059528410434723,
+        0.3464760184288025
+      ],
+      "image": {
+        "pixels": 147456,
+        "opaque": 147456,
+        "nonWhite": 46208,
+        "cornerDeviations": 0
+      },
+      "endpointXYError": 0
+    },
+    {
+      "name": "rotation-0.5",
+      "status": "PASS",
+      "amount": 0.5,
+      "material": "texture",
+      "vertices": 499,
+      "triangles": 944,
+      "depthRange": [
+        -0.20292943716049194,
+        0.36892667412757874
+      ],
+      "image": {
+        "pixels": 147456,
+        "opaque": 147456,
+        "nonWhite": 51776,
+        "cornerDeviations": 0
+      },
+      "endpointXYError": 0
+    },
+    {
+      "name": "rotation-0.75",
+      "status": "PASS",
+      "amount": 0.75,
+      "material": "texture",
+      "vertices": 499,
+      "triangles": 944,
+      "depthRange": [
+        -0.21585166454315186,
+        0.39285391569137573
+      ],
+      "image": {
+        "pixels": 147456,
+        "opaque": 147456,
+        "nonWhite": 57972,
+        "cornerDeviations": 0
+      },
+      "endpointXYError": 0
+    },
+    {
+      "name": "rotation-1",
+      "status": "PASS",
+      "amount": 1,
+      "material": "texture",
+      "vertices": 499,
+      "triangles": 944,
+      "depthRange": [
+        -0.22936484217643738,
+        0.418215274810791
+      ],
+      "image": {
+        "pixels": 147456,
+        "opaque": 147456,
+        "nonWhite": 64846,
+        "cornerDeviations": 0
+      },
+      "endpointXYError": 0
+    },
+    {
+      "name": "rotation-changes-projection",
+      "status": "PASS",
+      "mean": 8.986857096354166,
+      "max": 190
+    },
+    {
+      "name": "clay-is-distinct-from-photos",
+      "status": "PASS",
+      "mean": 9.603625827365452,
+      "max": 219
+    },
+    {
+      "name": "reverse-clay-0.25",
+      "status": "PASS",
+      "mean": 0,
+      "max": 0
+    },
+    {
+      "name": "reverse-texture-0.25",
+      "status": "PASS",
+      "mean": 0.0000016954210069444444,
+      "max": 1
+    },
+    {
+      "name": "reverse-clay-0.5",
+      "status": "PASS",
+      "mean": 0,
+      "max": 0
+    },
+    {
+      "name": "reverse-texture-0.5",
+      "status": "PASS",
+      "mean": 0.00014241536458333334,
+      "max": 1
+    },
+    {
+      "name": "reverse-clay-0.75",
+      "status": "PASS",
+      "mean": 0,
+      "max": 0
+    },
+    {
+      "name": "reverse-texture-0.75",
+      "status": "PASS",
+      "mean": 0.0000033908420138888887,
+      "max": 1
+    }
+  ],
+  "failures": [],
+  "metadata": {
+    "kind": "estimated-open-face-surface",
+    "metric": false,
+    "depthSource": "mediapipe-relative-z",
+    "projection": "weak-perspective",
+    "poseInterpolation": "orthonormal-eye-frame-quaternion",
+    "mouthCavity": "bounded-aperture-heuristic",
+    "limitation": "Surface faciale ouverte estimée ; aucun crâne, cheveux ni texture cachée reconstruits.",
+    "depthProjectionScale": 0.5769186130652052
+  },
+  "status": "PASS"
+}

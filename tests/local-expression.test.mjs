@@ -121,7 +121,7 @@ test('local renderer separates appearance and exact mesh geometry in WebGL and C
  assert.match(PAGE,/const texturedGeometry=\{\.\.\.geometry,textureMix\}/);
  assert.match(PAGE,/renderWebGLFace\(canvas\.width,texturedGeometry\)/);
  assert.match(PAGE,/renderCanvasMorph\(layer,v,texturedGeometry\)/);
- assert.match(PAGE,/blendMorphPixels\(pixelsA\.data,pixelsB\.data,geometry\.textureMix\?\?geometry\.t,pixelsA\.data\)/);
+ assert.match(PAGE,/blendMorphPixels\(pixelsA\.data,pixelsB\.data,geometry\.textureMix\?\?geometry\.t,pixelsA\.data,openingMixMap\(geometry,size\)\?\.weights\)/);
  assert.match(PAGE,/gl\.uniform1f\(r\.locations\.mix,geometry\.textureMix\?\?geometry\.t\)/);
  assert.match(PAGE,/geometry=localized\?stabilizedGeometry\(v\)/);
  assert.match(PAGE,/Math\.abs\(geometry\.t-position\/100\)>1e-8/);

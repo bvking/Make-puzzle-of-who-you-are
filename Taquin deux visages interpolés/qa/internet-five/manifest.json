@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "date": "2026-10-21",
+  "scope": "public-internet-five",
+  "changes": "Test images may be cropped, resized, detached onto a white background and projected onto an interpolated 3D facial surface. Source photographs retain their individual attribution and license. Published image adaptations that combine the CC BY-SA 4.0 photographs are offered under CC BY-SA 4.0; this does not change the software license.",
+  "portraits": [
+    {
+      "id": "closed-mouth",
+      "file": "p01.jpg",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/1/16/Official_Presidential_Portrait_of_President_Donald_J._Trump_%282025%29.jpg",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Official_Presidential_Portrait_of_President_Donald_J._Trump_(2025).jpg",
+      "author": "Daniel Torok / The White House",
+      "license": "Public domain — U.S. federal government work",
+      "licenseUrl": "https://commons.wikimedia.org/wiki/Template:PD-USGov-POTUS",
+      "description": "Frontal official photographic portrait, mouth closed, eyes open.",
+      "expectedFeature": "closed mouth",
+      "sourceTitle": "Official Presidential Portrait of President Donald J. Trump (2025).jpg",
+      "originalDimensions": [
+        1638,
+        2048
+      ],
+      "testDimensions": [
+        1120,
+        1400
+      ],
+      "originalSha256": "6da6d96e6c4441b60b51ac22b2e534faa98186c99d61148ebd7aa92b4f2c1fa0",
+      "sha256": "3821bb8746218badff180dddc756977683509fe034b691c005d57854bcaf0697",
+      "bytes": 291497
+    },
+    {
+      "id": "teeth-smile",
+      "file": "p02.jpg",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4b/Michelle_Obama_2013_official_portrait.jpg",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Michelle_Obama_2013_official_portrait.jpg",
+      "author": "Chuck Kennedy / The White House",
+      "license": "Public domain — U.S. federal government work",
+      "licenseUrl": "https://commons.wikimedia.org/wiki/Template:PD-USGov-POTUS",
+      "description": "Official photographic portrait with visible teeth in a broad smile.",
+      "expectedFeature": "teeth visible in smile",
+      "sourceTitle": "Michelle Obama 2013 official portrait.jpg",
+      "originalDimensions": [
+        2722,
+        4096
+      ],
+      "testDimensions": [
+        930,
+        1400
+      ],
+      "originalSha256": "fa3d0588071df873142d916328e16fd856d7d96dcd4d8dbffb7c28b1bf7f1cde",
+      "sha256": "31d79c56a3799a9048013bce49b5a84b0357e431f8f380fe886a28a20012ff0c",
+      "bytes": 308084
+    },
+    {
+      "id": "open-laugh",
+      "file": "p03.jpg",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Laughing_woman.jpg",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Laughing_woman.jpg",
+      "author": "Basile Morin",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "description": "Photographic portrait of a woman looking toward the camera, mouth open in laughter.",
+      "expectedFeature": "open mouth and narrowed eyelids",
+      "sourceTitle": "Laughing woman.jpg",
+      "originalDimensions": [
+        2102,
+        2488
+      ],
+      "testDimensions": [
+        1183,
+        1400
+      ],
+      "originalSha256": "486abfb0e59469c342ead45c9e0617bfd00b21a9ad88510983fa520b07f15ff8",
+      "sha256": "9924d9ea98219e9c564e9946818a393894c384412c64fc57415046a6b5562328",
+      "bytes": 494569
+    },
+    {
+      "id": "brow-frown",
+      "file": "p04.jpg",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/77/Frown.JPG",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Frown.JPG",
+      "author": "Richard Kelly",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "description": "Photograph titled Frown; brow and mouth configuration differs from the smiling portraits.",
+      "expectedFeature": "brows drawn together",
+      "sourceTitle": "Frown.JPG",
+      "originalDimensions": [
+        1862,
+        1862
+      ],
+      "testDimensions": [
+        1400,
+        1400
+      ],
+      "originalSha256": "f61c5cc93a85caa0307dd7cbb0d3a0a32236257e7f5ab24423773d447d60d863",
+      "sha256": "69c9ed9f5380cfbb8420583952f4c88e9432a39d4f9c76f7e9becea3724c8d44",
+      "bytes": 561154
+    },
+    {
+      "id": "closed-eyes",
+      "file": "p05.jpg",
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a5/A_woman_with_a_look_of_disgust.jpg",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:A_woman_with_a_look_of_disgust.jpg",
+      "author": "David Shankbone",
+      "license": "CC BY 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "description": "Photographic portrait with closed eyelids and a wrinkled nose; source title retained solely for attribution.",
+      "expectedFeature": "closed eyelids and nose wrinkle",
+      "sourceTitle": "A woman with a look of disgust.jpg",
+      "originalDimensions": [
+        1567,
+        2376
+      ],
+      "testDimensions": [
+        923,
+        1400
+      ],
+      "originalSha256": "2e356869433d970db75b13f3440eaccf86d6a3679268f1fe08a0fa69fd42e363",
+      "sha256": "337e2eb304761c6684ca9a45d3144ae8fd49e3e52e054f31965cbe7a22ff9ae5",
+      "bytes": 442281
+    }
+  ],
+  "description": "Five different adult subjects photographed on the Internet, selected to exercise visible mouth, eyelid and brow configurations. These are technical morphing fixtures, not emotion labels or endorsements. Source pages were checked for attribution and reuse terms; visual suitability and detected geometry are checked separately by the browser QA harness."
+}

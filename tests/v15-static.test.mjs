@@ -50,14 +50,15 @@ test('v15 exposes multiview, import, fallback and viewpoint controls', () => {
 test('v15 states the requested goal and the unresolved perspective limitation', () => {
   assert.match(page, /Objectif demandé — pas encore atteint pour des perspectives différentes/);
   assert.match(page, /même visage ou de deux visages différents/);
-  assert.match(page, /ne reconstruit pas un visage sous un nouvel angle/);
-  assert.match(page, /au moins une perspective suffisamment proche/);
-  assert.match(page, /reproduction CPU du pipeline géométrique/);
-  assert.match(page, /ne valide pas le pilote WebGL de l’iPhone/);
+  assert.match(page, /ne reconstruit pas fidèlement les angles cachés/);
+  assert.match(page, /Les prises de vue doivent rester proches/);
+  assert.match(page, /ce n’est pas un scan 3D métrique/);
+  assert.match(page, /Safari\/iPhone restent à valider/);
 });
 
-test('v15 defaults to localized expression morph while preserving stabilized and full-frame modes', () => {
-  assert.match(page, /const desiredMode=wasAlign&&\['canvas','webgl','regions','stabilized','local'\]\.includes\(previousMode\)\?previousMode:'local'/);
+test('v20 prefers an available 3D surface while preserving complete and legacy modes', () => {
+  assert.match(page, /const desiredMode=wasAlign&&\['surface3d','full','canvas','webgl','regions','stabilized','local'\]\.includes\(previousMode\)\?previousMode:\(surface3DModel\(\)\?'surface3d':'full'\)/);
+  assert.match(page, /data-mode="full"/);
   assert.match(page, /data-mode="local"/);
   assert.match(page, /function renderLocalExpressions\(/);
   assert.match(page, /localMaskFeatures\(points,protectGlasses,referencePoints,alignedPoints\)/);
@@ -78,7 +79,8 @@ test('v15 keeps dependencies reproducible and camera mirroring conditional', () 
   assert.match(page, /video\.classList\.toggle\('is-mirrored',state\.activeFacing==='user'\)/);
   const captureFunction = page.match(/function captureSquare\([\s\S]*?\n\}/)?.[0] ?? '';
   assert.doesNotMatch(captureFunction, /scale\(-1,1\)/);
-  assert.match(page, /confidenceMasks\?\.\[1\]/);
+  assert.match(page, /selfie_multiclass_256x256\/float32\/1\/selfie_multiclass_256x256\.tflite/);
+  assert.match(page, /outputCategoryMask:true,outputConfidenceMasks:true/);
 });
 
 test('v15 keeps slow iPhone camera permission requests alive and offers native capture', () => {
@@ -122,7 +124,7 @@ test('v15 diagnostic generates actual 25, 50, and 75 percent renderer snapshots'
   assert.match(page, /renderer:'canvas'/);
   assert.match(page, /renderer:'webgl'/);
   assert.match(page, /uniform1f\(r\.locations\.mix,geometry\.textureMix\?\?geometry\.t\)/);
-  assert.match(page, /blendMorphPixels\(pixelsA\.data,pixelsB\.data,geometry\.textureMix\?\?geometry\.t,pixelsA\.data\)/);
+  assert.match(page, /blendMorphPixels\(pixelsA\.data,pixelsB\.data,geometry\.textureMix\?\?geometry\.t,pixelsA\.data,openingMixMap\(geometry,size\)\?\.weights\)/);
 });
 
 test('v15 does not confuse MediaPipe import errors with no face detected', () => {

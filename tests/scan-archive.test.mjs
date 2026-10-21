@@ -41,7 +41,8 @@ test('ZIP is not a server upload and contains the expected names',async()=>{
  assert.match(PAGE,/id="exportScanArchive"/);
  assert.match(PAGE,/readScanArchive\(file\)/);
  assert.match(PAGE,/state\.sessions=\[\[candidates\[0\]\],\[candidates\[1\]\]\]/);
- assert.match(PAGE,/headRings\[index\]=hasSavedRings\?/);
+ assert.match(PAGE,/prepareWhitePortrait\(originalPhotos\[index\],marks\[index\]\)/);
+ assert.doesNotMatch(PAGE,/hasSavedRings\?/);
 });
 
 test('An invalid or incomplete face is refused before saving',async()=>{
@@ -71,4 +72,24 @@ test('Ordinary documents and excessive-sized files are refused as archives',asyn
 test('The app never claims the original camera file is preserved',()=>{
  assert.match(PAGE,/photos originales pleine résolution ne sont pas conservées/);
  assert.match(PAGE,/Scans restaurés depuis le ZIP privé/);
+});
+
+test('export after matting preserves candidate JPEG bytes or encodes the untouched originals, never the white render sources',async()=>{
+ const start=PAGE.indexOf('async function exportCurrentScans(){'),end=PAGE.indexOf('async function restoreSavedScans(',start);
+ const source=PAGE.slice(start,end);
+ for(const keepCandidate of [true,false]){
+  const inputs=[face(0),face(1)],originals=[{name:'original A'},{name:'original B'}],prepared=[{name:'white A'},{name:'white B'}];
+  const state={photos:prepared,originalPhotos:originals,marks:inputs.map(input=>input.landmarks),headRings:inputs.map(input=>input.headRing),faceOval:[],
+   selectedPair:keepCandidate?{first:{blob:inputs[0].photoBlob},second:{blob:inputs[1].photoBlob}}:null};
+  const encoded=[],feedback={},button={},link={click(){},remove(){}};let exported;
+  const dependencies={state,$:id=>id==='archiveStatus'?feedback:button,canMeshMorph:()=>true,
+   canvasToBlob:async photo=>{const index=originals.indexOf(photo);assert.ok(index>=0,'render sources must not be encoded for private restoration');encoded.push(photo);return inputs[index].photoBlob},
+   derivePose:()=>({yaw:0,pitch:0,roll:0,scale:1}),createScanArchive:async faces=>{exported=await createScanArchive(faces);return exported},
+   URL:{createObjectURL:()=> 'blob:local-private-archive',revokeObjectURL(){}},document:{createElement:()=>link,body:{appendChild(){}}},setTimeout(){}};
+  await new Function(...Object.keys(dependencies),source+';return exportCurrentScans')(...Object.values(dependencies))();
+  const restored=await readScanArchive(exported);
+  for(let index=0;index<2;index++)assert.deepEqual(new Uint8Array(await restored.faces[index].photoBlob.arrayBuffer()),new Uint8Array(await inputs[index].photoBlob.arrayBuffer()));
+  assert.deepEqual(encoded,keepCandidate?[]:originals);assert.equal(button.disabled,false);
+  assert.match(feedback.textContent,/Archive créée/);
+ }
 });
